@@ -34,7 +34,7 @@ export default async function AdminMcp() {
         <Card title="2. Brancher Claude">
           <p className="text-sm text-bone/80">Dans un terminal, avec Claude Code :</p>
           <pre className="mt-3 overflow-x-auto zone-dark rounded-xl p-4 font-mono text-xs leading-relaxed">
-            {`claude mcp add --transport http webcrea ${url} \\\n  --header "Authorization: Bearer VOTRE_JETON"`}
+            {`claude mcp add --transport http axynweb ${url} \\\n  --header "Authorization: Bearer VOTRE_JETON"`}
           </pre>
           <p className="mt-4 text-sm text-bone/80">Puis demandez par exemple :</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-mute">

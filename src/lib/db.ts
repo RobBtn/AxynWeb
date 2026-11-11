@@ -110,7 +110,7 @@ function seed(db: DatabaseSync) {
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (!adminEmail || !adminPassword) {
     console.warn(
-      "[webcrea] ADMIN_EMAIL / ADMIN_PASSWORD absents de .env.local : aucun compte administrateur créé."
+      "[axynweb] ADMIN_EMAIL / ADMIN_PASSWORD absents de .env.local : aucun compte administrateur créé."
     );
     return;
   }
@@ -118,7 +118,7 @@ function seed(db: DatabaseSync) {
   const insertUser = db.prepare(
     "INSERT INTO users (id, email, name, company, role, password_hash) VALUES (?, ?, ?, ?, ?, ?)"
   );
-  insertUser.run(randomUUID(), adminEmail.toLowerCase(), "Administrateur", "Webcrea", "admin", hashPassword(adminPassword));
+  insertUser.run(randomUUID(), adminEmail.toLowerCase(), "Administrateur", "AxynWeb", "admin", hashPassword(adminPassword));
 
   // Données de démonstration (supprimables depuis l'espace admin).
   const demoEmail = process.env.DEMO_CLIENT_EMAIL;

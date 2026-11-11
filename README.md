@@ -1,4 +1,4 @@
-# Webcrea — plateforme du studio
+# AxynWeb — plateforme du studio
 
 Une seule application qui regroupe :
 
@@ -23,7 +23,7 @@ Puis ouvrir http://localhost:3000. Les identifiants de l'administrateur et du cl
 2. Dans un terminal :
 
 ```bash
-claude mcp add --transport http webcrea http://localhost:3000/api/mcp --header "Authorization: Bearer VOTRE_JETON"
+claude mcp add --transport http axynweb http://localhost:3000/api/mcp --header "Authorization: Bearer VOTRE_JETON"
 ```
 
 3. Demander par exemple : « Crée un site pour la boulangerie Dupont avec le modèle Aurore », ou « Génère les sites des briefs en attente ».

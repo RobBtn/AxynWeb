@@ -165,7 +165,7 @@ export async function applyRequestWithAiAction(_p: FormState, fd: FormData): Pro
     updateSiteContent(site.id, patch);
     replyToRequest(
       request.id,
-      { name: "Webcrea", role: "admin" },
+      { name: "AxynWeb", role: "admin" },
       `C'est fait. Champs mis à jour : ${changed.map((f) => f.label.toLowerCase()).join(", ")}. Dites-nous si un ajustement est nécessaire.`,
       "done"
     );

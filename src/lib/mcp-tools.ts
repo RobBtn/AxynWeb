@@ -234,7 +234,7 @@ export const tools: Tool[] = [
       const message = text(a, "message", false);
       const status = text(a, "status", false) || undefined;
       if (!message && !status) throw new DataError("Fournissez un message ou un statut.");
-      replyToRequest(text(a, "request_id"), { name: "Webcrea", role: "admin" }, message, status);
+      replyToRequest(text(a, "request_id"), { name: "AxynWeb", role: "admin" }, message, status);
       return { ok: true };
     },
   },

@@ -4,9 +4,9 @@
  * (obligations légales : LCEN art. 6-III, RGPD art. 13).
  */
 export const brand = {
-  name: "Webcrea",
+  name: "AxynWeb",
   tagline: "Des sites à couper le souffle. Sécurisés, accompagnés, à prix juste.",
-  email: "contact@webcrea.example", // À COMPLÉTER
+  email: "contact@axynweb.example", // À COMPLÉTER
   phone: "", // À COMPLÉTER
   legal: {
     companyName: "À COMPLÉTER — raison sociale",
@@ -16,7 +16,7 @@ export const brand = {
     address: "À COMPLÉTER — adresse du siège",
     director: "À COMPLÉTER — directeur de la publication",
     host: "À COMPLÉTER — nom, adresse et téléphone de l'hébergeur (UE)",
-    dpoEmail: "contact@webcrea.example", // À COMPLÉTER
+    dpoEmail: "contact@axynweb.example", // À COMPLÉTER
   },
 };
 

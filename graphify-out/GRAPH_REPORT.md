@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b191ef2a`
+- Built from commit: `e797b1ad`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -91,7 +91,7 @@ Nodes (18): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModu
 
 ### Community 8 - "Webcrea — plateforme du studio"
 Cohesion: 0.25
-Nodes (7): Avant la mise en ligne, Brancher Claude, Conformité européenne, Démarrer, Organisation du code, Sécurité, Webcrea — plateforme du studio
+Nodes (7): Avant la mise en ligne, AxynWeb — plateforme du studio, Brancher Claude, Conformité européenne, Démarrer, Organisation du code, Sécurité
 
 ### Community 9 - "connexion/page.tsx"
 Cohesion: 0.29

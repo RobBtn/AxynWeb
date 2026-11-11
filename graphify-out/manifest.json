@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1794439888.4191172,
-    "seen": 1794440007.5351589,
-    "ast_hash": "445d2deef1b4389ea7a3e4dd0ce2c044",
+    "mtime": 1794441063.4285884,
+    "seen": 1794441094.1361334,
+    "ast_hash": "6f48a16e7f0340d7d8517c59051e9285",
     "semantic_hash": ""
   },
   "src/app/(public)/accessibilite/page.tsx": {
@@ -78,9 +78,9 @@
     "semantic_hash": ""
   },
   "src/app/actions/admin.ts": {
-    "mtime": 1794439955.825787,
-    "seen": 1794440007.5351589,
-    "ast_hash": "12e7d340c9717701e467ea9ef3bf168e",
+    "mtime": 1794441063.4211898,
+    "seen": 1794441094.1361334,
+    "ast_hash": "499ec8417679bf83f7018f99d4a08824",
     "semantic_hash": ""
   },
   "src/app/actions/client.ts": {
@@ -126,9 +126,9 @@
     "semantic_hash": ""
   },
   "src/app/admin/mcp/page.tsx": {
-    "mtime": 1794422322.213764,
-    "seen": 1794422739.359625,
-    "ast_hash": "9367568c5eb74699bbdaf59fc96fc5f8",
+    "mtime": 1794441063.422588,
+    "seen": 1794441094.1361334,
+    "ast_hash": "453c1aab8626517085acf8aed9d9b449",
     "semantic_hash": ""
   },
   "src/app/admin/page.tsx": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "src/lib/config.ts": {
-    "mtime": 1794440663.7075386,
-    "seen": 1794440809.4144874,
-    "ast_hash": "57d5380998624384f84211faf1eae7b6",
+    "mtime": 1794441063.4255867,
+    "seen": 1794441094.1361334,
+    "ast_hash": "e06be3c477fabd8822541c0aad9c0176",
     "semantic_hash": ""
   },
   "src/lib/data.ts": {
@@ -330,15 +330,15 @@
     "semantic_hash": ""
   },
   "src/lib/db.ts": {
-    "mtime": 1794401561.4159093,
-    "seen": 1794402684.29631,
-    "ast_hash": "5f25a1da4062bc9622ef10f8564f12bb",
+    "mtime": 1794441063.4265873,
+    "seen": 1794441094.1361334,
+    "ast_hash": "3a0ca9c8ce5f660920f727a42f75882e",
     "semantic_hash": ""
   },
   "src/lib/mcp-tools.ts": {
-    "mtime": 1794402326.5210369,
-    "seen": 1794402684.29631,
-    "ast_hash": "27ecaa39e1ffb320b07f8839017fc943",
+    "mtime": 1794441063.4265873,
+    "seen": 1794441094.1361334,
+    "ast_hash": "8de28ad47f14883234d0f9c9c67895c9",
     "semantic_hash": ""
   },
   "src/lib/password.ts": {
@@ -372,9 +372,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1794423321.178001,
-    "seen": 1794423339.8876367,
-    "ast_hash": "f3c344f35a06529113205e4c1770dcd9",
+    "mtime": 1794441063.4275877,
+    "seen": 1794441094.1361334,
+    "ast_hash": "c8ebf1e1365507333a6fdb0816cf61ff",
     "semantic_hash": ""
   },
   "src/app/admin/sites/nouveau/page.tsx": {
