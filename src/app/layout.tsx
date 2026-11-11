@@ -16,9 +16,9 @@ const serif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: { default: `${brand.name} — Sites web 3D créés avec l'IA`, template: `%s — ${brand.name}` },
+  title: { default: `${brand.name} — Sites web 3D, sécurisés et accompagnés`, template: `%s — ${brand.name}` },
   description:
-    "Studio de création de sites web. Des sites immersifs en 3D, conçus avec l'IA, livrés en quelques jours à prix juste. Espace client inclus.",
+    "Studio de création de sites web. Des sites immersifs en 3D, relus et sécurisés par un étudiant ingénieur en cybersécurité, livrés en quelques jours à prix juste. Espace client inclus.",
 };
 
 export const viewport: Viewport = { themeColor: "#0c0d0a" };

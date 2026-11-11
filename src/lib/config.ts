@@ -5,7 +5,7 @@
  */
 export const brand = {
   name: "Webcrea",
-  tagline: "Des sites à couper le souffle. Créés avec l'IA. À prix juste.",
+  tagline: "Des sites à couper le souffle. Sécurisés, accompagnés, à prix juste.",
   email: "contact@webcrea.example", // À COMPLÉTER
   phone: "", // À COMPLÉTER
   legal: {
@@ -26,7 +26,7 @@ export const pricing = {
     {
       id: "essentiel",
       name: "Essentiel",
-      price: 179,
+      price: 149,
       description: "Un site une page, basé sur un de nos modèles 3D.",
       features: [
         "Modèle 3D animé au choix",
@@ -65,7 +65,9 @@ export const pricing = {
   ],
   maintenanceMonthly: 19,
   simulator: {
-    base: 179,
+    // Tarif dégressif : la 1re page est dans la base, la 2e coûte moins cher que les suivantes.
+    base: 149,
+    secondPage: 15,
     perPage: 30,
     options: [
       { id: "scene3d", label: "Scène 3D personnalisée", price: 90 },

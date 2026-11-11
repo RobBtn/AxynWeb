@@ -9,8 +9,8 @@ const sectors = ["Restaurants", "Artisans", "Coachs", "Créateurs", "Architectes
 
 const steps = [
   { n: "01", title: "Le brief", text: "Vous décrivez votre activité en quelques lignes, ou vous choisissez un modèle. C'est tout ce qu'il nous faut." },
-  { n: "02", title: "La génération", text: "Notre IA compose une première version complète : structure, textes, fond 3D, animations." },
-  { n: "03", title: "Les retouches", text: "Un humain relit, corrige, peaufine. Vous ajoutez vos photos et validez depuis votre espace client." },
+  { n: "02", title: "La création", text: "Nous montons une première version complète : structure, textes, fond 3D, animations." },
+  { n: "03", title: "Les retouches", text: "Chaque page est relue, corrigée et vérifiée côté sécurité. Vous ajoutez vos photos et validez depuis votre espace client." },
   { n: "04", title: "La mise en ligne", text: "Nom de domaine, hébergement en Europe, certificat HTTPS. Votre site est en ligne." },
 ];
 
@@ -23,8 +23,8 @@ const clientFeatures = [
 
 const faq = [
   {
-    q: "Vous utilisez vraiment l'IA pour créer les sites ?",
-    a: "Oui, et nous l'assumons. L'IA produit en quelques heures ce qui prenait des semaines. Un humain vérifie ensuite chaque page avant la livraison. C'est ce qui nous permet de proposer ces prix.",
+    q: "Qui est derrière le studio ?",
+    a: "Le studio est porté par un étudiant ingénieur en cybersécurité, en cours de cursus. Nous travaillons avec des outils modernes, dont l'assistance par IA, et nous connaissons les failles qu'ils peuvent introduire dans le code : chaque site est relu, sécurisé avant la mise en ligne, puis tenu à jour.",
   },
   {
     q: "Le site m'appartient-il ?",
@@ -47,12 +47,12 @@ const faq = [
 const facts = [
   { big: "72 h", label: "pour une première version en ligne" },
   { big: `${pricing.offers[0].price} €`, label: "le site complet, à partir de" },
-  { big: "1", label: "humain relit chaque page avant livraison" },
+  { big: "100 %", label: "des sites relus, sécurisés et tenus à jour" },
 ];
 
 /** Pastille ronde dont le texte tourne : signature visuelle du héros. */
 function Sticker() {
-  const text = `Dès ${pricing.offers[0].price} € · En ligne en 72 h · IA assumée · `;
+  const text = `Dès ${pricing.offers[0].price} € · En ligne en 72 h · Sites sécurisés · `;
   return (
     <Link
       href="/#contact"
@@ -85,7 +85,7 @@ export default function Home() {
           <Sticker />
         </div>
 
-        <p className="kicker rise self-start">Studio web · IA assumée</p>
+        <p className="kicker rise self-start">Studio web · Sécurité d&apos;abord</p>
         <h1 className="display mt-8 text-[clamp(3.2rem,11.5vw,13rem)]">
           <span className="line-mask">
             <span>Des sites qui</span>
@@ -130,8 +130,9 @@ export default function Home() {
           Notre parti pris
         </p>
         <p data-scrub-text className="display mt-10 max-w-6xl text-[clamp(2rem,5.4vw,5.4rem)] leading-[1]">
-          Oui, on utilise l&apos;IA. C&apos;est elle qui nous permet de livrer en trois jours un site que vous
-          n&apos;auriez pas pu vous offrir. Et c&apos;est un humain qui relit chaque page avant qu&apos;elle parte.
+          Un beau site livré vite, c&apos;est bien. Un site sûr, c&apos;est indispensable. Le studio est porté par un
+          étudiant ingénieur en cybersécurité : chaque site est relu, sécurisé et tenu à jour, et vous êtes accompagné du
+          premier échange à la mise en ligne.
         </p>
         <dl data-stagger className="mt-24 grid gap-4 md:grid-cols-3">
           {facts.map((f) => (

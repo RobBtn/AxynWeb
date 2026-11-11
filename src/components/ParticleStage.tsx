@@ -175,10 +175,10 @@ void main(){
   vec2 ndc = gl_Position.xy / gl_Position.w;
   vec2 d = ndc - uMouse;
   d.x *= uAspect;
-  float push = smoothstep(0.32, 0.0, length(d)) * uMouseOn;
+  float push = smoothstep(0.26, 0.0, length(d)) * uMouseOn;
   vec2 dir = normalize(d + vec2(0.0001));
   dir.x /= uAspect;
-  ndc += dir * push * 0.12;
+  ndc += dir * push * 0.1;
   gl_Position.xy = ndc * gl_Position.w;
 
   // Fondu au loin et tout près de la caméra : rien n'apparaît ni ne disparaît d'un coup.
@@ -335,7 +335,8 @@ export default function ParticleStage() {
         uniforms.uTime.value = t;
         uniforms.uShape.value = cur.shape;
         uniforms.uReveal.value = Math.min(t / 2.4, 1);
-        uniforms.uMouse.value.set(mouse.x, mouse.y);
+        // Position exacte du curseur (non lissée) : l'écartement se produit sous la souris, sans retard.
+        uniforms.uMouse.value.set(mouse.tx, mouse.ty);
         uniforms.uMouseOn.value = mouse.on;
         uniforms.uAlpha.value = cur.alpha * (mobile ? 0.75 : 1);
         // Teinte des particules : entre la couleur de la page et l'encre, pour se fondre dans le fond.

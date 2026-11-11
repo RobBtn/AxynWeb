@@ -17,7 +17,8 @@ export default function Estimator() {
   const total = useMemo(
     () =>
       sim.base +
-      (pages - 1) * sim.perPage +
+      (pages >= 2 ? sim.secondPage : 0) +
+      Math.max(0, pages - 2) * sim.perPage +
       sim.options.filter((o) => options.includes(o.id)).reduce((s, o) => s + o.price, 0),
     [pages, options, sim]
   );

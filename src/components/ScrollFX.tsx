@@ -227,7 +227,9 @@ export default function ScrollFX({ smooth = true }: { smooth?: boolean }) {
       let cursor: HTMLDivElement | null = null;
       let moveX: ((v: number) => void) | null = null;
       let moveY: ((v: number) => void) | null = null;
-      if (desktop && fine) {
+      // Curseur personnalisé désactivé : on garde le pointeur normal du système.
+      const customCursor = false;
+      if (customCursor && desktop && fine) {
         cursor = document.createElement("div");
         cursor.className = "cursor";
         cursor.setAttribute("aria-hidden", "true");
