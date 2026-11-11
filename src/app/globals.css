@@ -1,0 +1,537 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-display), var(--font-geist-sans), system-ui, sans-serif;
+  --font-serif: var(--font-serif), "Times New Roman", serif;
+}
+
+/*
+ * Thème clair. Convention héritée des noms : « ink » = le fond, « bone » = le
+ * texte, « accent » = vert sapin, « on-accent » = le texte posé dessus. Les couleurs sont de vraies variables CSS, donc une zone peut
+ * s'inverser localement (.zone-dark, .zone-accent) sans dupliquer de classes.
+ */
+@theme {
+  --color-ink: #f3f0e6;
+  --color-ink-2: #fffdf6;
+  --color-ink-3: #e7e3d5;
+  --color-bone: #12150d;
+  --color-mute: #666553;
+  --color-accent: #164a36;
+  --color-on-accent: #f3f0e6;
+  --color-accent-ink: #164a36;
+  --color-ok: #164a36;
+  --color-coral: #c2401f;
+  --color-line: rgb(18 21 13 / 0.16);
+}
+
+.zone-dark {
+  --color-ink: #10130b;
+  --color-ink-2: #181c11;
+  --color-ink-3: #232819;
+  --color-bone: #f3f0e6;
+  --color-mute: #a09f8b;
+  --color-accent: #cfe3c4;
+  --color-on-accent: #12150d;
+  --color-accent-ink: #cfe3c4;
+  --color-ok: #cfe3c4;
+  --color-coral: #ff9a80;
+  --color-line: rgb(243 240 230 / 0.16);
+  background: var(--color-ink);
+  color: var(--color-bone);
+}
+.zone-accent {
+  --color-ink: #164a36;
+  --color-ink-2: #1d5a43;
+  --color-ink-3: #0f3a2a;
+  --color-bone: #f3f0e6;
+  --color-mute: #b9cdbf;
+  --color-accent: #f3f0e6;
+  --color-on-accent: #164a36;
+  --color-accent-ink: #f3f0e6;
+  --color-line: rgb(243 240 230 / 0.24);
+  background: var(--color-ink);
+  color: var(--color-bone);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  background: var(--color-ink);
+  scroll-behavior: auto;
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-bone);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-bone);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-bone);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Vert sapin en aplat (texte crème dessus) ; en texte, la variante lisible de chaque zone. */
+.text-accent,
+.hover\:text-accent:hover,
+.focus-within\:text-accent:focus-within {
+  color: var(--color-accent-ink);
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.grain::after {
+  content: none;
+}
+.aura {
+  display: none;
+}
+
+/* Panneau : surface claire, filet net, ombre portée franche au survol (.lift). */
+.glass {
+  position: relative;
+  background: var(--color-ink-2);
+  border: 1px solid var(--color-bone);
+}
+.lift {
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lift:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0 var(--color-bone);
+}
+
+/* Titres */
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  font-variation-settings: "wdth" 86;
+}
+/* Mot mis en avant : surligné d'un aplat vert, légèrement penché. */
+.display em {
+  font-style: normal;
+  display: inline-block;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  padding: 0 0.14em 0.04em;
+  border-radius: 0.12em;
+  transform: rotate(-1.5deg);
+}
+.serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.98;
+}
+.split-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.split-inner {
+  display: inline-block;
+  will-change: transform;
+}
+.scrub-word {
+  opacity: 0.18;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+  color: var(--color-bone);
+  border: 1px solid var(--color-bone);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+}
+.kicker::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-bone);
+}
+
+/* Boutons */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-bone);
+  padding: 0.95rem 1.6rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--color-bone);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--color-bone);
+}
+.btn-ghost:hover {
+  background: var(--color-bone);
+  color: var(--color-ink);
+}
+.btn-dark {
+  background: var(--color-bone);
+  color: var(--color-ink);
+}
+.btn-dark:hover {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn-sm {
+  padding: 0.5rem 0.95rem;
+  font-size: 0.82rem;
+}
+.btn-danger {
+  border-color: var(--color-coral);
+  color: var(--color-coral);
+}
+.btn-danger:hover {
+  background: var(--color-coral);
+  color: var(--color-ink);
+}
+
+/* Formulaires */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--color-mute);
+}
+.input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--color-line);
+  background: var(--color-ink-2);
+  padding: 0.8rem 1rem;
+  color: var(--color-bone);
+  font-size: 0.95rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.input:hover {
+  border-color: var(--color-mute);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--color-bone);
+  box-shadow: 3px 3px 0 var(--color-accent);
+}
+.input::placeholder {
+  color: var(--color-mute);
+  opacity: 0.6;
+}
+select.input option {
+  background: var(--color-ink-2);
+  color: var(--color-bone);
+}
+
+/* Bandeau défilant */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+
+/* Pastille ronde qui tourne */
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin-slow {
+  animation: spin-slow 18s linear infinite;
+}
+
+/* Entrées du héros (CSS pur, pas de flash) */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.rise-1 {
+  animation-delay: 0.1s;
+}
+.rise-2 {
+  animation-delay: 0.22s;
+}
+.rise-3 {
+  animation-delay: 0.34s;
+}
+/* Scène de particules (accueil) : elle peint le fond de page, les sections deviennent transparentes. */
+.stage-backdrop {
+  background: var(--color-ink);
+}
+html.stage-on [data-stage] {
+  background-color: transparent !important;
+  border-top-color: transparent;
+}
+
+/* Relief 3D au survol (posé par ScrollFX sur [data-tilt]) */
+[data-tilt] {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Les lignes du titre basculent en 3D depuis l'arrière en montant. */
+@keyframes line-up {
+  from {
+    transform: translateY(110%) rotateX(-75deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.line-mask {
+  display: block;
+  overflow: hidden;
+  perspective: 900px;
+  padding: 0.06em 0 0.12em;
+  margin: -0.06em 0 -0.12em;
+}
+.line-mask > span {
+  display: block;
+  transform-origin: 50% 0%;
+  animation: line-up 1.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.line-mask:nth-child(2) > span {
+  animation-delay: 0.09s;
+}
+.line-mask:nth-child(3) > span {
+  animation-delay: 0.18s;
+}
+
+/* Curseur personnalisé (ordinateur uniquement, posé par ScrollFX) */
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 90;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 1px solid var(--color-on-accent);
+  color: var(--color-on-accent);
+  font-size: 0;
+  font-weight: 600;
+  transition:
+    width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    margin 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    font-size 0.2s;
+}
+.cursor.is-label {
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  font-size: 0.82rem;
+}
+
+/* Cadres photo */
+.photo {
+  position: relative;
+  overflow: hidden;
+  background: var(--photo-bg, color-mix(in srgb, currentColor 9%, transparent));
+}
+.photo > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.photo-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  background-image:
+    linear-gradient(to top right, transparent calc(50% - 0.5px), currentColor calc(50% - 0.5px), currentColor calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(to bottom right, transparent calc(50% - 0.5px), currentColor calc(50% - 0.5px), currentColor calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  background-size: 100% 100%;
+}
+
+/* Pastilles d'état : fond teinté, texte foncé (lisible sur clair) */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.22rem 0.65rem;
+  font-size: 0.74rem;
+  font-weight: 500;
+  background: var(--color-ink-3);
+  color: var(--color-bone);
+  white-space: nowrap;
+}
+.pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+.pill-ok {
+  background: #d3e5c9;
+  color: #164a36;
+}
+.pill-warn {
+  background: #ffd76a;
+  color: #3a2c00;
+}
+.pill-bad {
+  background: #ffb7a3;
+  color: #5a1503;
+}
+.pill-info {
+  background: #c9d8ff;
+  color: #10245c;
+}
+
+/* Tableaux des espaces privés */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.table th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: var(--color-mute);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-bone);
+}
+.table td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: middle;
+}
+.table tr:last-child td {
+  border-bottom: 0;
+}
+.table tbody tr:hover td {
+  background: var(--color-ink);
+}
+
+.prose-legal h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-size: 1.6rem;
+  margin: 2.4rem 0 0.8rem;
+}
+.prose-legal p,
+.prose-legal li {
+  color: color-mix(in srgb, var(--color-bone) 82%, transparent);
+  line-height: 1.75;
+  margin-bottom: 0.8rem;
+}
+.prose-legal ul {
+  list-style: disc;
+  padding-left: 1.3rem;
+}
+.prose-legal a {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .line-mask > span,
+  .marquee-track,
+  .spin-slow {
+    animation: none;
+  }
+  .scrub-word {
+    opacity: 1;
+  }
+}
