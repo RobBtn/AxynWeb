@@ -21,6 +21,15 @@ const clientFeatures = [
   { title: "Vos données vous appartiennent", text: "Export en un clic, suppression sur demande, aucun traceur. Conforme au RGPD." },
 ];
 
+const security = [
+  { title: "Code relu avant la mise en ligne", text: "Chaque site est vérifié : formulaires, accès, dépendances. Rien ne part sans contrôle." },
+  { title: "HTTPS partout", text: "Certificat inclus et renouvelé automatiquement. Vos visiteurs voient le cadenas." },
+  { title: "Mises à jour suivies", text: "Les correctifs de sécurité sont appliqués pour vous, sans rien casser." },
+  { title: "Sauvegardes régulières", text: "Votre site et vos contenus peuvent être restaurés en cas de problème." },
+  { title: "Hébergement en Europe", text: "Vos données et celles de vos visiteurs restent dans l'Union européenne." },
+  { title: "Zéro traceur par défaut", text: "Pas de publicité, pas de pistage. Conforme au RGPD sans bandeau envahissant." },
+];
+
 const faq = [
   {
     q: "Qui est derrière le studio ?",
@@ -266,6 +275,33 @@ export default function Home() {
               <span className="pill pill-info">en cours</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* SÉCURITÉ */}
+      <section data-stage="4" data-stage-alpha="0.45" data-stage-bg="#10130b" data-stage-ink="#cfe3c4" className="zone-dark relative z-10 px-6 py-40 md:px-10">
+        <div className="grid gap-16 lg:grid-cols-[1fr_1.5fr]">
+          <div>
+            <p className="kicker" data-reveal>
+              Sécurité
+            </p>
+            <h2 data-split className="display mt-6 text-5xl md:text-7xl">
+              Un site sûr, pas seulement joli.
+            </h2>
+            <p data-reveal className="mt-8 max-w-md text-lg text-bone/75">
+              La sécurité n&apos;est pas une option facturée en plus : elle est incluse dans chaque site, dès le premier
+              jour.
+            </p>
+          </div>
+          <ul data-stagger className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
+            {security.map((s, i) => (
+              <li key={s.title} className="bg-ink p-7">
+                <span className="font-mono text-xs text-accent">0{i + 1}</span>
+                <h3 className="mt-6 text-xl font-medium">{s.title}</h3>
+                <p className="mt-2 text-mute">{s.text}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

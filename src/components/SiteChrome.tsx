@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { brand } from "@/lib/config";
+import MobileMenu from "./MobileMenu";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
@@ -25,7 +26,7 @@ export function Nav() {
     <header className="fixed inset-x-0 top-4 z-40 px-4">
       <nav
         aria-label="Navigation principale"
-        className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-bone bg-ink-2/90 py-2 pl-3 pr-2 shadow-[4px_4px_0_var(--color-bone)] backdrop-blur-md"
+        className="relative mx-auto flex max-w-6xl items-center justify-between rounded-full border border-bone bg-ink-2/90 py-2 pl-3 pr-2 shadow-[4px_4px_0_var(--color-bone)] backdrop-blur-md"
       >
         <Logo />
         <ul className="hidden items-center gap-1 text-sm md:flex">
@@ -37,9 +38,13 @@ export function Nav() {
             </li>
           ))}
         </ul>
-        <Link href="/connexion" className="btn btn-dark btn-sm">
-          Espace client
-        </Link>
+        {/* Le bouton vit dans un conteneur : la classe .btn fixe son affichage et l'emporterait sur max-md:hidden. */}
+        <span className="max-md:hidden">
+          <Link href="/connexion" className="btn btn-dark btn-sm">
+            Espace client
+          </Link>
+        </span>
+        <MobileMenu links={links} />
       </nav>
     </header>
   );

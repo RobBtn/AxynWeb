@@ -21,7 +21,7 @@ export default async function TemplateDemo({ params }: Props) {
       <TemplateSite template={template} content={template.content} />
       <aside
         aria-label="Démonstration"
-        className="zone-dark fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line p-1.5 pl-5 text-sm shadow-2xl"
+        className="zone-dark fixed bottom-20 left-1/2 md:bottom-4 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line p-1.5 pl-5 text-sm shadow-2xl"
       >
         <span className="hidden whitespace-nowrap sm:inline">
           Modèle <strong>{template.name}</strong>

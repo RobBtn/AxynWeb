@@ -159,9 +159,9 @@ void main(){
   p = mix(p, q4, k4);
   p = mix(p, q5, k5);
 
-  // Pendant le changement, léger éparpillement puis rassemblement.
+  // Pendant le changement, un souffle à peine : les formes se fondent sans nuage brouillon.
   float f = fract(uShape);
-  p += (aRnd - 0.5) * sin(f * 3.14159) * step(0.001, f) * 1.3;
+  p += (aRnd - 0.5) * sin(f * 3.14159) * step(0.001, f) * 0.45;
 
   // Entrée en scène : nuage dispersé qui se met en place.
   float r = clamp(uReveal * 1.4 - aRnd.z * 0.4, 0.0, 1.0);
@@ -292,6 +292,10 @@ export default function ParticleStage() {
         camera.updateProjectionMatrix();
         uniforms.uAspect.value = camera.aspect;
         mobile = w < 768;
+        // Écran étroit : champ plus large pour voir le paysage, et points plus gros pour qu'ils restent visibles.
+        camera.fov = mobile ? 62 : 40;
+        camera.updateProjectionMatrix();
+        uniforms.uSize.value = (mobile ? 36 : 30) * dpr;
       };
       const onMove = (e: PointerEvent) => {
         mouse.tx = (e.clientX / window.innerWidth) * 2 - 1;
@@ -338,7 +342,7 @@ export default function ParticleStage() {
         // Position exacte du curseur (non lissée) : l'écartement se produit sous la souris, sans retard.
         uniforms.uMouse.value.set(mouse.tx, mouse.ty);
         uniforms.uMouseOn.value = mouse.on;
-        uniforms.uAlpha.value = cur.alpha * (mobile ? 0.75 : 1);
+        uniforms.uAlpha.value = Math.min(cur.alpha * (mobile ? 1.2 : 1), 0.8);
         // Teinte des particules : entre la couleur de la page et l'encre, pour se fondre dans le fond.
         uniforms.uColor.value.setRGB(
           cur.bg[0] + (cur.ink[0] - cur.bg[0]) * INK_MIX,

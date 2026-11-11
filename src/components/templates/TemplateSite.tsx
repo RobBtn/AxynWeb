@@ -19,6 +19,34 @@ export default function TemplateSite({ template, content, bare = false }: Props)
     <>
       <ScrollFX />
       <Layout template={template} content={content} bare={bare} />
+      <MobileActions c={content} />
+    </>
+  );
+}
+
+/** Sur téléphone : appeler, venir ou écrire en un geste, toujours sous le pouce. */
+function MobileActions({ c }: { c: SiteContent }) {
+  const actions = [
+    c.phone && { href: tel(c.phone), label: "Appeler" },
+    c.address && { href: mapUrl(c.address), label: "Itinéraire", external: true },
+    c.email && { href: `mailto:${c.email}`, label: "Écrire" },
+  ].filter(Boolean) as { href: string; label: string; external?: boolean }[];
+  if (actions.length === 0) return null;
+  return (
+    <>
+      <div className="h-16 md:hidden" aria-hidden="true" />
+      <nav aria-label="Contact rapide" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-white/15 bg-[#10130b] text-[#f3f0e6] md:hidden">
+        {actions.map((a) => (
+          <a
+            key={a.label}
+            href={a.href}
+            {...(a.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className="flex-1 border-r border-white/15 py-4 text-center text-sm font-semibold last:border-r-0 active:bg-white/10"
+          >
+            {a.label}
+          </a>
+        ))}
+      </nav>
     </>
   );
 }
