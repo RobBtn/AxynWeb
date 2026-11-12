@@ -82,6 +82,16 @@ CREATE TABLE IF NOT EXISTS leads (
   consent_at TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- Inscriptions en attente de vérification de l'e-mail : le compte n'existe qu'après saisie du code.
+CREATE TABLE IF NOT EXISTS signup_codes (
+  email TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  password_hash TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  sent_at INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS prospects (
   id TEXT PRIMARY KEY,
   category TEXT NOT NULL DEFAULT '',

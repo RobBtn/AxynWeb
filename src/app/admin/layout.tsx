@@ -17,10 +17,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin", label: "Vue d'ensemble" },
         { href: "/admin/sites", label: "Sites", badge: o.briefsPending },
         { href: "/admin/clients", label: "Clients" },
+        { href: "/admin/utilisateurs", label: "Utilisateurs" },
         { href: "/admin/demandes", label: "Demandes", badge: o.requestsOpen },
         { href: "/admin/domaines", label: "Domaines", badge: o.domainsExpiring },
         { href: "/admin/prospects", label: "Prospects", badge: o.leadsNew },
         { href: "/admin/mcp", label: "Claude (MCP)" },
+        { href: "/admin/compte", label: "Mon compte" },
       ]}
     >
       {children}

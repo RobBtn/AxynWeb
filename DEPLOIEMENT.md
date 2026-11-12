@@ -129,7 +129,16 @@ ADMIN_PASSWORD=un-mot-de-passe-long-et-unique
 # Pas de DEMO_CLIENT_* en production : sinon un faux client est créé.
 # Clé API Claude (console.anthropic.com), pour le bouton IA de l'admin. Facultatif.
 ANTHROPIC_API_KEY=
+
+# E-mails (code de vérification à l'inscription). Voir « Envoyer des e-mails » plus bas.
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=AxynWeb <contact@exemple.fr>
 ```
+
+> **Sans réglages SMTP, les inscriptions publiques sont fermées en production.** C'est voulu : l'app refuse de créer des comptes dont l'adresse n'a pas été vérifiée par un code. Le site fonctionne normalement pour le reste, et l'admin peut toujours créer des comptes depuis « Utilisateurs ». Pour fermer volontairement les inscriptions, ajoute `SIGNUP_OPEN=false`.
 
 > Le compte admin n'est créé **qu'au premier démarrage, quand la base est vide**. Changer `ADMIN_PASSWORD` plus tard dans ce fichier ne change pas le mot de passe : il faudra le changer depuis l'app.
 
@@ -260,17 +269,31 @@ Fais un essai de restauration une fois, avant d'en avoir besoin.
 
 ## 11. Mettre à jour le site
 
-Après un `git push` depuis ton PC :
+Le trajet est toujours le même : **ton PC → GitHub → serveur**.
 
-```bash
-cd /srv/axynweb
-sudo -u axyn git pull
-sudo -u axyn npm ci
-sudo -u axyn npm run build
-sudo systemctl restart axynweb
+1. Sur ton PC, teste en local (`npm run dev`), puis vérifie que ça compile : `npm run build`.
+2. Commite et envoie sur GitHub : `git add -A`, `git commit -m "..."`, `git push`.
+3. Mets le serveur à jour, depuis ton PC, avec une seule commande :
+
+```powershell
+ssh -i $env:USERPROFILE\.ssh\axynweb_ed25519 admin@IP_DU_SERVEUR "sudo /usr/local/bin/axynweb-deploy"
 ```
 
-Le site est coupé quelques secondes pendant le redémarrage. Les nouvelles colonnes de base de données sont ajoutées automatiquement au démarrage.
+Le script `axynweb-deploy` (installé sur le serveur) fait, dans l'ordre :
+
+1. sauvegarde la base si le script de sauvegarde existe (étape 10) ;
+2. récupère le code (`git pull`, sans fusion risquée) ;
+3. installe les dépendances et compile ;
+4. redémarre le service ;
+5. vérifie que le site répond, et sinon affiche les journaux et la commande pour revenir en arrière.
+
+S'il n'y a rien de nouveau sur GitHub, il s'arrête sans rien compiler. Il refuse aussi de s'exécuter si `.env.local` est absent.
+
+La compilation prend quelques minutes sur un seul processeur. Pendant ce temps, l'ancienne version continue de répondre, puis le site est coupé quelques secondes au redémarrage. Les nouvelles colonnes de base de données sont ajoutées automatiquement au démarrage.
+
+> **Le serveur n'a pas ton `.env.local`** : il ne se met jamais à jour par GitHub. Si tu ajoutes un nouveau réglage (comme les `SMTP_*`), modifie aussi le fichier sur le serveur : `sudo -u axyn nano /srv/axynweb/.env.local`, puis `sudo systemctl restart axynweb`.
+
+**Déploiement automatique à chaque push** (facultatif) : une GitHub Action peut lancer cette même commande par SSH dès que tu pousses sur `main`. Elle demande de stocker dans GitHub une clé qui donne accès au serveur, donc à ne faire que si tu en as vraiment besoin. Tant que tu veux relire ce que tu envoies en ligne, la commande manuelle est plus sûre.
 
 ## 12. Recharger tes prospects
 
@@ -301,11 +324,33 @@ claude mcp add --transport http axynweb-prod https://exemple.fr/api/mcp --header
 
 Un jeton donne les pleins pouvoirs de l'admin sur le site. Ne le colle nulle part en public, et révoque-le dans l'admin s'il fuite.
 
-## 14. Avant d'ouvrir au public
+## 14. Envoyer des e-mails (inscription par code)
+
+L'app envoie un code à 6 chiffres par e-mail quand quelqu'un crée un compte. Il lui faut un **serveur SMTP**, c'est-à-dire un compte chez un service d'envoi ou une boîte mail de ton domaine. Tu en as besoin de :
+
+| Réglage | Exemple |
+| --- | --- |
+| `SMTP_HOST` | l'adresse du serveur SMTP indiquée par ton fournisseur |
+| `SMTP_PORT` | `587` (le plus courant, STARTTLS) ou `465` (TLS direct) |
+| `SMTP_USER` / `SMTP_PASS` | l'identifiant et le mot de passe SMTP (souvent différents de ceux du compte) |
+| `SMTP_FROM` | `AxynWeb <contact@axynweb.fr>` : l'adresse doit appartenir à ton domaine ou être autorisée par le service |
+
+Pour que les messages n'arrivent pas dans les courriers indésirables, configure chez ton gestionnaire de domaine les enregistrements **SPF** et **DKIM** que ton fournisseur d'envoi t'indique, puis **DMARC**. Sans cela, beaucoup de messagers rejettent le code.
+
+Après avoir rempli `.env.local` :
+
+```bash
+sudo systemctl restart axynweb
+```
+
+Pour tester : crée un compte sur `/inscription` avec une adresse à toi, et vérifie que le code arrive. En cas d'échec, `sudo journalctl -u axynweb -n 50 --no-pager` affiche la raison (la ligne commence par `[axynweb] envoi du code impossible`).
+
+## 15. Avant d'ouvrir au public
 
 - Compléter `src/lib/config.ts` : raison sociale, SIRET, hébergeur (Hetzner Online GmbH), e-mail, tarifs. Ces informations alimentent les mentions légales.
 - Faire relire les CGV par un juriste et désigner un médiateur de la consommation.
-- Brancher l'envoi d'e-mails (notifications de devis, identifiants) : pas inclus dans l'app.
+- L'envoi d'e-mails sert aujourd'hui au code d'inscription. Les notifications de devis et la remise des identifiants ne sont pas encore envoyées par e-mail.
+- Mentionner dans la politique de confidentialité la création de compte par inscription (nom, e-mail, mot de passe haché).
 - Router les noms de domaine des clients vers leurs sites : pas encore fait, les sites sont servis sur `/s/<slug>`.
 
 ## En cas de problème

@@ -48,6 +48,34 @@ export async function createClientAction(_p: FormState, fd: FormData): Promise<F
   });
 }
 
+/* ---------- Utilisateurs et droits ---------- */
+/** Donne ou retire les droits d'administration. On ne peut pas modifier son propre rôle. */
+export async function setUserRoleAction(_p: FormState, fd: FormData): Promise<FormState> {
+  return adminAction((actor) => {
+    const id = str(fd, "id");
+    const role = str(fd, "role");
+    if (role !== "admin" && role !== "client") throw new DataError("Rôle invalide.");
+    const target = get<{ email: string; role: string }>("SELECT email, role FROM users WHERE id = ?", id);
+    if (!target) throw new DataError("Utilisateur introuvable.");
+    if (target.email === actor) throw new DataError("Vous ne pouvez pas modifier votre propre rôle.");
+    if (target.role === role) return { ok: true };
+    run("UPDATE users SET role = ? WHERE id = ?", role, id);
+    audit(actor, "user.role", `${target.email} : ${target.role} → ${role}`);
+    return { ok: true, message: role === "admin" ? "Droits d'administration accordés." : "Droits d'administration retirés." };
+  });
+}
+
+/** Crée un compte (client ou administrateur) avec un mot de passe provisoire affiché une seule fois. */
+export async function createUserAction(_p: FormState, fd: FormData): Promise<FormState> {
+  return adminAction((actor) => {
+    const role = str(fd, "role") === "admin" ? "admin" : "client";
+    const u = createClient({ name: str(fd, "name"), email: str(fd, "email") });
+    if (role === "admin") run("UPDATE users SET role = 'admin' WHERE id = ?", u.id);
+    audit(actor, "user.create", `${u.email} (${role})`);
+    return { ok: true, message: `Compte ${role === "admin" ? "administrateur" : "client"} créé pour ${u.email}. Mot de passe provisoire (affiché une seule fois) :`, secret: u.password };
+  });
+}
+
 export async function resetClientPasswordAction(_p: FormState, fd: FormData): Promise<FormState> {
   return adminAction((actor) => {
     const c = resetClientPassword(str(fd, "id"));

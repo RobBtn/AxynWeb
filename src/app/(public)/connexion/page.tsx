@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import ParticleStage from "@/components/ParticleStage";
 import LoginForm from "./LoginForm";
 import { getUser } from "@/lib/auth";
+import { signupAvailable } from "@/lib/mail";
 
 export const metadata: Metadata = { title: "Connexion", robots: { index: false } };
 
@@ -26,6 +28,14 @@ export default async function ConnexionPage() {
           <h1 className="display mt-4 text-5xl">Content de vous revoir.</h1>
           <p className="mt-3 text-sm text-mute">Vos identifiants vous ont été remis à la livraison de votre site.</p>
           <LoginForm />
+          {signupAvailable() && (
+            <p className="mt-4 text-sm text-mute">
+              Pas encore de compte ?{" "}
+              <Link href="/inscription" className="underline">
+                Créer un compte
+              </Link>
+            </p>
+          )}
         </div>
       </section>
     </>
