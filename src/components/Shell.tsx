@@ -61,9 +61,14 @@ export function PageTitle({ kicker, title, children }: { kicker: string; title: 
   );
 }
 
-export function Card({ title, children, className = "" }: { title?: string; children: React.ReactNode; className?: string }) {
+export type Tone = "alert" | "info" | "ok" | "muted";
+
+/** Classes d'un ton de panneau (voir globals.css) ; sans ton, panneau neutre. */
+export const toneClass = (tone?: Tone) => (tone ? (tone === "muted" ? "tone-muted" : `tone tone-${tone}`) : "");
+
+export function Card({ title, children, className = "", tone }: { title?: string; children: React.ReactNode; className?: string; tone?: Tone }) {
   return (
-    <section className={`glass rounded-2xl p-6 ${className}`}>
+    <section className={`glass rounded-2xl p-6 ${toneClass(tone)} ${className}`}>
       {title && <h2 className="mb-4 text-lg font-semibold">{title}</h2>}
       {children}
     </section>

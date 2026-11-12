@@ -25,7 +25,10 @@ export default function SideNav({ items, label }: { items: NavItem[]; label: str
               >
                 {i.label}
                 {!!i.badge && (
-                  <span className="rounded-full border border-bone bg-accent px-2 py-0.5 font-mono text-[0.7rem] font-semibold text-on-accent">
+                  <span
+                    className="min-w-6 rounded-full border border-bone bg-[#ffd76a] px-2 py-0.5 text-center font-mono text-[0.72rem] font-bold text-[#3a2c00]"
+                    aria-label={`${i.badge} à traiter`}
+                  >
                     {i.badge}
                   </span>
                 )}

@@ -1,42 +1,72 @@
 import ActionForm from "./ActionForm";
-import { Card, StatusPill, frDate } from "./Shell";
+import { Card, StatusPill, frDate, toneClass } from "./Shell";
 import { replyRequest } from "@/app/actions/client";
 import { applyRequestWithAiAction } from "@/app/actions/admin";
-import { all, type MessageRow, type RequestRow } from "@/lib/db";
+import { all, get, type MessageRow, type RequestRow } from "@/lib/db";
 import { REQUEST_STATUSES, statusLabel } from "@/lib/data";
+
+/** Un message du fil : bleu pour le client, vert pour l'équipe, avec l'auteur en toutes lettres. */
+function Message({
+  from,
+  author,
+  date,
+  mine,
+  note,
+  children,
+}: {
+  from: "client" | "admin";
+  author: string;
+  date: string;
+  /** Message écrit par la personne qui regarde la page : aligné à droite. */
+  mine: boolean;
+  note?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <article
+      className={`glass max-w-[88%] rounded-2xl p-5 ${toneClass(from === "client" ? "info" : "ok")} ${mine ? "self-end" : "self-start"}`}
+      aria-label={`${from === "client" ? "Message du client" : "Réponse de l'équipe"} ${author}`}
+    >
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className={`pill ${from === "client" ? "pill-info" : "pill-ok"}`}>{from === "client" ? "Client" : "Équipe"}</span>
+        <span className="text-sm font-semibold">{author}</span>
+        <span className="text-xs text-mute">
+          {note && `${note} · `}
+          {date}
+        </span>
+      </header>
+      <p className="mt-3 whitespace-pre-wrap">{children}</p>
+    </article>
+  );
+}
 
 /** Fil d'une demande de modification, partagé par les espaces client et admin. */
 export default function Thread({ request, siteName, admin = false }: { request: RequestRow; siteName: string; admin?: boolean }) {
   const messages = all<MessageRow>("SELECT * FROM request_messages WHERE request_id = ? ORDER BY created_at ASC", request.id);
+  const clientName = get<{ name: string }>("SELECT name FROM users WHERE id = ?", request.client_id)?.name;
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
       <div className="flex flex-col gap-4">
-        <Card>
-          <p className="text-xs text-mute">Demande initiale · {frDate(request.created_at)}</p>
-          <p className="mt-3 whitespace-pre-wrap text-bone/90">{request.body}</p>
-        </Card>
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`max-w-[85%] rounded-2xl p-5 ${
-              m.author_role === "admin" ? "self-start bg-accent/40" : "self-end bg-ink-3"
-            }`}
-          >
-            <p className="text-xs text-mute">
-              {m.author_name} · {frDate(m.created_at)}
-            </p>
-            <p className="mt-2 whitespace-pre-wrap">{m.body}</p>
-          </div>
-        ))}
+        <Message from="client" author={clientName ?? "Client"} date={frDate(request.created_at)} mine={!admin} note="Demande initiale">
+          {request.body}
+        </Message>
+        {messages.map((m) => {
+          const from = m.author_role === "admin" ? "admin" : "client";
+          return (
+            <Message key={m.id} from={from} author={m.author_name} date={frDate(m.created_at)} mine={admin ? from === "admin" : from === "client"}>
+              {m.body}
+            </Message>
+          );
+        })}
         {admin && request.status !== "done" && (
-          <Card title="Traiter avec l'IA">
+          <Card title="Traiter avec l'IA" tone="muted" className="mt-4">
             <p className="mb-3 text-sm text-mute">L&apos;IA applique la demande aux textes du site, répond au client et clôt la demande.</p>
             <ActionForm action={applyRequestWithAiAction} submit="Appliquer la demande avec l'IA">
               <input type="hidden" name="requestId" value={request.id} />
             </ActionForm>
           </Card>
         )}
-        <Card title="Répondre">
+        <Card title="Répondre" tone="muted" className={admin && request.status !== "done" ? "" : "mt-4"}>
           <ActionForm action={replyRequest} submit="Envoyer" reset className="flex flex-col gap-3">
             <input type="hidden" name="requestId" value={request.id} />
             <label className="field">

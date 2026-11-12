@@ -125,6 +125,34 @@ html.lenis body {
   box-shadow: 6px 6px 0 var(--color-bone);
 }
 
+/*
+ * Tons des panneaux : un fond teinté et une barre à gauche disent d'un coup d'œil
+ * de quoi il s'agit, au lieu de blocs tous identiques.
+ *   alert : demande une action (nouveau, à traiter, expire bientôt)
+ *   info  : message d'un client / information
+ *   ok    : réponse de l'équipe / terminé
+ *   muted : outil ou formulaire, pas du contenu (tireté, fond sable)
+ */
+.tone {
+  border-left-width: 6px;
+}
+.tone-alert {
+  background: #fff1bf;
+  border-left-color: #d99a00;
+}
+.tone-info {
+  background: #e6edff;
+  border-left-color: #3b5bdb;
+}
+.tone-ok {
+  background: #e2eed9;
+  border-left-color: #164a36;
+}
+.tone-muted {
+  background: var(--color-ink-3);
+  border-style: dashed;
+}
+
 /* Titres */
 .display {
   font-family: var(--font-display);

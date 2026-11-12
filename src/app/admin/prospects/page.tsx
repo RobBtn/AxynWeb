@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ActionForm from "@/components/ActionForm";
 import ProspectTags from "@/components/ProspectTags";
-import { Card, Empty, PageTitle, StatusPill, frDate } from "@/components/Shell";
+import { Card, Empty, PageTitle, StatusPill, frDate, type Tone } from "@/components/Shell";
 import {
   createSiteFromLeadAction,
   deleteLeadAction,
@@ -14,10 +14,18 @@ import { all, type LeadRow, type ProspectRow } from "@/lib/db";
 import { statusLabel } from "@/lib/data";
 import { isProspectTag, parseTags, prospectTags } from "@/lib/prospect-tags";
 
+/** Teinte d'une fiche selon son suivi : à faire (jaune), entretien (bleu), déjà vu (vert) ; rien de coché = neutre. */
+function prospectTone(tags: string[]): Tone | undefined {
+  if (tags.includes("rappeler") || tags.includes("repasser")) return "alert";
+  if (tags.includes("entretien")) return "info";
+  if (tags.includes("presentiel")) return "ok";
+  return undefined;
+}
+
 function ProspectCard({ p }: { p: ProspectRow }) {
   const tags = parseTags(p.tags);
   return (
-    <Card>
+    <Card tone={prospectTone(tags)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-semibold">
@@ -42,7 +50,8 @@ function ProspectCard({ p }: { p: ProspectRow }) {
               {prospectTags.find((x) => x.id === t)?.label}
             </span>
           ))}
-          <StatusPill status={p.status} label={statusLabel[p.status]} />
+          {/* « Nouvelle » est l'état par défaut de toute la liste : l'afficher partout ferait du bruit. */}
+          {p.status !== "new" && <StatusPill status={p.status} label={statusLabel[p.status]} />}
         </div>
       </div>
       {p.finding && <p className="mt-3 break-words text-sm text-bone/85">{p.finding}</p>}
@@ -91,9 +100,12 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {leads.map((l) => (
-            <Card key={l.id}>
+            <Card key={l.id} tone={l.status === "new" ? "alert" : "info"}>
               <div className="flex items-start justify-between gap-4">
                 <div>
+                  <p className="mb-2">
+                    <span className="pill pill-info">Demande de devis</span>
+                  </p>
                   <p className="text-lg font-semibold">{l.name}</p>
                   <p className="text-sm text-mute">
                     <a href={`mailto:${l.email}`} className="underline">

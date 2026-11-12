@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, Empty, PageTitle, StatusPill, frDate } from "@/components/Shell";
+import { Card, Empty, PageTitle, StatusPill, frDate, toneClass } from "@/components/Shell";
 import { requireUser } from "@/lib/auth";
 import { all } from "@/lib/db";
 import { listDomains, listRequests, listSites, overview, statusLabel } from "@/lib/data";
@@ -14,11 +14,12 @@ export default async function AdminHome() {
     "SELECT * FROM audit ORDER BY id DESC LIMIT 8"
   );
 
+  // `todo` : chiffre qui demande une action, mis en évidence tant qu'il n'est pas à zéro.
   const kpis = [
-    { label: "Clients", value: o.clients, href: "/admin/clients" },
-    { label: "Sites en ligne", value: `${o.sitesLive}/${o.sites}`, href: "/admin/sites" },
-    { label: "Demandes ouvertes", value: o.requestsOpen, href: "/admin/demandes" },
-    { label: "Nouveaux prospects", value: o.leadsNew, href: "/admin/prospects" },
+    { label: "Clients", value: o.clients, href: "/admin/clients", todo: false },
+    { label: "Sites en ligne", value: `${o.sitesLive}/${o.sites}`, href: "/admin/sites", todo: false },
+    { label: "Demandes ouvertes", value: o.requestsOpen, href: "/admin/demandes", todo: o.requestsOpen > 0 },
+    { label: "Nouveaux prospects", value: o.leadsNew, href: "/admin/prospects", todo: o.leadsNew > 0 },
   ];
 
   return (
@@ -30,19 +31,22 @@ export default async function AdminHome() {
       </PageTitle>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((k) => (
-          <Link key={k.label} href={k.href} className="glass lift rounded-2xl p-6">
-            <p className="text-sm text-mute">{k.label}</p>
+          <Link key={k.label} href={k.href} className={`glass lift rounded-2xl p-6 ${toneClass(k.todo ? "alert" : undefined)}`}>
+            <p className="flex items-center justify-between gap-2 text-sm text-mute">
+              {k.label}
+              {k.todo && <span className="pill pill-warn">À traiter</span>}
+            </p>
             <p className="display mt-4 text-6xl">{k.value}</p>
           </Link>
         ))}
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card title="Briefs à générer">
+        <Card title="Briefs à générer" tone={briefs.length ? "info" : undefined}>
           {briefs.length === 0 ? (
             <Empty>Aucun brief en attente.</Empty>
           ) : (
-            <ul className="divide-y divide-white/5">
+            <ul className="divide-y divide-line">
               {briefs.map((s) => (
                 <li key={s.id}>
                   <Link href={`/admin/sites/${s.id}`} className="block py-3 hover:text-accent">
@@ -58,11 +62,11 @@ export default async function AdminHome() {
           </p>
         </Card>
 
-        <Card title="Demandes à traiter">
+        <Card title="Demandes à traiter" tone={requests.length ? "alert" : undefined}>
           {requests.length === 0 ? (
             <Empty>Rien à traiter.</Empty>
           ) : (
-            <ul className="divide-y divide-white/5">
+            <ul className="divide-y divide-line">
               {requests.map((r) => (
                 <li key={r.id}>
                   <Link href={`/admin/demandes/${r.id}`} className="flex items-center justify-between gap-4 py-3 hover:text-accent">
@@ -80,11 +84,11 @@ export default async function AdminHome() {
           )}
         </Card>
 
-        <Card title="Domaines à renouveler (30 jours)">
+        <Card title="Domaines à renouveler (30 jours)" tone={expiring.length ? "alert" : undefined}>
           {expiring.length === 0 ? (
             <Empty>Aucune échéance proche.</Empty>
           ) : (
-            <ul className="divide-y divide-white/5">
+            <ul className="divide-y divide-line">
               {expiring.map((d) => (
                 <li key={d.id} className="flex items-center justify-between gap-4 py-3">
                   <span className="font-mono text-sm">{d.name}</span>
@@ -95,7 +99,7 @@ export default async function AdminHome() {
           )}
         </Card>
 
-        <Card title="Journal d'activité">
+        <Card title="Journal d'activité" tone="muted">
           <ul className="space-y-2 text-sm">
             {log.map((l) => (
               <li key={l.id} className="flex flex-wrap justify-between gap-x-4 text-bone/80">
