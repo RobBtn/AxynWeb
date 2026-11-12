@@ -103,6 +103,10 @@ CREATE TABLE IF NOT EXISTS prospects (
   finding TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','contacted','won','lost')),
   tags TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  website TEXT NOT NULL DEFAULT '',
+  address TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (name, phone)
 );
@@ -175,10 +179,10 @@ export function getDb(): DatabaseSync {
   const db = new DatabaseSync(path.join(dir, "webcrea.db"));
   db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;");
   db.exec(SCHEMA);
-  // Migration : « tags » a été ajoutée après la création de la table sur les bases existantes.
-  const prospectCols = db.prepare("PRAGMA table_info(prospects)").all() as { name: string }[];
-  if (!prospectCols.some((c) => c.name === "tags")) {
-    db.exec("ALTER TABLE prospects ADD COLUMN tags TEXT NOT NULL DEFAULT ''");
+  // Migration : ces colonnes ont été ajoutées après la création de la table sur les bases existantes.
+  const prospectCols = (db.prepare("PRAGMA table_info(prospects)").all() as { name: string }[]).map((c) => c.name);
+  for (const col of ["tags", "email", "website", "address", "notes"]) {
+    if (!prospectCols.includes(col)) db.exec(`ALTER TABLE prospects ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
   }
   seed(db);
   globalForDb.__webcreaDb = db;
@@ -278,6 +282,11 @@ export type ProspectRow = {
   status: "new" | "contacted" | "won" | "lost";
   /** Cases cochées, séparées par des virgules (voir prospect-tags.ts). */
   tags: string;
+  email: string;
+  /** Adresse du site actuel du commerce (http ou https). */
+  website: string;
+  address: string;
+  notes: string;
   created_at: string;
 };
 export type TokenRow = {

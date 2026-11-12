@@ -8,7 +8,9 @@ import {
   deleteProspectAction,
   setLeadStatusAction,
   setProspectStatusAction,
+  updateProspectInfoAction,
 } from "@/app/actions/admin";
+import BulkDeleteBar from "@/components/BulkDeleteBar";
 import { requireUser } from "@/lib/auth";
 import { all, type LeadRow, type ProspectRow } from "@/lib/db";
 import { statusLabel } from "@/lib/data";
@@ -27,22 +29,49 @@ function ProspectCard({ p }: { p: ProspectRow }) {
   return (
     <Card tone={prospectTone(tags)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-semibold">
-            {p.name}
-            {p.priority && <span className="ml-2 font-mono text-xs font-normal text-mute">{p.priority}</span>}
-          </p>
-          <p className="text-sm text-mute">
-            {[p.activity, p.rating && `${p.rating} ★`].filter(Boolean).join(" · ")}
-            {p.phone && (
-              <>
-                {(p.activity || p.rating) && " · "}
-                <a href={`tel:${p.phone.replace(/\s/g, "")}`} className="underline">
-                  {p.phone}
-                </a>
-              </>
+        <div className="flex min-w-0 items-start gap-3">
+          {/* Case de sélection : rattachée au formulaire « bulk-delete » (barre de sélection) même si elle est ici. */}
+          <input type="checkbox" name="id" value={p.id} form="bulk-delete" aria-label={`Sélectionner ${p.name}`} className="mt-1.5 size-4 shrink-0 cursor-pointer accent-accent" />
+          <div className="min-w-0">
+            <p className="font-semibold">
+              {p.name}
+              {p.priority && <span className="ml-2 font-mono text-xs font-normal text-mute">{p.priority}</span>}
+            </p>
+            <p className="text-sm text-mute">
+              {[p.activity, p.rating && `${p.rating} ★`].filter(Boolean).join(" · ")}
+              {p.phone && (
+                <>
+                  {(p.activity || p.rating) && " · "}
+                  <a href={`tel:${p.phone.replace(/\s/g, "")}`} className="underline">
+                    {p.phone}
+                  </a>
+                </>
+              )}
+            </p>
+            {(p.email || p.website || p.address) && (
+              <p className="mt-1 break-words text-sm text-mute">
+                {p.email && (
+                  <a href={`mailto:${p.email}`} className="underline">
+                    {p.email}
+                  </a>
+                )}
+                {p.website && (
+                  <>
+                    {p.email && " · "}
+                    <a href={p.website} target="_blank" rel="noopener noreferrer" className="underline">
+                      {p.website.replace(/^https?:\/\//, "")} ↗
+                    </a>
+                  </>
+                )}
+                {p.address && (
+                  <>
+                    {(p.email || p.website) && " · "}
+                    {p.address}
+                  </>
+                )}
+              </p>
             )}
-          </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {tags.map((t) => (
@@ -55,9 +84,34 @@ function ProspectCard({ p }: { p: ProspectRow }) {
         </div>
       </div>
       {p.finding && <p className="mt-3 break-words text-sm text-bone/85">{p.finding}</p>}
+      {p.notes && <p className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-bone/5 px-3 py-2 text-sm">{p.notes}</p>}
       <div className="mt-4 border-t border-line pt-3">
         <ProspectTags id={p.id} name={p.name} tags={p.tags} />
       </div>
+      <details className="mt-3 text-sm">
+        <summary className="cursor-pointer select-none font-medium underline-offset-4 hover:underline">Informations (e-mail, site, adresse, notes)</summary>
+        <ActionForm action={updateProspectInfoAction} submit="Enregistrer" className="mt-3 flex flex-col gap-3">
+          <input type="hidden" name="id" value={p.id} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="field">
+              E-mail
+              <input className="input" type="email" name="email" defaultValue={p.email} maxLength={120} autoComplete="off" placeholder="contact@commerce.fr" />
+            </label>
+            <label className="field">
+              Site actuel
+              <input className="input" name="website" defaultValue={p.website} maxLength={200} autoComplete="off" placeholder="commerce.fr" />
+            </label>
+          </div>
+          <label className="field">
+            Adresse
+            <input className="input" name="address" defaultValue={p.address} maxLength={200} autoComplete="off" />
+          </label>
+          <label className="field">
+            Notes
+            <textarea className="input min-h-24" name="notes" defaultValue={p.notes} maxLength={2000} />
+          </label>
+        </ActionForm>
+      </details>
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <ActionForm action={setProspectStatusAction} submit="OK" variant="ghost" className="flex items-center gap-2">
           <input type="hidden" name="id" value={p.id} />
@@ -160,6 +214,8 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
           </Link>
         ))}
       </nav>
+
+      {shown.length > 0 && <BulkDeleteBar />}
 
       {shown.length === 0 ? (
         <Empty>

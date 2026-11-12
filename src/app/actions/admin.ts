@@ -12,7 +12,9 @@ import {
   createClient,
   createSiteFromBrief,
   createSiteFromTemplate,
+  deleteProspects,
   findSite,
+  updateProspect,
   replyToRequest,
   resetClientPassword,
   setSiteHtml,
@@ -327,6 +329,34 @@ export async function deleteProspectAction(_p: FormState, fd: FormData): Promise
     run("DELETE FROM prospects WHERE id = ?", str(fd, "id"));
     audit(actor, "prospect.delete", str(fd, "id"));
     return { ok: true };
+  });
+}
+
+/** Informations complémentaires d'un prospect : e-mail, site actuel, adresse, notes (un champ vidé est effacé). */
+export async function updateProspectInfoAction(_p: FormState, fd: FormData): Promise<FormState> {
+  return adminAction((actor) => {
+    const id = str(fd, "id");
+    const p = updateProspect(id, {
+      email: str(fd, "email"),
+      website: str(fd, "website"),
+      address: str(fd, "address"),
+      notes: String(fd.get("notes") ?? ""),
+    });
+    audit(actor, "prospect.update", p.name);
+    return { ok: true, message: "Informations enregistrées." };
+  });
+}
+
+/** Suppression de plusieurs prospects cochés dans la liste (formulaire « bulk-delete »). */
+export async function deleteProspectsAction(_p: FormState, fd: FormData): Promise<FormState> {
+  return adminAction((actor) => {
+    const ids = [...new Set(fd.getAll("id").map((v) => String(v).trim()).filter(Boolean))];
+    if (ids.length === 0) throw new DataError("Cochez au moins un prospect.");
+    // Seuls des identifiants sont acceptés ici (jamais un nom) : on supprime exactement ce qui était coché.
+    const known = ids.filter((id) => get("SELECT 1 AS x FROM prospects WHERE id = ?", id));
+    const result = deleteProspects(known);
+    audit(actor, "prospect.delete", `${result.deleted} : ${result.deletedItems.map((p) => p.name).join(", ")}`.slice(0, 500));
+    return { ok: true, message: `${result.deleted} prospect${result.deleted > 1 ? "s" : ""} supprimé${result.deleted > 1 ? "s" : ""}.` };
   });
 }
 

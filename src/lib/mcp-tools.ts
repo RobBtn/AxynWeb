@@ -1,5 +1,5 @@
 import "server-only";
-import { all, type LeadRow } from "./db";
+import { all, audit, type LeadRow } from "./db";
 import {
   DataError,
   PROSPECT_PRIORITIES,
@@ -9,6 +9,7 @@ import {
   createClient,
   createSiteFromBrief,
   createSiteFromTemplate,
+  deleteProspects,
   findSite,
   getProspect,
   listClients,
@@ -280,10 +281,11 @@ export const tools: Tool[] = [
     name: "list_prospects",
     description:
       "Liste la prospection à froid : les commerces repérés par le studio, SANS demande de leur part (à ne pas confondre avec list_leads, les demandes de devis reçues). " +
-      "Chaque prospect a : id, name, activity, phone, rating (note Google), category (« A. Aucun site », « B. Site cassé ou mort », « C. Site pourri ou daté », « D. Non évalué »), " +
-      "priority (« Haute », « Normale », « À vérifier »), finding (le constat sur son site), status (new = nouveau, contacted = contacté, won = gagné, lost = perdu), " +
+      "Chaque prospect a : id, name, activity, phone, email, website (son site actuel), address, rating (note Google), category (« A. Aucun site », « B. Site cassé ou mort », « C. Site pourri ou daté », « D. Non évalué »), " +
+      "priority (« Haute », « Normale », « À vérifier »), finding (le constat sur son site), notes (texte libre), status (new = nouveau, contacted = contacté, won = gagné, lost = perdu), " +
       `tags (cases de suivi cochées : ${prospectTags.map((t) => `${t.id} = ${t.label}`).join(", ")}) et created_at. ` +
-      "Tous les filtres sont facultatifs et se cumulent ; la réponse indique le total et se parcourt avec limit/offset (50 par défaut, 200 au plus).",
+      "Tous les filtres sont facultatifs et se cumulent ; la recherche `query` porte sur le nom, l'activité, le téléphone, l'e-mail, le site, l'adresse, le constat et les notes. " +
+      "La réponse indique le total et se parcourt avec limit/offset (50 par défaut, 200 au plus).",
     inputSchema: {
       type: "object",
       properties: {
@@ -331,6 +333,10 @@ export const tools: Tool[] = [
               name: s("Nom du commerce (obligatoire)"),
               activity: s("Activité, ex. « Salon de coiffure »"),
               phone: s("Téléphone, ex. « 02 99 06 40 36 »"),
+              email: s("Adresse e-mail du commerce (un prospect ayant le même e-mail n'est pas dupliqué)"),
+              website: s("Adresse de son site actuel, ex. « exemple.fr » (http ou https)"),
+              address: s("Adresse postale (200 car. max)"),
+              notes: s("Notes libres (2 000 car. max)"),
               rating: s("Note Google, ex. « 4,8 »"),
               category: s("Catégorie, ex. « A. Aucun site »"),
               priority: s("Priorité", { enum: [...PROSPECT_PRIORITIES] }),
@@ -362,6 +368,10 @@ export const tools: Tool[] = [
         name: s("Nouveau nom"),
         activity: s("Activité"),
         phone: s("Téléphone"),
+        email: s("Adresse e-mail (chaîne vide pour l'effacer)"),
+        website: s("Adresse de son site actuel (chaîne vide pour l'effacer)"),
+        address: s("Adresse postale"),
+        notes: s("Notes libres (remplacent les anciennes)"),
         rating: s("Note Google"),
         category: s("Catégorie"),
         priority: s("Priorité", { enum: [...PROSPECT_PRIORITIES] }),
@@ -372,6 +382,31 @@ export const tools: Tool[] = [
     handler: (a) => {
       const { prospect, ...patch } = a;
       return updateProspect(text({ prospect }, "prospect"), patch);
+    },
+  },
+  {
+    name: "delete_prospects",
+    description:
+      "SUPPRIME DÉFINITIVEMENT des prospects de la liste de prospection (200 au plus par appel). Action irréversible : n'appelle cet outil que sur demande explicite de l'administrateur, " +
+      "après lui avoir montré la liste exacte des prospects visés (list_prospects), et passe `confirm: true`. Les prospects se désignent par identifiant ou par nom exact. " +
+      "La réponse liste ce qui a été supprimé et ce qui n'a pas été trouvé. Ne supprime jamais tous les prospects « pour faire du ménage » sans demande précise.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        prospects: { type: "array", items: { type: "string" }, description: "Identifiants ou noms exacts des prospects à supprimer" },
+        confirm: { type: "boolean", description: "Doit valoir true : confirme que l'administrateur a demandé cette suppression" },
+      },
+      required: ["prospects", "confirm"],
+    },
+    handler: (a) => {
+      if (a.confirm !== true) {
+        throw new DataError("Suppression non confirmée : demande d'abord son accord à l'administrateur, puis rappelle l'outil avec confirm: true.");
+      }
+      const result = deleteProspects(Array.isArray(a.prospects) ? a.prospects : []);
+      if (result.deleted > 0) {
+        audit("mcp", "prospect.delete", result.deletedItems.map((p) => p.name).join(", ").slice(0, 500));
+      }
+      return result;
     },
   },
   {

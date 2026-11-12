@@ -325,7 +325,7 @@ export const PROSPECT_STATUSES = ["new", "contacted", "won", "lost"] as const;
 export const PROSPECT_PRIORITIES = ["Haute", "Normale", "À vérifier"] as const;
 const MAX_PROSPECTS_PER_CALL = 200;
 
-/** Un prospect tel que le voit le MCP : toutes les colonnes, les cases cochées en liste. */
+/** Un prospect tel que le voit le MCP : toutes les colonnes (dont e-mail, site, adresse, notes), les cases cochées en liste. */
 export type ProspectView = Omit<ProspectRow, "tags"> & { tags: string[] };
 const prospectView = (p: ProspectRow): ProspectView => ({ ...p, tags: parseTags(p.tags) });
 
@@ -338,6 +338,31 @@ function normalizePriority(v: unknown): string {
   const key = raw.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   return PROSPECT_PRIORITIES.find((p) => p.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") === key) ?? raw;
 }
+
+/** E-mail du prospect : vide autorisé, sinon une adresse valide, en minuscules. */
+function checkEmail(v: unknown): string {
+  const raw = squash(v, 120).toLowerCase();
+  if (!raw) return "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw)) throw new DataError(`Adresse e-mail invalide : « ${raw} ».`);
+  return raw;
+}
+
+/** Site actuel du commerce : vide autorisé, sinon une adresse http(s) ; « exemple.fr » devient « https://exemple.fr ». */
+function checkWebsite(v: unknown): string {
+  const raw = squash(v, 200);
+  if (!raw) return "";
+  let url: URL;
+  try {
+    url = new URL(/^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`);
+  } catch {
+    throw new DataError(`Adresse de site invalide : « ${raw} ».`);
+  }
+  // Jamais de « javascript: » ou autre schéma : ce champ devient un lien cliquable dans l'admin.
+  if (!/^https?:$/.test(url.protocol) || !url.hostname.includes(".")) throw new DataError(`Adresse de site invalide : « ${raw} » (http ou https attendu).`);
+  return url.pathname === "/" && !url.search && !url.hash ? url.origin : url.href;
+}
+
+const checkNotes = (v: unknown) => (typeof v === "string" ? v.trim().slice(0, 2000) : "");
 
 function checkTags(v: unknown): string[] {
   if (v === undefined || v === null) return [];
@@ -374,9 +399,11 @@ export function listProspects(f: { status?: string; tag?: string; category?: str
     params.push(normalizePriority(f.priority));
   }
   if (f.query) {
-    where.push("(name LIKE ? ESCAPE '\\' OR activity LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\' OR finding LIKE ? ESCAPE '\\')");
+    where.push(
+      "(name LIKE ? ESCAPE '\\' OR activity LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\' OR finding LIKE ? ESCAPE '\\' OR email LIKE ? ESCAPE '\\' OR website LIKE ? ESCAPE '\\' OR address LIKE ? ESCAPE '\\' OR notes LIKE ? ESCAPE '\\')"
+    );
     const q = likePattern(f.query);
-    params.push(q, q, q, q);
+    params.push(q, q, q, q, q, q, q, q);
   }
   const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
   const total = get<{ n: number }>(`SELECT COUNT(*) AS n FROM prospects ${clause}`, ...params)?.n ?? 0;
@@ -433,17 +460,23 @@ export function addProspects(items: unknown[]) {
       const status = squash(o.status, 20) || "new";
       if (!(PROSPECT_STATUSES as readonly string[]).includes(status)) throw new DataError(`Statut inconnu. Valeurs : ${PROSPECT_STATUSES.join(", ")}.`);
       const tags = checkTags(o.tags);
+      const email = checkEmail(o.email);
+      const website = checkWebsite(o.website);
 
       const key = `${name.toLowerCase()}|${phone}`;
       if (seen.has(key)) return void skipped.push({ index, name, reason: "doublon dans la liste fournie" });
+      if (email && seen.has(`@${email}`)) return void skipped.push({ index, name, reason: "même e-mail qu'un autre prospect de la liste fournie" });
       seen.add(key);
+      if (email) seen.add(`@${email}`);
       if (get("SELECT 1 AS x FROM prospects WHERE lower(name) = lower(?) AND phone = ?", name, phone)) {
         return void skipped.push({ index, name, reason: "déjà dans la liste" });
       }
+      const sameEmail = email ? get<{ name: string }>("SELECT name FROM prospects WHERE email = ?", email) : undefined;
+      if (sameEmail) return void skipped.push({ index, name, reason: `cet e-mail est déjà celui de « ${sameEmail.name} »` });
 
       const id = newId();
       run(
-        "INSERT INTO prospects (id, category, priority, name, activity, phone, rating, finding, status, tags) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO prospects (id, category, priority, name, activity, phone, rating, finding, status, tags, email, website, address, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         id,
         squash(o.category, 80),
         normalizePriority(o.priority),
@@ -453,7 +486,11 @@ export function addProspects(items: unknown[]) {
         squash(o.rating, 12),
         typeof o.finding === "string" ? o.finding.trim().slice(0, 1000) : "",
         status,
-        tags.join(",")
+        tags.join(","),
+        email,
+        website,
+        squash(o.address, 200),
+        checkNotes(o.notes)
       );
       created.push({ id, name });
     } catch (e) {
@@ -497,6 +534,10 @@ export function updateProspect(idOrName: string, patch: Record<string, unknown>)
   if (patch.category !== undefined) set("category", squash(patch.category, 80));
   if (patch.priority !== undefined) set("priority", normalizePriority(patch.priority));
   if (patch.finding !== undefined) set("finding", typeof patch.finding === "string" ? patch.finding.trim().slice(0, 1000) : "");
+  if (patch.email !== undefined) set("email", checkEmail(patch.email));
+  if (patch.website !== undefined) set("website", checkWebsite(patch.website));
+  if (patch.address !== undefined) set("address", squash(patch.address, 200));
+  if (patch.notes !== undefined) set("notes", checkNotes(patch.notes));
 
   if (sets.length === 0) throw new DataError("Rien à modifier : fournissez au moins un champ.");
   try {
@@ -505,6 +546,39 @@ export function updateProspect(idOrName: string, patch: Record<string, unknown>)
     throw new DataError("Un prospect avec ce nom et ce téléphone existe déjà.");
   }
   return getProspect(p.id);
+}
+
+/**
+ * Supprime des prospects (200 au plus par appel), désignés par identifiant ou par nom exact. Définitif.
+ * Une référence introuvable ou ambiguë n'empêche pas les autres : elle est listée avec la raison.
+ */
+export function deleteProspects(refs: unknown[]) {
+  if (!Array.isArray(refs) || refs.length === 0) throw new DataError("Aucun prospect désigné.");
+  if (refs.length > MAX_PROSPECTS_PER_CALL) throw new DataError(`${MAX_PROSPECTS_PER_CALL} prospects au maximum par appel.`);
+
+  const found = new Map<string, ProspectRow>();
+  const failed: { ref: string; error: string }[] = [];
+  for (const raw of refs) {
+    const ref = typeof raw === "string" ? raw.trim() : "";
+    if (!ref) {
+      failed.push({ ref: String(raw), error: "Référence vide." });
+      continue;
+    }
+    try {
+      const p = findProspect(ref);
+      found.set(p.id, p);
+    } catch (e) {
+      if (!(e instanceof DataError)) throw e;
+      failed.push({ ref, error: e.message });
+    }
+  }
+  for (const id of found.keys()) run("DELETE FROM prospects WHERE id = ?", id);
+  return {
+    deleted: found.size,
+    deletedItems: [...found.values()].map((p) => ({ id: p.id, name: p.name, phone: p.phone })),
+    failed: failed.length,
+    failedItems: failed,
+  };
 }
 
 /* ---------- Vue d'ensemble ---------- */
