@@ -541,7 +541,7 @@ export function updateProspect(idOrName: string, patch: Record<string, unknown>)
 
   if (sets.length === 0) throw new DataError("Rien à modifier : fournissez au moins un champ.");
   try {
-    run(`UPDATE prospects SET ${sets.join(", ")} WHERE id = ?`, ...params, p.id);
+    run(`UPDATE prospects SET ${sets.join(", ")}, updated_at = datetime('now') WHERE id = ?`, ...params, p.id);
   } catch {
     throw new DataError("Un prospect avec ce nom et ce téléphone existe déjà.");
   }

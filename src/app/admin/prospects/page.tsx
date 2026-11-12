@@ -249,7 +249,7 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
       )}
 
       <p className="mt-6 text-xs text-mute">
-        RGPD : les prospects sans suite doivent être supprimés au plus tard 3 ans après le dernier contact.
+        RGPD : les fiches non modifiées depuis 3 ans (hors clients gagnés) sont supprimées automatiquement. En cas d’opposition d’un commerce, supprime sa fiche immédiatement.
       </p>
     </>
   );

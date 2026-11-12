@@ -305,7 +305,7 @@ export async function setProspectStatusAction(_p: FormState, fd: FormData): Prom
   return adminAction(() => {
     const status = str(fd, "status");
     if (!["new", "contacted", "won", "lost"].includes(status)) throw new DataError("Statut invalide.");
-    run("UPDATE prospects SET status = ? WHERE id = ?", status, str(fd, "id"));
+    run("UPDATE prospects SET status = ?, updated_at = datetime('now') WHERE id = ?", status, str(fd, "id"));
     return { ok: true };
   });
 }
@@ -319,7 +319,7 @@ export async function setProspectTagAction(id: string, tag: string, on: boolean)
     const next = new Set(parseTags(row.tags));
     if (on) next.add(tag);
     else next.delete(tag);
-    run("UPDATE prospects SET tags = ? WHERE id = ?", [...next].join(","), id);
+    run("UPDATE prospects SET tags = ?, updated_at = datetime('now') WHERE id = ?", [...next].join(","), id);
     return { ok: true };
   });
 }

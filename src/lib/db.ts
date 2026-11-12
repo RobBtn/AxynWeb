@@ -172,6 +172,29 @@ function seed(db: DatabaseSync) {
   ).run(requestId, siteId, clientId, "Ajouter les horaires d'été", "Bonjour, pouvez-vous ajouter nos horaires d'été en bas de page ? Merci !");
 }
 
+/**
+ * Purge automatique, alignée sur la politique de confidentialité : demandes de devis 3 ans, journal 12 mois,
+ * prospects à froid 3 ans après leur dernière modification (hors clients gagnés), codes et sessions expirés.
+ * Exécutée à l'ouverture de la base puis une fois par jour.
+ */
+export function purgeExpired(db: DatabaseSync = getDb()) {
+  const now = Date.now();
+  const n = (sql: string, ...p: number[]) => Number(db.prepare(sql).run(...p).changes);
+  const leads = n("DELETE FROM leads WHERE created_at < datetime('now', '-3 years')");
+  const prospects = n(
+    "DELETE FROM prospects WHERE status != 'won' AND COALESCE(NULLIF(updated_at, ''), created_at) < datetime('now', '-3 years')"
+  );
+  const audit = n("DELETE FROM audit WHERE created_at < datetime('now', '-12 months') AND action != 'purge'");
+  n("DELETE FROM signup_codes WHERE expires_at < ?", now);
+  n("DELETE FROM sessions WHERE expires_at < ?", now);
+  if (leads || prospects || audit) {
+    db.prepare("INSERT INTO audit (actor, action, detail) VALUES ('system', 'purge', ?)").run(
+      `${leads} demande(s) de devis, ${prospects} prospect(s), ${audit} entrée(s) de journal supprimés`
+    );
+  }
+  return { leads, prospects, audit };
+}
+
 export function getDb(): DatabaseSync {
   if (globalForDb.__webcreaDb) return globalForDb.__webcreaDb;
   const dir = path.join(process.cwd(), "data");
@@ -181,9 +204,11 @@ export function getDb(): DatabaseSync {
   db.exec(SCHEMA);
   // Migration : ces colonnes ont été ajoutées après la création de la table sur les bases existantes.
   const prospectCols = (db.prepare("PRAGMA table_info(prospects)").all() as { name: string }[]).map((c) => c.name);
-  for (const col of ["tags", "email", "website", "address", "notes"]) {
+  for (const col of ["tags", "email", "website", "address", "notes", "updated_at"]) {
     if (!prospectCols.includes(col)) db.exec(`ALTER TABLE prospects ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
   }
+  purgeExpired(db);
+  setInterval(() => purgeExpired(db), 24 * 3600 * 1000).unref();
   seed(db);
   globalForDb.__webcreaDb = db;
   return db;

@@ -33,6 +33,16 @@ export default function Confidentialite() {
           durée du contrat, puis 5 ans pour les pièces contractuelles et 10 ans pour les pièces comptables.
         </li>
         <li>
+          <strong>Prospection commerciale</strong> — si vous dirigez un commerce ou une entreprise, nous pouvons vous
+          contacter sans demande préalable de votre part. Données : nom de l&apos;établissement, activité, téléphone,
+          adresse, e-mail et site web professionnels, ainsi que nos notes de suivi (échanges, date de rappel). Source :
+          informations publiques (annuaires, fiches Google Maps, site de l&apos;entreprise). Finalité : vous proposer
+          nos services de création de site. Base légale : intérêt légitime, en prospection entre professionnels
+          (article L.34-5 du code des postes et communications électroniques). Conservation : 3 ans après notre
+          dernier contact, puis suppression automatique ; suppression immédiate si vous vous y opposez. Aucune
+          donnée n&apos;est cédée à des tiers.
+        </li>
+        <li>
           <strong>Journal de sécurité</strong> — connexions et actions sensibles. Finalité : sécurité du service
           (intérêt légitime). Conservation : 12 mois.
         </li>
@@ -69,6 +79,11 @@ export default function Confidentialite() {
         de portabilité. Depuis votre espace client, vous pouvez télécharger vos données et demander la suppression de
         votre compte. Vous pouvez aussi écrire à <a href={`mailto:${l.dpoEmail}`}>{l.dpoEmail}</a> : nous répondons sous
         un mois.
+      </p>
+      <p>
+        Si vous avez été contacté dans le cadre de notre prospection, vous pouvez vous y opposer à tout moment, sans
+        justification : écrivez-nous et vos informations seront supprimées de notre liste et ne seront plus utilisées.
+        Chaque prise de contact vous le rappelle.
       </p>
       <p>
         Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL :{" "}
