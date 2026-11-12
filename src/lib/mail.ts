@@ -14,7 +14,8 @@ import { LOGO_CID } from "./mail-template";
  */
 const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
 
-export const mailConfigured = Boolean(SMTP_HOST && SMTP_FROM);
+// Un identifiant sans mot de passe ne peut pas se connecter : on le traite comme « non configuré ».
+export const mailConfigured = Boolean(SMTP_HOST && SMTP_FROM && (!SMTP_USER || SMTP_PASS));
 
 /** Réglages non secrets, pour l'écran « Tester l'envoi » de l'admin. */
 export const mailSettings = { host: SMTP_HOST ?? "", port: Number(SMTP_PORT) || 587, from: SMTP_FROM ?? "", user: SMTP_USER ?? "" };
