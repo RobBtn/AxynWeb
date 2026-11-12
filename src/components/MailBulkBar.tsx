@@ -52,7 +52,7 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
       id={FORM_ID}
       ref={formRef}
       action={action}
-      className="mb-2 flex flex-wrap items-center gap-1.5 rounded-xl border border-line bg-ink-3 px-2.5 py-2 text-sm"
+      className="flex flex-wrap items-center gap-1 rounded-xl bg-ink-3 px-2.5 py-2 text-sm"
       onSubmit={(e) => {
         if (count === 0) e.preventDefault();
       }}
@@ -76,13 +76,13 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
           {count === 0 ? "Tout" : `${count} sél.`}
         </span>
       </label>
-      <button type="button" className="btn btn-ghost btn-sm" disabled={none} onClick={() => submit("read")}>
+      <button type="button" className="btn btn-ghost !px-2.5 !py-1 !text-xs" disabled={none} onClick={() => submit("read")}>
         Lu
       </button>
-      <button type="button" className="btn btn-ghost btn-sm" disabled={none} onClick={() => submit("unread")}>
+      <button type="button" className="btn btn-ghost !px-2.5 !py-1 !text-xs" disabled={none} onClick={() => submit("unread")}>
         Non lu
       </button>
-      <select name="folder" className="input !w-auto max-w-32 !py-1.5 text-xs" aria-label="Dossier de destination" defaultValue="">
+      <select name="folder" className="input !w-auto max-w-40 !px-2 !py-1 text-xs" aria-label="Dossier de destination" defaultValue="">
         <option value="">Sans dossier</option>
         {folders.map((f) => (
           <option key={f.id} value={f.id}>
@@ -90,10 +90,10 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
           </option>
         ))}
       </select>
-      <button type="button" className="btn btn-ghost btn-sm" disabled={none} onClick={() => submit("move")}>
+      <button type="button" className="btn btn-ghost !px-2.5 !py-1 !text-xs" disabled={none} onClick={() => submit("move")}>
         Classer
       </button>
-      <button type="button" className="btn btn-danger btn-sm" disabled={none} onClick={() => setAsking(true)}>
+      <button type="button" className="btn btn-danger !px-2.5 !py-1 !text-xs" disabled={none} onClick={() => setAsking(true)}>
         Supprimer
       </button>
       {(state?.error || state?.message) && (

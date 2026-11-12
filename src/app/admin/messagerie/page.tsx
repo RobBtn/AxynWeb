@@ -56,14 +56,14 @@ export default async function Messagerie({ searchParams }: { searchParams: Promi
     return `${BASE}${s ? `?${s}` : ""}`;
   };
   const entry = (active: boolean) =>
-    `flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ${active ? "bg-accent text-on-accent font-medium" : "hover:bg-ink-3"}`;
+    `flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm ${active ? "bg-accent text-on-accent font-medium" : "hover:bg-ink-3"}`;
   const title = where === "inbox" ? "Boîte de réception" : where === "sent" ? "Envoyés" : (custom?.name ?? "");
 
   return (
-    <div className="grid items-start gap-4 xl:grid-cols-[12.5rem_minmax(0,23rem)_minmax(0,1fr)]">
+    <div className="overflow-hidden rounded-3xl border border-line bg-ink-2 shadow-sm xl:grid xl:h-[calc(100dvh-8rem)] xl:min-h-[34rem] xl:grid-cols-[15rem_minmax(21rem,26rem)_minmax(0,1fr)]">
       {/* Dossiers */}
-      <aside aria-label="Dossiers" className="flex flex-col gap-3 xl:sticky xl:top-6">
-        <nav className="flex flex-wrap gap-1 xl:flex-col">
+      <aside aria-label="Dossiers" className="flex min-w-0 flex-col gap-4 border-b border-line bg-ink-3/60 p-5 xl:h-full xl:overflow-y-auto xl:border-b-0 xl:border-r">
+        <nav className="flex flex-wrap gap-1.5 xl:flex-col xl:gap-1">
           <Link href={href({ dossier: "inbox", page: undefined, m: undefined })} className={entry(where === "inbox")} aria-current={where === "inbox" ? "page" : undefined}>
             <span>Boîte de réception</span>
             <span className="font-mono text-xs">{counts.unread > 0 ? `${counts.unread}/${counts.inbox}` : counts.inbox}</span>
@@ -108,14 +108,15 @@ export default async function Messagerie({ searchParams }: { searchParams: Promi
       </aside>
 
       {/* Liste */}
-      <section className={open ? "hidden xl:block" : ""} aria-label={title}>
-        <h2 className="mb-2 text-lg font-semibold">{title}</h2>
+      <section className={`min-w-0 border-b border-line xl:h-full xl:overflow-y-auto xl:border-b-0 xl:border-r ${open ? "hidden xl:block" : ""}`} aria-label={title}>
+        <div className="px-5 pb-3 pt-5">
+        <h2 className="mb-3 text-lg font-semibold">{title}</h2>
         {syncError && (
           <p role="status" className="mb-2 break-words rounded-xl border border-coral/40 bg-coral/10 px-3 py-2 text-xs">
             Actualisation impossible : {syncError.slice(0, 200)}. Les messages déjà récupérés restent consultables.
           </p>
         )}
-        <form action={BASE} method="get" role="search" className="mb-2 flex gap-2">
+        <form action={BASE} method="get" role="search" className="flex gap-2">
           {where !== "inbox" && <input type="hidden" name="dossier" value={where} />}
           <input className="input min-w-0 flex-1" type="search" name="q" defaultValue={q} placeholder={`Rechercher dans ${title.toLowerCase()}…`} aria-label="Rechercher" maxLength={80} />
           <button className="btn btn-primary btn-sm">OK</button>
@@ -125,20 +126,23 @@ export default async function Messagerie({ searchParams }: { searchParams: Promi
             </Link>
           )}
         </form>
+        </div>
 
         {items.length === 0 ? (
-          <Empty>{q ? "Aucun message ne correspond à la recherche." : where === "sent" ? "Aucun message envoyé." : "Aucun message."}</Empty>
+          <div className="px-5 pb-5"><Empty>{q ? "Aucun message ne correspond à la recherche." : where === "sent" ? "Aucun message envoyé." : "Aucun message."}</Empty></div>
         ) : (
           <>
-            <MailBulkBar folders={folders.map((f) => ({ id: f.id, name: f.name }))} />
-            <ul className="overflow-hidden rounded-xl border border-line">
+            <div className="sticky top-0 z-10 bg-ink-2 px-5 pb-2">
+              <MailBulkBar folders={folders.map((f) => ({ id: f.id, name: f.name }))} />
+            </div>
+            <ul className="border-t border-line">
               {items.map((m) => {
                 const unread = m.box === "inbox" && !m.seen;
                 const selected = m.id === open;
                 const who = m.box === "sent" ? `À : ${displayName(m.to_addr)}` : displayName(m.from_addr);
                 return (
-                  <li key={m.id} className={`flex items-start gap-2 border-b border-line px-2.5 py-2 last:border-b-0 ${selected ? "bg-ink-3" : "bg-ink-2"}`}>
-                    <input type="checkbox" name="id" value={m.id} form="mail-bulk" aria-label={`Sélectionner : ${m.subject || "message"}`} className="mt-1 size-4 shrink-0 cursor-pointer accent-accent" />
+                  <li key={m.id} className={`flex items-start gap-3 border-b border-line px-5 py-4 ${selected ? "bg-ink-3" : "hover:bg-ink-3/50"}`}>
+                    <input type="checkbox" name="id" value={m.id} form="mail-bulk" aria-label={`Sélectionner : ${m.subject || "message"}`} className="mt-1.5 size-4 shrink-0 cursor-pointer accent-accent" />
                     <Link href={href({ m: m.id })} className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
                         <span className={`truncate text-sm ${unread ? "font-semibold" : ""}`}>
@@ -147,19 +151,19 @@ export default async function Messagerie({ searchParams }: { searchParams: Promi
                         </span>
                         <span className="shrink-0 font-mono text-[0.68rem] text-mute">{frMailDate(m.date)}</span>
                       </span>
-                      <span className={`block truncate text-sm ${unread ? "font-medium" : "text-bone/85"}`}>{m.subject || "(sans objet)"}</span>
-                      <span className="block truncate text-xs text-mute">{m.snippet.replace(/\s+/g, " ")}</span>
+                      <span className={`mt-0.5 block truncate text-sm ${unread ? "font-medium" : "text-bone/85"}`}>{m.subject || "(sans objet)"}</span>
+                      <span className="mt-0.5 block truncate text-xs text-mute">{m.snippet.replace(/\s+/g, " ")}</span>
                       {m.folder_name && where !== m.folder_name && <span className="pill pill-info mt-1 text-[0.65rem]">{m.folder_name}</span>}
                     </Link>
                   </li>
                 );
               })}
             </ul>
-            <p className="mt-2 text-xs text-mute">
+            <p className="px-5 pt-3 text-xs text-mute">
               {total} message{total > 1 ? "s" : ""}
             </p>
             {pages > 1 && (
-              <nav aria-label="Pages" className="mt-1 flex items-center gap-3 text-sm">
+              <nav aria-label="Pages" className="flex items-center gap-3 px-5 pb-5 pt-2 text-sm">
                 {page > 1 && (
                   <Link href={href({ page: String(page - 1) })} className="btn btn-ghost btn-sm">
                     ←
@@ -180,11 +184,11 @@ export default async function Messagerie({ searchParams }: { searchParams: Promi
       </section>
 
       {/* Lecture */}
-      <section className={open ? "" : "hidden xl:block"} aria-label="Lecture">
+      <section className={`min-w-0 overflow-x-hidden p-6 xl:h-full xl:overflow-y-auto xl:p-10 ${open ? "" : "hidden xl:block"}`} aria-label="Lecture">
         {open ? (
           <MessageView id={open} backHref={href({ m: undefined })} hrefFor={(id) => href({ m: id })} />
         ) : (
-          <Empty>Sélectionne un message dans la liste pour le lire.</Empty>
+          <div className="flex h-full min-h-60 flex-col items-center justify-center gap-2 text-center text-mute"><p className="text-lg">Aucun message sélectionné</p><p className="text-sm">Choisis un message dans la liste pour le lire et y répondre.</p></div>
         )}
       </section>
     </div>

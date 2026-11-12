@@ -92,7 +92,7 @@ export default function MessageView({ id, backHref, hrefFor }: { id: string; bac
       </dl>
 
       {/* Contenu */}
-      <div className="rounded-xl border border-line bg-ink-2 p-4 text-sm">
+      <div className="overflow-hidden rounded-xl border border-line bg-ink-3 p-3 text-sm">
         {m.html ? <MailFrame id={m.id} /> : <div className="whitespace-pre-wrap break-words">{m.body || "(message vide)"}</div>}
       </div>
 

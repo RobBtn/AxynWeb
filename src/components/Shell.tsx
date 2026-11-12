@@ -21,8 +21,8 @@ export default function Shell({
 }) {
   return (
     <div className="relative min-h-dvh">
-      <div className="relative z-10 mx-auto flex max-w-[92rem] flex-col gap-6 p-4 lg:flex-row lg:p-6">
-        <aside className="flex shrink-0 flex-col gap-4 rounded-2xl border border-bone bg-ink-2 p-4 lg:sticky lg:top-6 lg:h-[calc(100dvh-3rem)] lg:w-64">
+      <div className="relative z-10 mx-auto flex max-w-[140rem] flex-col gap-5 p-4 lg:flex-row lg:gap-5 lg:px-3 lg:py-4">
+        <aside className="flex shrink-0 flex-col gap-4 rounded-2xl border border-bone bg-ink-2 p-4 lg:sticky lg:top-4 lg:h-[calc(100dvh-2rem)] lg:w-60 lg:overflow-y-auto">
           <div className="flex items-center justify-between gap-3 px-1">
             <Logo />
             <span className="rounded-full bg-ink-3 px-2.5 py-1 font-mono text-[0.68rem]">{title}</span>

@@ -19,11 +19,15 @@ export default async function MessagerieLayout({ children }: { children: React.R
   }
   return (
     <>
-      <PageTitle kicker={`Boîte partagée · ${inboxAddress}`} title="Messagerie">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1">
+          <h1 className="display text-3xl md:text-4xl">Messagerie</h1>
+          <span className="truncate font-mono text-xs text-mute">Boîte partagée · {inboxAddress}</span>
+        </div>
         <Link href="/admin/messagerie/nouveau" className="btn btn-primary btn-sm">
           + Nouveau message
         </Link>
-      </PageTitle>
+      </header>
       {children}
     </>
   );
