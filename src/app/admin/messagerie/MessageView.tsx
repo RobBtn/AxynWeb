@@ -3,7 +3,7 @@ import ActionForm from "@/components/ActionForm";
 import MailFrame from "@/components/MailFrame";
 import { frMailDate } from "@/lib/format";
 import { mailActionAction, sendMessageAction } from "@/app/actions/mailbox";
-import { emailOf, getMailMessage, listFolders, prospectsByEmail, setMessagesSeen } from "@/lib/inbox";
+import { emailOf, folderTree, getMailMessage, prospectsByEmail, setMessagesSeen } from "@/lib/inbox";
 
 /** Volet de lecture : en-têtes, actions, contenu du message, fil de la conversation et réponse. */
 export default function MessageView({ id, backHref, hrefFor }: { id: string; backHref: string; hrefFor: (messageId: string) => string }) {
@@ -11,7 +11,7 @@ export default function MessageView({ id, backHref, hrefFor }: { id: string; bac
   if (!data) return <p className="rounded-2xl border border-dashed border-line p-8 text-center text-sm text-mute">Message introuvable.</p>;
   const { message: m, thread, siblings, refs } = data;
   if (m.box === "inbox" && !m.seen) setMessagesSeen([m.id], true);
-  const folders = listFolders();
+  const folders = folderTree();
 
   const counterpart = emailOf((m.box === "sent" ? m.to_addr : m.from_addr).split(",")[0]);
   const prospect = prospectsByEmail([counterpart]).get(counterpart);
@@ -51,7 +51,7 @@ export default function MessageView({ id, backHref, hrefFor }: { id: string; bac
             <option value="">Sans dossier</option>
             {folders.map((f) => (
               <option key={f.id} value={f.id}>
-                {f.name}
+                {f.label}
               </option>
             ))}
           </select>

@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS audit (
 CREATE TABLE IF NOT EXISTS mail_folders (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
+  parent_id TEXT REFERENCES mail_folders(id) ON DELETE CASCADE,
   created_by TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -243,6 +244,8 @@ export function getDb(): DatabaseSync {
   }
   const threadCols = (db.prepare("PRAGMA table_info(mail_threads)").all() as { name: string }[]).map((c) => c.name);
   if (!threadCols.includes("status")) db.exec("ALTER TABLE mail_threads ADD COLUMN status TEXT NOT NULL DEFAULT 'open'");
+  const folderCols = (db.prepare("PRAGMA table_info(mail_folders)").all() as { name: string }[]).map((c) => c.name);
+  if (!folderCols.includes("parent_id")) db.exec("ALTER TABLE mail_folders ADD COLUMN parent_id TEXT REFERENCES mail_folders(id) ON DELETE CASCADE");
   const msgCols = (db.prepare("PRAGMA table_info(mail_messages)").all() as { name: string }[]).map((c) => c.name);
   if (!msgCols.includes("html")) db.exec("ALTER TABLE mail_messages ADD COLUMN html TEXT NOT NULL DEFAULT ''");
   purgeExpired(db);

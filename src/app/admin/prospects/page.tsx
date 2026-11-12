@@ -1,7 +1,8 @@
 import Link from "next/link";
 import ActionForm from "@/components/ActionForm";
 import ProspectTags from "@/components/ProspectTags";
-import { Card, Empty, PageTitle, StatusPill, frDate, type Tone } from "@/components/Shell";
+import { Card, Empty, StatusPill, frDate, type Tone } from "@/components/Shell";
+import { ChatIcon, DocIcon, ListIcon, MailCheckIcon, PhoneIcon, PinIcon, RepeatIcon } from "@/components/MailIcons";
 import {
   createSiteFromLeadAction,
   deleteLeadAction,
@@ -14,7 +15,7 @@ import BulkDeleteBar from "@/components/BulkDeleteBar";
 import { requireUser } from "@/lib/auth";
 import { all, type LeadRow, type ProspectRow } from "@/lib/db";
 import { statusLabel } from "@/lib/data";
-import { isProspectTag, parseTags, prospectTags } from "@/lib/prospect-tags";
+import { isProspectTag, parseTags, prospectTags, type ProspectTagId } from "@/lib/prospect-tags";
 
 /** Teinte d'une fiche selon son suivi : à faire (jaune), entretien (bleu), déjà vu (vert) ; rien de coché = neutre. */
 function prospectTone(tags: string[]): Tone | undefined {
@@ -131,13 +132,29 @@ function ProspectCard({ p }: { p: ProspectRow }) {
   );
 }
 
+const tagIcon = {
+  rappeler: <PhoneIcon />,
+  entretien: <ChatIcon />,
+  presentiel: <PinIcon />,
+  repasser: <RepeatIcon />,
+  mail: <MailCheckIcon />,
+} as const;
+
+const entry = (active: boolean) =>
+  `flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition ${
+    active ? "border-accent bg-accent font-medium text-on-accent" : "border-line bg-ink-2 hover:border-bone/40 hover:bg-ink-3"
+  }`;
+
 export default async function AdminLeads({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string }> }) {
   await requireUser("admin");
   const { vue, q: rawQ } = await searchParams;
   const q = (rawQ ?? "").trim().slice(0, 80);
-  const view = vue && isProspectTag(vue) ? vue : "tous";
 
   const leads = all<LeadRow>("SELECT * FROM leads ORDER BY created_at DESC");
+  const newLeads = leads.filter((l) => l.status === "new").length;
+  // Sans choix : les demandes de devis à traiter d'abord, sinon toute la prospection.
+  const view: "devis" | "tous" | ProspectTagId = vue === "devis" ? "devis" : vue && isProspectTag(vue) ? vue : vue === "tous" ? "tous" : newLeads > 0 ? "devis" : "tous";
+
   const prospects = all<ProspectRow>(
     "SELECT * FROM prospects ORDER BY CASE priority WHEN 'Haute' THEN 0 WHEN 'Normale' THEN 1 ELSE 2 END, rowid"
   );
@@ -145,142 +162,170 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
   const needle = q.toLowerCase();
   const matches = (p: ProspectRow) =>
     !needle || [p.name, p.activity, p.phone, p.email, p.website, p.address].some((v) => v.toLowerCase().includes(needle));
-  const inView = view === "tous" ? prospects : prospects.filter((p) => parseTags(p.tags).includes(view));
+  const inView = view === "devis" || view === "tous" ? prospects : prospects.filter((p) => parseTags(p.tags).includes(view));
   const shown = inView.filter(matches);
-  const qs = (v: string) => {
-    const params = new URLSearchParams();
-    if (v !== "tous") params.set("vue", v);
-    if (q) params.set("q", q);
-    const s = params.toString();
-    return `/admin/prospects${s ? `?${s}` : ""}#prospection`;
-  };
   const categories = [...new Set(shown.map((p) => p.category))].sort();
 
-  const tabs = [{ id: "tous", label: "Tous", n: prospects.length }, ...prospectTags.map((t) => ({ id: t.id, label: t.label, n: counts[t.id] }))];
+  const href = (v: string, withQ = true) => {
+    const params = new URLSearchParams();
+    params.set("vue", v);
+    if (withQ && q) params.set("q", q);
+    return `/admin/prospects?${params.toString()}`;
+  };
+  const title = view === "devis" ? "Demandes de devis" : view === "tous" ? "Tous les prospects" : (prospectTags.find((t) => t.id === view)?.label ?? "");
 
   return (
     <>
-      <PageTitle kicker="Administration" title="Prospects" />
-      {leads.length === 0 ? (
-        <Empty>Aucune demande de devis pour l&apos;instant.</Empty>
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {leads.map((l) => (
-            <Card key={l.id} tone={l.status === "new" ? "alert" : "info"}>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="mb-2">
-                    <span className="pill pill-info">Demande de devis</span>
-                  </p>
-                  <p className="text-lg font-semibold">{l.name}</p>
-                  <p className="text-sm text-mute">
-                    <a href={`mailto:${l.email}`} className="underline">
-                      {l.email}
-                    </a>
-                    {l.company && ` · ${l.company}`} · {frDate(l.created_at)}
-                  </p>
+      <header className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 pt-1">
+        <h1 className="display text-3xl md:text-4xl">Prospects</h1>
+        <span className="font-mono text-xs text-mute">
+          {leads.length} demande{leads.length > 1 ? "s" : ""} de devis · {prospects.length} commerces repérés
+        </span>
+      </header>
+
+      <div className="overflow-hidden rounded-3xl border border-line bg-ink-2 shadow-sm xl:grid xl:h-[calc(100dvh-8rem)] xl:min-h-[34rem] xl:grid-cols-[16.5rem_minmax(0,1fr)]">
+        {/* Volet de gauche : vues */}
+        <aside aria-label="Vues" className="flex min-w-0 flex-col gap-4 border-b border-line bg-ink-3/60 p-5 xl:h-full xl:overflow-y-auto xl:border-b-0 xl:border-r">
+          <nav className="flex flex-wrap gap-2 xl:flex-col">
+            <Link href={href("devis", false)} className={entry(view === "devis")} aria-current={view === "devis" ? "page" : undefined}>
+              <DocIcon />
+              <span className="flex-1">Demandes de devis</span>
+              <span className="font-mono text-xs">{newLeads > 0 ? `${newLeads}/${leads.length}` : leads.length}</span>
+            </Link>
+          </nav>
+
+          <p className="border-t border-line pt-4 font-mono text-[0.68rem] uppercase tracking-wider text-mute">Prospection à froid</p>
+          <nav className="flex flex-wrap gap-2 xl:flex-col xl:gap-1.5" aria-label="Vues de la prospection">
+            <Link href={href("tous")} className={entry(view === "tous")} aria-current={view === "tous" ? "page" : undefined}>
+              <ListIcon />
+              <span className="flex-1">Tous</span>
+              <span className="font-mono text-xs">{prospects.length}</span>
+            </Link>
+            {prospectTags.map((t) => (
+              <Link key={t.id} href={href(t.id)} className={entry(view === t.id)} aria-current={view === t.id ? "page" : undefined}>
+                {tagIcon[t.id]}
+                <span className="flex-1">{t.label}</span>
+                <span className="font-mono text-xs">{counts[t.id]}</span>
+              </Link>
+            ))}
+          </nav>
+
+          <p className="mt-auto text-xs leading-relaxed text-mute">
+            RGPD : les fiches non modifiées depuis 3 ans (hors clients gagnés) sont supprimées automatiquement. En cas d&apos;opposition d&apos;un commerce, supprime sa fiche tout de suite.
+          </p>
+        </aside>
+
+        {/* Volet de droite : contenu */}
+        <section className="min-w-0 p-5 xl:h-full xl:overflow-y-auto xl:p-8" aria-label={title}>
+          <h2 className="mb-1 text-xl font-semibold">{title}</h2>
+
+          {view === "devis" ? (
+            leads.length === 0 ? (
+              <Empty>Aucune demande de devis pour l&apos;instant.</Empty>
+            ) : (
+              <>
+                <p className="mb-5 text-sm text-mute">Demandes envoyées par des visiteurs ou des clients depuis le simulateur.</p>
+                <div className="grid gap-4 2xl:grid-cols-2">
+                  {leads.map((l) => (
+                    <Card key={l.id} tone={l.status === "new" ? "alert" : "info"}>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="break-words text-lg font-semibold">{l.name}</p>
+                          <p className="break-words text-sm text-mute">
+                            <a href={`mailto:${l.email}`} className="underline">
+                              {l.email}
+                            </a>
+                            {l.company && ` · ${l.company}`} · {frDate(l.created_at)}
+                          </p>
+                        </div>
+                        <StatusPill status={l.status} label={statusLabel[l.status]} />
+                      </div>
+                      {l.estimate && <p className="mt-4 break-words rounded-xl bg-accent/10 px-4 py-2 font-mono text-xs text-accent">{l.estimate}</p>}
+                      <p className="mt-4 whitespace-pre-wrap break-words text-bone/85">{l.message}</p>
+                      <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-line pt-4">
+                        <ActionForm action={createSiteFromLeadAction} submit="Créer son site avec l'IA →" className="flex flex-col gap-2">
+                          <input type="hidden" name="id" value={l.id} />
+                        </ActionForm>
+                        <ActionForm action={setLeadStatusAction} submit="OK" variant="ghost" className="flex items-center gap-2">
+                          <input type="hidden" name="id" value={l.id} />
+                          <select className="input !w-auto !py-2 text-sm" name="status" defaultValue={l.status} aria-label="Statut de la demande">
+                            {(["new", "contacted", "won", "lost"] as const).map((s) => (
+                              <option key={s} value={s}>
+                                {statusLabel[s]}
+                              </option>
+                            ))}
+                          </select>
+                        </ActionForm>
+                        <ActionForm action={deleteLeadAction} submit="Supprimer" variant="danger" confirm="Supprimer cette demande et ses données ?">
+                          <input type="hidden" name="id" value={l.id} />
+                        </ActionForm>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
-                <StatusPill status={l.status} label={statusLabel[l.status]} />
-              </div>
-              {l.estimate && <p className="mt-4 rounded-xl bg-accent/10 px-4 py-2 font-mono text-xs text-accent">{l.estimate}</p>}
-              <p className="mt-4 whitespace-pre-wrap text-bone/85">{l.message}</p>
-              <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-line pt-4">
-                <ActionForm action={createSiteFromLeadAction} submit="Créer son site avec l'IA →" className="flex flex-col gap-2">
-                  <input type="hidden" name="id" value={l.id} />
-                </ActionForm>
-                <ActionForm action={setLeadStatusAction} submit="OK" variant="ghost" className="flex items-center gap-2">
-                  <input type="hidden" name="id" value={l.id} />
-                  <select className="input !w-auto !py-2 text-sm" name="status" defaultValue={l.status} aria-label="Statut du prospect">
-                    {(["new", "contacted", "won", "lost"] as const).map((s) => (
-                      <option key={s} value={s}>
-                        {statusLabel[s]}
-                      </option>
-                    ))}
-                  </select>
-                </ActionForm>
-                <ActionForm action={deleteLeadAction} submit="Supprimer" variant="danger" confirm="Supprimer ce prospect et ses données ?">
-                  <input type="hidden" name="id" value={l.id} />
-                </ActionForm>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+              </>
+            )
+          ) : (
+            <>
+              <p className="mb-4 text-sm text-mute">
+                {view === "tous"
+                  ? "Commerces repérés, sans demande de leur part. Coche une case sur une fiche : elle apparaît dans la vue correspondante."
+                  : "Les fiches cochées « " + title + " »."}
+              </p>
+              <form action="/admin/prospects" method="get" role="search" className="mb-4 flex flex-wrap items-center gap-2">
+                <input type="hidden" name="vue" value={view} />
+                <input className="input !w-auto min-w-56 flex-1" type="search" name="q" defaultValue={q} placeholder="Rechercher un nom, une activité, un téléphone…" aria-label="Rechercher un prospect" maxLength={80} />
+                <button className="btn btn-primary btn-sm">Rechercher</button>
+                {q && (
+                  <Link href={href(view, false)} className="btn btn-ghost btn-sm">
+                    Effacer
+                  </Link>
+                )}
+              </form>
+              {q && (
+                <p className="mb-4 text-sm text-mute">
+                  {shown.length} résultat{shown.length > 1 ? "s" : ""} pour « {q} »
+                </p>
+              )}
 
-      <h2 id="prospection" className="mb-1 mt-12 scroll-mt-6 text-2xl font-semibold">
-        Prospection à froid
-      </h2>
-      <p className="mb-5 text-sm text-mute">
-        {prospects.length} commerces repérés, sans demande de leur part. Coche une case sur une fiche : elle apparaît dans l&apos;onglet correspondant.
-      </p>
+              {shown.length > 0 && <BulkDeleteBar />}
 
-      <form action="/admin/prospects#prospection" method="get" role="search" className="mb-4 flex flex-wrap items-center gap-2">
-        {view !== "tous" && <input type="hidden" name="vue" value={view} />}
-        <input className="input !w-auto min-w-64 flex-1" type="search" name="q" defaultValue={q} placeholder="Rechercher un nom, une activité, un téléphone…" aria-label="Rechercher un prospect" maxLength={80} />
-        <button className="btn btn-primary btn-sm">Rechercher</button>
-        {q && (
-          <Link href={view === "tous" ? "/admin/prospects#prospection" : `/admin/prospects?vue=${view}#prospection`} className="btn btn-ghost btn-sm">
-            Effacer
-          </Link>
-        )}
-      </form>
-      {q && (
-        <p className="mb-4 text-sm text-mute">
-          {shown.length} résultat{shown.length > 1 ? "s" : ""} pour « {q} »
-        </p>
-      )}
-
-      <nav aria-label="Vues de la prospection" className="mb-6 flex flex-wrap gap-2">
-        {tabs.map((t) => (
-          <Link
-            key={t.id}
-            href={qs(t.id)}
-            aria-current={view === t.id ? "page" : undefined}
-            className={`btn btn-sm ${view === t.id ? "btn-primary" : "btn-ghost"}`}
-          >
-            {t.label} · {t.n}
-          </Link>
-        ))}
-      </nav>
-
-      {shown.length > 0 && <BulkDeleteBar />}
-
-      {shown.length === 0 ? (
-        <Empty>
-          {q
-            ? "Aucun résultat."
-            : view === "tous"
-            ? "Aucun commerce repéré pour l'instant."
-            : "Personne dans cet onglet. Coche la case correspondante sur une fiche de l'onglet « Tous »."}
-        </Empty>
-      ) : view === "tous" ? (
-        <div className="space-y-8">
-          {categories.map((cat) => (
-            <section key={cat}>
-              <h3 className="mb-3 font-mono text-xs uppercase tracking-wider text-mute">
-                {cat || "Sans catégorie"} · {shown.filter((p) => p.category === cat).length}
-              </h3>
-              <div className="grid gap-3">
-                {shown
-                  .filter((p) => p.category === cat)
-                  .map((p) => (
+              {shown.length === 0 ? (
+                <Empty>
+                  {q
+                    ? "Aucun résultat."
+                    : view === "tous"
+                      ? "Aucun commerce repéré pour l'instant."
+                      : "Personne ici. Coche la case correspondante sur une fiche de la vue « Tous »."}
+                </Empty>
+              ) : view === "tous" ? (
+                <div className="space-y-8">
+                  {categories.map((cat) => (
+                    <section key={cat}>
+                      <h3 className="mb-3 font-mono text-xs uppercase tracking-wider text-mute">
+                        {cat || "Sans catégorie"} · {shown.filter((p) => p.category === cat).length}
+                      </h3>
+                      <div className="grid gap-3">
+                        {shown
+                          .filter((p) => p.category === cat)
+                          .map((p) => (
+                            <ProspectCard key={p.id} p={p} />
+                          ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {shown.map((p) => (
                     <ProspectCard key={p.id} p={p} />
                   ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : (
-        <div className="grid gap-3">
-          {shown.map((p) => (
-            <ProspectCard key={p.id} p={p} />
-          ))}
-        </div>
-      )}
-
-      <p className="mt-6 text-xs text-mute">
-        RGPD : les fiches non modifiées depuis 3 ans (hors clients gagnés) sont supprimées automatiquement. En cas d’opposition d’un commerce, supprime sa fiche immédiatement.
-      </p>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      </div>
     </>
   );
 }

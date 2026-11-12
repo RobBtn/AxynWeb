@@ -37,7 +37,7 @@ export type MailMessage = {
   seen: number;
   sent_by: string;
 };
-export type MailFolder = { id: string; name: string };
+export type MailFolder = { id: string; name: string; parent_id: string | null };
 
 /* ---------- Connexion IMAP ---------- */
 async function withClient<T>(fn: (c: ImapFlow) => Promise<T>): Promise<T> {
@@ -336,11 +336,50 @@ export function moveThreads(ids: string[], folderId: string | null) {
 
 export const listFolders = () =>
   all<MailFolder & { n: number; unread: number }>(
-    `SELECT f.id, f.name,
+    `SELECT f.id, f.name, f.parent_id,
        (SELECT COUNT(*) FROM mail_threads t WHERE t.folder_id = f.id) AS n,
        (SELECT COUNT(*) FROM mail_messages m JOIN mail_threads t ON t.id = m.thread_id WHERE t.folder_id = f.id AND m.box = 'inbox' AND m.seen = 0) AS unread
      FROM mail_folders f ORDER BY lower(f.name)`
   );
+
+export type FolderNode = MailFolder & { n: number; unread: number; depth: number; label: string; total: number; totalUnread: number };
+export const MAX_FOLDER_DEPTH = 3; // racine = profondeur 0
+
+/** Arborescence des dossiers, à plat et dans l'ordre d'affichage (parents suivis de leurs sous-dossiers). */
+export function folderTree(): FolderNode[] {
+  const flat = listFolders();
+  const kids = new Map<string | null, typeof flat>();
+  for (const f of flat) {
+    const key = flat.some((p) => p.id === f.parent_id) ? f.parent_id : null;
+    kids.set(key, [...(kids.get(key) ?? []), f]);
+  }
+  const out: FolderNode[] = [];
+  const walk = (parent: string | null, depth: number, path: string): { total: number; unread: number } => {
+    let total = 0;
+    let unread = 0;
+    for (const f of kids.get(parent) ?? []) {
+      const label = path ? `${path} / ${f.name}` : f.name;
+      const node: FolderNode = { ...f, depth, label, total: f.n, totalUnread: f.unread };
+      out.push(node);
+      const sub = walk(f.id, depth + 1, label);
+      node.total += sub.total;
+      node.totalUnread += sub.unread;
+      total += node.total;
+      unread += node.totalUnread;
+    }
+    return { total, unread };
+  };
+  walk(null, 0, "");
+  return out;
+}
+
+/** Le dossier et tous ses sous-dossiers (pour afficher aussi leurs messages). */
+export function folderWithDescendants(id: string): string[] {
+  const flat = listFolders();
+  const ids = [id];
+  for (let i = 0; i < ids.length; i++) for (const f of flat) if (f.parent_id === ids[i] && !ids.includes(f.id)) ids.push(f.id);
+  return ids;
+}
 
 export const mailCounts = () => ({
   threads: get<{ n: number }>("SELECT COUNT(*) AS n FROM mail_threads")?.n ?? 0,
@@ -405,10 +444,10 @@ export function recapTotals() {
 }
 
 /* ---------- Écriture ---------- */
-export function createFolder(name: string, by: string): MailFolder {
+export function createFolder(name: string, by: string, parentId: string | null = null): MailFolder {
   const id = newId();
-  run("INSERT INTO mail_folders (id, name, created_by) VALUES (?, ?, ?)", id, name, by);
-  return { id, name };
+  run("INSERT INTO mail_folders (id, name, parent_id, created_by) VALUES (?, ?, ?, ?)", id, name, parentId, by);
+  return { id, name, parent_id: parentId };
 }
 export const deleteFolder = (id: string) => run("DELETE FROM mail_folders WHERE id = ?", id);
 
@@ -452,16 +491,16 @@ export type MailListRow = {
 };
 
 /** Messages d'une boîte (reçus ou envoyés) ou d'un dossier personnalisé, filtrés par la recherche. */
-export function listMailMessages(o: { box?: "inbox" | "sent"; folder?: string; query?: string; page: number; per: number }) {
+export function listMailMessages(o: { box?: "inbox" | "sent"; folders?: string[]; query?: string; page: number; per: number }) {
   const where: string[] = [];
   const params: (string | number)[] = [];
   if (o.box) {
     where.push("m.box = ?");
     params.push(o.box);
   }
-  if (o.folder) {
-    where.push("t.folder_id = ?");
-    params.push(o.folder);
+  if (o.folders?.length) {
+    where.push(`t.folder_id IN (${o.folders.map(() => "?").join(",")})`);
+    params.push(...o.folders);
   }
   if (o.query) {
     where.push("(m.subject LIKE ? OR m.from_addr LIKE ? OR m.to_addr LIKE ? OR m.body LIKE ?)");

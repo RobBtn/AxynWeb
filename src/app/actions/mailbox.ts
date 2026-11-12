@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { audit, get } from "@/lib/db";
 import { rateLimit, requireUser } from "@/lib/auth";
 import {
+  MAX_FOLDER_DEPTH,
   createFolder,
+  folderTree,
   deleteFolder,
   deleteMessages,
   moveMessagesToFolder,
@@ -63,8 +65,14 @@ export async function createFolderAction(_prev: FormState, fd: FormData): Promis
   const user = await requireUser("admin");
   const name = String(fd.get("name") ?? "").replace(/\s+/g, " ").trim().slice(0, 40);
   if (!name) return { error: "Donne un nom au dossier." };
-  if (get("SELECT 1 FROM mail_folders WHERE lower(name) = lower(?)", name)) return { error: "Ce dossier existe déjà." };
-  createFolder(name, user.email);
+  if (get("SELECT 1 FROM mail_folders WHERE lower(name) = lower(?)", name)) return { error: "Un dossier porte déjà ce nom." };
+  const parent = String(fd.get("parent") ?? "");
+  if (parent) {
+    const p = folderTree().find((f) => f.id === parent);
+    if (!p) return { error: "Dossier parent introuvable." };
+    if (p.depth + 1 >= MAX_FOLDER_DEPTH) return { error: `Pas plus de ${MAX_FOLDER_DEPTH} niveaux de dossiers.` };
+  }
+  createFolder(name, user.email, parent || null);
   audit(user.email, "mail.folder.create", name);
   revalidatePath(page, "layout");
   return { ok: true, message: `Dossier « ${name} » créé.` };

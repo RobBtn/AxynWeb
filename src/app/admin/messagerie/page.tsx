@@ -3,8 +3,10 @@ import ActionForm from "@/components/ActionForm";
 import MailBulkBar from "@/components/MailBulkBar";
 import { Empty } from "@/components/Shell";
 import { frMailDate } from "@/lib/format";
-import { createFolderAction, deleteFolderAction, syncAction } from "@/app/actions/mailbox";
-import { boxCounts, emailOf, listFolders, listMailMessages, syncMailbox } from "@/lib/inbox";
+import { createFolderAction, deleteFolderAction } from "@/app/actions/mailbox";
+import SyncButton from "@/components/SyncButton";
+import { ChartIcon, FolderIcon, FolderPlusIcon, InboxIcon, SendIcon } from "@/components/MailIcons";
+import { boxCounts, emailOf, folderTree, folderWithDescendants, listMailMessages, syncMailbox } from "@/lib/inbox";
 import MessageView from "./MessageView";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +24,7 @@ const displayName = (a: string) => {
 
 export default async function Messagerie({ searchParams }: { searchParams: Promise<Params> }) {
   const sp = await searchParams;
-  const folders = listFolders();
+  const folders = folderTree();
   // « inbox » (réception, par défaut), « sent » (envoyés) ou l'identifiant d'un dossier personnalisé.
   const where = sp.dossier === "sent" ? "sent" : folders.some((f) => f.id === sp.dossier) ? (sp.dossier as string) : "inbox";
   const page = Math.max(1, Math.floor(Number(sp.page)) || 1);
@@ -39,7 +41,7 @@ export default async function Messagerie({ searchParams }: { searchParams: Promi
   const counts = boxCounts();
   const { items, total, pages } = listMailMessages({
     box: where === "inbox" || where === "sent" ? where : undefined,
-    folder: custom?.id,
+    folders: custom ? folderWithDescendants(custom.id) : undefined,
     query: q,
     page,
     per: PER,
@@ -56,51 +58,90 @@ export default async function Messagerie({ searchParams }: { searchParams: Promi
     return `${BASE}${s ? `?${s}` : ""}`;
   };
   const entry = (active: boolean) =>
-    `flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm ${active ? "bg-accent text-on-accent font-medium" : "hover:bg-ink-3"}`;
+    `flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition ${active ? "border-accent bg-accent font-medium text-on-accent" : "border-line bg-ink-2 hover:border-bone/40 hover:bg-ink-3"}`;
   const title = where === "inbox" ? "Boîte de réception" : where === "sent" ? "Envoyés" : (custom?.name ?? "");
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-line bg-ink-2 shadow-sm xl:grid xl:h-[calc(100dvh-8rem)] xl:min-h-[34rem] xl:grid-cols-[15rem_minmax(21rem,26rem)_minmax(0,1fr)]">
+    <div className="overflow-hidden rounded-3xl border border-line bg-ink-2 shadow-sm xl:grid xl:h-[calc(100dvh-8rem)] xl:min-h-[34rem] xl:grid-cols-[16.5rem_minmax(21rem,26rem)_minmax(0,1fr)]">
       {/* Dossiers */}
       <aside aria-label="Dossiers" className="flex min-w-0 flex-col gap-4 border-b border-line bg-ink-3/60 p-5 xl:h-full xl:overflow-y-auto xl:border-b-0 xl:border-r">
-        <nav className="flex flex-wrap gap-1.5 xl:flex-col xl:gap-1">
+        <nav className="flex flex-wrap gap-2 xl:flex-col">
           <Link href={href({ dossier: "inbox", page: undefined, m: undefined })} className={entry(where === "inbox")} aria-current={where === "inbox" ? "page" : undefined}>
-            <span>Boîte de réception</span>
+            <InboxIcon />
+            <span className="flex-1">Boîte de réception</span>
             <span className="font-mono text-xs">{counts.unread > 0 ? `${counts.unread}/${counts.inbox}` : counts.inbox}</span>
           </Link>
           <Link href={href({ dossier: "sent", page: undefined, m: undefined })} className={entry(where === "sent")} aria-current={where === "sent" ? "page" : undefined}>
-            <span>Envoyés</span>
+            <SendIcon />
+            <span className="flex-1">Envoyés</span>
             <span className="font-mono text-xs">{counts.sent}</span>
           </Link>
-          {folders.length > 0 && <p className="mt-2 hidden px-3 font-mono text-[0.68rem] uppercase tracking-wider text-mute xl:block">Dossiers</p>}
-          {folders.map((f) => (
-            <Link key={f.id} href={href({ dossier: f.id, page: undefined, m: undefined })} className={entry(where === f.id)} aria-current={where === f.id ? "page" : undefined}>
-              <span className="truncate">{f.name}</span>
-              <span className="font-mono text-xs">{f.unread > 0 ? `${f.unread}/${f.n}` : f.n}</span>
-            </Link>
-          ))}
-          <Link href="/admin/messagerie/recap" className={`${entry(false)} xl:mt-3`}>
-            Récap envois et réponses
-          </Link>
         </nav>
-        <details>
-          <summary className="btn btn-ghost btn-sm cursor-pointer list-none">+ Nouveau dossier</summary>
-          <div className="mt-2 rounded-2xl border border-line bg-ink-2 p-3">
-            <ActionForm action={createFolderAction} submit="Créer" reset className="flex flex-col gap-2">
-              <label className="field">
-                Nom du dossier
-                <input className="input" name="name" maxLength={40} placeholder="Ex. Devis en cours" required />
-              </label>
-            </ActionForm>
-          </div>
-        </details>
-        <ActionForm action={syncAction} submit="Actualiser" variant="ghost" />
+
+        <div className="flex items-center justify-between gap-2 border-t border-line pt-4">
+          <span className="font-mono text-[0.68rem] uppercase tracking-wider text-mute">Dossiers</span>
+          <details className="relative">
+            <summary
+              className="inline-flex size-9 cursor-pointer list-none items-center justify-center rounded-full border border-line bg-ink-2 transition hover:bg-ink-3"
+              title="Créer un dossier"
+              aria-label="Créer un dossier"
+            >
+              <FolderPlusIcon />
+            </summary>
+            <div className="absolute right-0 z-30 mt-2 w-64 rounded-2xl border border-line bg-ink-2 p-3 shadow-xl">
+              <ActionForm action={createFolderAction} submit="Créer le dossier" reset className="flex flex-col gap-2">
+                <label className="field">
+                  Nom du dossier
+                  <input className="input" name="name" maxLength={40} placeholder="Ex. Devis en cours" required />
+                </label>
+                <label className="field">
+                  Placer dans
+                  <select className="input" name="parent" defaultValue={custom && custom.depth + 1 < 3 ? custom.id : ""}>
+                    <option value="">Racine (au premier niveau)</option>
+                    {folders
+                      .filter((f) => f.depth + 1 < 3)
+                      .map((f) => (
+                        <option key={f.id} value={f.id}>
+                          {f.label}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              </ActionForm>
+            </div>
+          </details>
+        </div>
+
+        {folders.length === 0 ? (
+          <p className="text-xs text-mute">Aucun dossier. Utilise le pictogramme ci-dessus pour en créer, puis range-y des mails ou d&apos;autres dossiers.</p>
+        ) : (
+          <nav className="flex flex-col gap-1.5" aria-label="Dossiers personnalisés">
+            {folders.map((f) => (
+              <Link
+                key={f.id}
+                href={href({ dossier: f.id, page: undefined, m: undefined })}
+                className={entry(where === f.id)}
+                style={{ marginLeft: f.depth * 14 }}
+                aria-current={where === f.id ? "page" : undefined}
+              >
+                <FolderIcon />
+                <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                <span className="font-mono text-xs">{f.totalUnread > 0 ? `${f.totalUnread}/${f.total}` : f.total}</span>
+              </Link>
+            ))}
+          </nav>
+        )}
+
+        <Link href="/admin/messagerie/recap" className={`${entry(false)} xl:mt-auto`}>
+          <ChartIcon />
+          <span>Récap envois et réponses</span>
+        </Link>
         {custom && (
           <ActionForm
             action={deleteFolderAction}
             submit="Supprimer ce dossier"
             variant="danger"
-            confirm={`Supprimer le dossier « ${custom.name} » ? Les messages ne sont pas supprimés, ils restent dans la réception et les envoyés.`}
+            confirm={`Supprimer le dossier « ${custom.name} » ? Ses sous-dossiers sont supprimés avec lui. Les messages ne sont pas supprimés : ils restent dans la réception et les envoyés.`}
           >
             <input type="hidden" name="id" value={custom.id} />
           </ActionForm>
@@ -110,7 +151,10 @@ export default async function Messagerie({ searchParams }: { searchParams: Promi
       {/* Liste */}
       <section className={`min-w-0 border-b border-line xl:h-full xl:overflow-y-auto xl:border-b-0 xl:border-r ${open ? "hidden xl:block" : ""}`} aria-label={title}>
         <div className="px-5 pb-3 pt-5">
-        <h2 className="mb-3 text-lg font-semibold">{title}</h2>
+        <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">{title}</h2>
+            <SyncButton />
+          </div>
         {syncError && (
           <p role="status" className="mb-2 break-words rounded-xl border border-coral/40 bg-coral/10 px-3 py-2 text-xs">
             Actualisation impossible : {syncError.slice(0, 200)}. Les messages déjà récupérés restent consultables.
@@ -133,7 +177,7 @@ export default async function Messagerie({ searchParams }: { searchParams: Promi
         ) : (
           <>
             <div className="sticky top-0 z-10 bg-ink-2 px-5 pb-2">
-              <MailBulkBar folders={folders.map((f) => ({ id: f.id, name: f.name }))} />
+              <MailBulkBar folders={folders.map((f) => ({ id: f.id, name: f.label }))} />
             </div>
             <ul className="border-t border-line">
               {items.map((m) => {
