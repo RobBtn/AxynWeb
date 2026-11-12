@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
-import { bulkMailAction } from "@/app/actions/mailbox";
+import { mailActionAction } from "@/app/actions/mailbox";
 import type { FormState } from "@/app/actions/public";
 import ConfirmDialog from "./ConfirmDialog";
 
@@ -9,16 +9,15 @@ const FORM_ID = "mail-bulk";
 const boxes = () => [...document.querySelectorAll<HTMLInputElement>(`input[type="checkbox"][form="${FORM_ID}"]`)];
 
 /**
- * Actions groupées de la messagerie. Chaque conversation de la liste porte une case `form="mail-bulk"` :
- * l'envoi emporte exactement les identifiants cochés. La suppression demande confirmation.
+ * Barre d'actions de la liste de messages. Chaque ligne porte une case `form="mail-bulk"` : l'envoi emporte exactement
+ * les messages cochés. La suppression demande confirmation.
  */
 export default function MailBulkBar({ folders }: { folders: { id: string; name: string }[] }) {
-  const [state, action, pending] = useActionState<FormState, FormData>(bulkMailAction, undefined);
+  const [state, action, pending] = useActionState<FormState, FormData>(mailActionAction, undefined);
   const [count, setCount] = useState(0);
   const [asking, setAsking] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const opRef = useRef<HTMLInputElement>(null);
-  const folderRef = useRef<HTMLSelectElement>(null);
 
   const recount = useCallback(() => setCount(boxes().filter((b) => b.checked).length), []);
 
@@ -42,18 +41,18 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
     if (opRef.current) opRef.current.value = op;
     formRef.current?.requestSubmit();
   };
-
   const setAll = (checked: boolean) => {
     boxes().forEach((b) => (b.checked = checked));
     recount();
   };
+  const none = count === 0 || pending;
 
   return (
     <form
       id={FORM_ID}
       ref={formRef}
       action={action}
-      className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-ink-3 px-3 py-2 text-sm"
+      className="mb-2 flex flex-wrap items-center gap-1.5 rounded-xl border border-line bg-ink-3 px-2.5 py-2 text-sm"
       onSubmit={(e) => {
         if (count === 0) e.preventDefault();
       }}
@@ -61,7 +60,7 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
       <input ref={opRef} type="hidden" name="op" defaultValue="" />
       {asking && (
         <ConfirmDialog
-          message={`Supprimer ${count} conversation${count > 1 ? "s" : ""} pour tous les administrateurs ? Les messages sont déplacés dans la corbeille de la messagerie.`}
+          message={`Supprimer ${count} message${count > 1 ? "s" : ""} ? Ils sont déplacés dans la corbeille de la messagerie.`}
           confirmLabel={`Supprimer ${count}`}
           danger
           onCancel={() => setAsking(false)}
@@ -71,17 +70,19 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
           }}
         />
       )}
-      <label className="flex cursor-pointer items-center gap-2">
+      <label className="mr-1 flex cursor-pointer items-center gap-2">
         <input type="checkbox" className="size-4 accent-accent" aria-label="Tout sélectionner" onChange={(e) => setAll(e.target.checked)} checked={count > 0 && count === boxes().length} />
-        <span aria-live="polite">{count === 0 ? "Sélection" : `${count} sélectionnée${count > 1 ? "s" : ""}`}</span>
+        <span aria-live="polite" className="text-xs text-mute">
+          {count === 0 ? "Tout" : `${count} sél.`}
+        </span>
       </label>
-      <button type="button" className="btn btn-ghost btn-sm" disabled={count === 0 || pending} onClick={() => submit("done")}>
-        Marquer traitées
+      <button type="button" className="btn btn-ghost btn-sm" disabled={none} onClick={() => submit("read")}>
+        Lu
       </button>
-      <button type="button" className="btn btn-ghost btn-sm" disabled={count === 0 || pending} onClick={() => submit("open")}>
-        Rouvrir
+      <button type="button" className="btn btn-ghost btn-sm" disabled={none} onClick={() => submit("unread")}>
+        Non lu
       </button>
-      <select ref={folderRef} name="folder" className="input !w-auto !py-1.5 text-sm" aria-label="Dossier de destination" defaultValue="">
+      <select name="folder" className="input !w-auto max-w-32 !py-1.5 text-xs" aria-label="Dossier de destination" defaultValue="">
         <option value="">Sans dossier</option>
         {folders.map((f) => (
           <option key={f.id} value={f.id}>
@@ -89,10 +90,10 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
           </option>
         ))}
       </select>
-      <button type="button" className="btn btn-ghost btn-sm" disabled={count === 0 || pending} onClick={() => submit("move")}>
+      <button type="button" className="btn btn-ghost btn-sm" disabled={none} onClick={() => submit("move")}>
         Classer
       </button>
-      <button type="button" className="btn btn-danger btn-sm" disabled={count === 0 || pending} onClick={() => setAsking(true)}>
+      <button type="button" className="btn btn-danger btn-sm" disabled={none} onClick={() => setAsking(true)}>
         Supprimer
       </button>
       {(state?.error || state?.message) && (

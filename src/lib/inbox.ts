@@ -436,6 +436,124 @@ export async function deleteThread(id: string): Promise<void> {
   run("DELETE FROM mail_threads WHERE id = ?", id);
 }
 
+/* ---------- Vue « client de messagerie » : messages individuels ---------- */
+export type MailListRow = {
+  id: string;
+  thread_id: string;
+  box: "inbox" | "sent";
+  from_addr: string;
+  to_addr: string;
+  subject: string;
+  date: string;
+  seen: number;
+  snippet: string;
+  has_html: number;
+  folder_name: string | null;
+};
+
+/** Messages d'une boîte (reçus ou envoyés) ou d'un dossier personnalisé, filtrés par la recherche. */
+export function listMailMessages(o: { box?: "inbox" | "sent"; folder?: string; query?: string; page: number; per: number }) {
+  const where: string[] = [];
+  const params: (string | number)[] = [];
+  if (o.box) {
+    where.push("m.box = ?");
+    params.push(o.box);
+  }
+  if (o.folder) {
+    where.push("t.folder_id = ?");
+    params.push(o.folder);
+  }
+  if (o.query) {
+    where.push("(m.subject LIKE ? OR m.from_addr LIKE ? OR m.to_addr LIKE ? OR m.body LIKE ?)");
+    const like = `%${o.query.replace(/[%_]/g, "")}%`;
+    params.push(like, like, like, like);
+  }
+  const w = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  const from = "FROM mail_messages m JOIN mail_threads t ON t.id = m.thread_id LEFT JOIN mail_folders f ON f.id = t.folder_id";
+  const total = get<{ n: number }>(`SELECT COUNT(*) AS n ${from} ${w}`, ...params)?.n ?? 0;
+  const items = all<MailListRow>(
+    `SELECT m.id, m.thread_id, m.box, m.from_addr, m.to_addr, m.subject, m.date, m.seen, substr(m.body, 1, 140) AS snippet,
+       (m.html != '') AS has_html, f.name AS folder_name
+     ${from} ${w} ORDER BY m.date DESC LIMIT ? OFFSET ?`,
+    ...params, o.per, (o.page - 1) * o.per
+  );
+  return { items, total, pages: Math.max(1, Math.ceil(total / o.per)) };
+}
+
+export const boxCounts = () => ({
+  inbox: get<{ n: number }>("SELECT COUNT(*) AS n FROM mail_messages WHERE box = 'inbox'")?.n ?? 0,
+  unread: get<{ n: number }>("SELECT COUNT(*) AS n FROM mail_messages WHERE box = 'inbox' AND seen = 0")?.n ?? 0,
+  sent: get<{ n: number }>("SELECT COUNT(*) AS n FROM mail_messages WHERE box = 'sent'")?.n ?? 0,
+});
+
+/** Un message, avec les autres messages de sa conversation. */
+export function getMailMessage(id: string) {
+  const message = get<MailMessage>("SELECT * FROM mail_messages WHERE id = ?", id);
+  if (!message) return null;
+  const thread = get<{ id: string; subject: string; folder_id: string | null }>("SELECT id, subject, folder_id FROM mail_threads WHERE id = ?", message.thread_id);
+  const siblings = all<{ id: string; box: "inbox" | "sent"; from_addr: string; to_addr: string; date: string; sent_by: string }>(
+    "SELECT id, box, from_addr, to_addr, date, sent_by FROM mail_messages WHERE thread_id = ? ORDER BY date ASC",
+    message.thread_id
+  );
+  const refs = all<{ message_id: string }>("SELECT message_id FROM mail_messages WHERE thread_id = ? AND message_id != '' ORDER BY date ASC", message.thread_id).map((r) => r.message_id);
+  return { message, thread, siblings, refs };
+}
+
+/** Le message le plus récent d'une conversation (pour les anciens liens). */
+export const latestMessageOfThread = (threadId: string) =>
+  get<{ id: string }>("SELECT id FROM mail_messages WHERE thread_id = ? ORDER BY date DESC LIMIT 1", threadId)?.id ?? null;
+
+/** Marque des messages reçus lus ou non lus (ici, et sur le serveur de messagerie si possible). */
+export function setMessagesSeen(ids: string[], seen: boolean) {
+  if (!ids.length) return;
+  const rows = all<{ uid: number | null }>(`SELECT uid FROM mail_messages WHERE id IN (${idsClause(ids)}) AND box = 'inbox'`, ...ids);
+  run(`UPDATE mail_messages SET seen = ? WHERE id IN (${idsClause(ids)}) AND box = 'inbox'`, seen ? 1 : 0, ...ids);
+  const uids = rows.map((r) => r.uid).filter((u): u is number => u !== null);
+  if (uids.length && inboxConfigured) {
+    withClient(async (c) => {
+      const lock = await c.getMailboxLock("INBOX");
+      try {
+        if (seen) await c.messageFlagsAdd(uids.join(","), ["\\Seen"], { uid: true });
+        else await c.messageFlagsRemove(uids.join(","), ["\\Seen"], { uid: true });
+      } finally {
+        lock.release();
+      }
+    }).catch(() => {});
+  }
+}
+
+/** Supprime des messages : déplacés dans la corbeille de la messagerie, retirés d'ici. */
+export async function deleteMessages(ids: string[]): Promise<void> {
+  if (!ids.length) return;
+  const rows = all<{ id: string; box: "inbox" | "sent"; uid: number | null }>(`SELECT id, box, uid FROM mail_messages WHERE id IN (${idsClause(ids)})`, ...ids);
+  if (inboxConfigured && rows.some((r) => r.uid !== null)) {
+    await withClient(async (c) => {
+      const trash = await specialPath(c, "\\Trash");
+      const sent = await specialPath(c, "\\Sent");
+      for (const box of ["inbox", "sent"] as const) {
+        const uids = rows.filter((r) => r.box === box && r.uid !== null).map((r) => r.uid as number);
+        const path = box === "inbox" ? "INBOX" : sent;
+        if (!uids.length || !path) continue;
+        const lock = await c.getMailboxLock(path);
+        try {
+          if (trash && trash !== path) await c.messageMove(uids.join(","), trash, { uid: true });
+          else await c.messageDelete(uids.join(","), { uid: true });
+        } finally {
+          lock.release();
+        }
+      }
+    });
+  }
+  run(`DELETE FROM mail_messages WHERE id IN (${idsClause(ids)})`, ...ids);
+  run("DELETE FROM mail_threads WHERE id NOT IN (SELECT DISTINCT thread_id FROM mail_messages)");
+}
+
+/** Classe les conversations des messages donnés dans un dossier (ou les en sort). */
+export function moveMessagesToFolder(ids: string[], folderId: string | null) {
+  if (!ids.length) return;
+  run(`UPDATE mail_threads SET folder_id = ? WHERE id IN (SELECT thread_id FROM mail_messages WHERE id IN (${idsClause(ids)}))`, folderId, ...ids);
+}
+
 /** Envoie un message (SMTP), l'enregistre dans la conversation et en garde une copie dans « Envoyés ». */
 export async function sendFromInbox(m: { to: string; subject: string; text: string; by: string; inReplyTo?: string; references?: string }): Promise<string> {
   const transporter = nodemailer.createTransport({

@@ -19,18 +19,11 @@ export default async function MessagerieLayout({ children }: { children: React.R
   }
   return (
     <>
-      <PageTitle kicker="Administration" title="Messagerie">
-        <Link href="/admin/messagerie" className="btn btn-ghost btn-sm">
-          Récap
-        </Link>
-        <Link href="/admin/messagerie/conversations" className="btn btn-ghost btn-sm">
-          Conversations
-        </Link>
+      <PageTitle kicker={`Boîte partagée · ${inboxAddress}`} title="Messagerie">
         <Link href="/admin/messagerie/nouveau" className="btn btn-primary btn-sm">
           + Nouveau message
         </Link>
       </PageTitle>
-      <p className="mb-4 text-sm text-mute">Boîte partagée entre tous les administrateurs : {inboxAddress}. Les messages s&apos;affichent tels que reçus ; scripts et images distantes sont bloqués.</p>
       {children}
     </>
   );

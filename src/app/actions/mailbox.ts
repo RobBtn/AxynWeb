@@ -4,11 +4,23 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { audit, get } from "@/lib/db";
 import { rateLimit, requireUser } from "@/lib/auth";
-import { createFolder, deleteFolder, deleteThread, moveThreads, sendFromInbox, setThreadsStatus, syncMailbox, tagProspectMailSent } from "@/lib/inbox";
+import {
+  createFolder,
+  deleteFolder,
+  deleteMessages,
+  moveMessagesToFolder,
+  sendFromInbox,
+  setMessagesSeen,
+  syncMailbox,
+  tagProspectMailSent,
+} from "@/lib/inbox";
 import type { FormState } from "./public";
 
 const EMAIL = /^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]+$/;
 const page = "/admin/messagerie";
+const MSG_ID = /^[0-9a-f-]{36}$/i;
+const idsOf = (fd: FormData) => [...new Set(fd.getAll("id").map(String))].filter((i) => MSG_ID.test(i)).slice(0, 100);
+const plural = (n: number, w: string) => `${n} ${w}${n > 1 ? "s" : ""}`;
 
 /** Envoie un message ou une réponse depuis la boîte mail partagée. */
 export async function sendMessageAction(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -66,78 +78,41 @@ export async function deleteFolderAction(_prev: FormState, fd: FormData): Promis
   deleteFolder(id);
   audit(user.email, "mail.folder.delete", f.name);
   revalidatePath(page, "layout");
-  redirect(`${page}/conversations`);
+  redirect(page);
 }
 
-export async function moveThreadAction(_prev: FormState, fd: FormData): Promise<FormState> {
+/** Actions sur les messages cochés ou sur le message ouvert : lu, non lu, classer, supprimer. */
+export async function mailActionAction(_prev: FormState, fd: FormData): Promise<FormState> {
   const user = await requireUser("admin");
-  const id = String(fd.get("thread") ?? "");
-  const folder = String(fd.get("folder") ?? "");
-  if (!get("SELECT 1 FROM mail_threads WHERE id = ?", id)) return { error: "Conversation introuvable." };
-  if (folder && !get("SELECT 1 FROM mail_folders WHERE id = ?", folder)) return { error: "Dossier introuvable." };
-  moveThreads([id], folder || null);
-  audit(user.email, "mail.move", id);
-  revalidatePath(page, "layout");
-  return { ok: true, message: folder ? "Conversation classée." : "Conversation retirée du dossier." };
-}
-
-export async function deleteThreadAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const user = await requireUser("admin");
-  const id = String(fd.get("thread") ?? "");
-  const t = get<{ subject: string }>("SELECT subject FROM mail_threads WHERE id = ?", id);
-  if (!t) return { error: "Conversation introuvable." };
-  try {
-    await deleteThread(id);
-  } catch (e) {
-    return { error: `Suppression impossible : ${(e instanceof Error ? e.message : "erreur inconnue").slice(0, 200)}` };
-  }
-  audit(user.email, "mail.delete", t.subject);
-  revalidatePath(page, "layout");
-  redirect(`${page}/conversations`);
-}
-
-/** Marque une conversation « traitée » ou la rouvre. */
-export async function setThreadStatusAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  await requireUser("admin");
-  const id = String(fd.get("thread") ?? "");
-  const status = fd.get("status") === "done" ? "done" : "open";
-  if (!get("SELECT 1 FROM mail_threads WHERE id = ?", id)) return { error: "Conversation introuvable." };
-  setThreadsStatus([id], status);
-  revalidatePath(page, "layout");
-  return { ok: true, message: status === "done" ? "Conversation marquée comme traitée." : "Conversation rouverte." };
-}
-
-/** Actions groupées sur les conversations cochées dans la liste. */
-export async function bulkMailAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const user = await requireUser("admin");
-  const ids = [...new Set(fd.getAll("id").map(String))].filter((i) => /^[0-9a-f-]{36}$/i.test(i)).slice(0, 100);
-  if (ids.length === 0) return { error: "Aucune conversation sélectionnée." };
+  const ids = idsOf(fd);
+  if (ids.length === 0) return { error: "Aucun message sélectionné." };
   const op = String(fd.get("op") ?? "");
-  if (op === "done" || op === "open") {
-    setThreadsStatus(ids, op);
+  const n = plural(ids.length, "message");
+  const s = ids.length > 1 ? "s" : "";
+  if (op === "read" || op === "unread") {
+    setMessagesSeen(ids, op === "read");
     revalidatePath(page, "layout");
-    return { ok: true, message: `${ids.length} conversation${ids.length > 1 ? "s" : ""} ${op === "done" ? "marquée(s) traitée(s)" : "rouverte(s)"}.` };
+    return { ok: true, message: `${n} marqué${s} comme ${op === "read" ? "lu" : "non lu"}${s}.` };
   }
   if (op === "move") {
     const folder = String(fd.get("folder") ?? "");
     if (folder && !get("SELECT 1 FROM mail_folders WHERE id = ?", folder)) return { error: "Dossier introuvable." };
-    moveThreads(ids, folder || null);
+    moveMessagesToFolder(ids, folder || null);
     revalidatePath(page, "layout");
-    return { ok: true, message: `${ids.length} conversation${ids.length > 1 ? "s" : ""} ${folder ? "classée(s)" : "retirée(s) de leur dossier"}.` };
+    return { ok: true, message: folder ? `${n} classé${s}.` : `${n} retiré${s} de leur dossier.` };
   }
   if (op === "delete") {
-    let n = 0;
-    for (const id of ids) {
-      try {
-        await deleteThread(id);
-        n++;
-      } catch (e) {
-        return { error: `Suppression interrompue après ${n} : ${(e instanceof Error ? e.message : "erreur").slice(0, 150)}` };
-      }
+    try {
+      await deleteMessages(ids);
+    } catch (e) {
+      return { error: `Suppression impossible : ${(e instanceof Error ? e.message : "erreur").slice(0, 150)}` };
     }
-    audit(user.email, "mail.delete", `${n} conversation(s)`);
+    audit(user.email, "mail.delete", n);
     revalidatePath(page, "layout");
-    return { ok: true, message: `${n} conversation${n > 1 ? "s" : ""} supprimée${n > 1 ? "s" : ""}.` };
+    // Depuis la lecture d'un message : retour à la liste du même dossier.
+    const back = String(fd.get("back") ?? "");
+    if (fd.get("from") === "reading") redirect(back.startsWith(page) && !back.startsWith("//") ? back : page);
+    return { ok: true, message: `${n} supprimé${s}.` };
   }
   return { error: "Action inconnue." };
 }
