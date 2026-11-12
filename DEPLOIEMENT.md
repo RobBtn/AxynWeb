@@ -343,7 +343,9 @@ Après avoir rempli `.env.local` :
 sudo systemctl restart axynweb
 ```
 
-Pour tester : crée un compte sur `/inscription` avec une adresse à toi, et vérifie que le code arrive. En cas d'échec, `sudo journalctl -u axynweb -n 50 --no-pager` affiche la raison (la ligne commence par `[axynweb] envoi du code impossible`).
+Pour tester, le plus simple : connecte-toi en admin, ouvre **Mon compte**, carte **Envoi d'e-mails**, et clique sur **Envoyer un e-mail de test**. Un message avec le logo arrive à ton adresse d'administrateur, ou la raison précise de l'échec s'affiche à l'écran. Tu peux aussi créer un compte sur `/inscription` avec une adresse à toi. Dans les deux cas, `sudo journalctl -u axynweb -n 50 --no-pager` détaille les erreurs (la ligne commence par `[axynweb] envoi du code impossible`).
+
+Le logo est joint aux e-mails sous forme d'image PNG (`public/logo/axynweb-logo-1000.png`) : il s'affiche sans dépendre du site.
 
 ## 15. Avant d'ouvrir au public
 

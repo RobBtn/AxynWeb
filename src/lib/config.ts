@@ -6,7 +6,7 @@
 export const brand = {
   name: "AxynWeb",
   tagline: "Des sites à couper le souffle. Sécurisés, accompagnés, à prix juste.",
-  email: "contact@axynweb.example", // À COMPLÉTER
+  email: "contact@axynweb.fr",
   phone: "", // À COMPLÉTER
   legal: {
     companyName: "À COMPLÉTER — raison sociale",
@@ -16,7 +16,7 @@ export const brand = {
     address: "À COMPLÉTER — adresse du siège",
     director: "À COMPLÉTER — directeur de la publication",
     host: "À COMPLÉTER — nom, adresse et téléphone de l'hébergeur (UE)",
-    dpoEmail: "contact@axynweb.example", // À COMPLÉTER
+    dpoEmail: "contact@axynweb.fr",
   },
 };
 

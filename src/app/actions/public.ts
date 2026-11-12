@@ -7,6 +7,7 @@ import { z } from "zod";
 import { audit, get, newId, run, type UserRow } from "@/lib/db";
 import { createSession, destroySession, rateLimit } from "@/lib/auth";
 import { sendMail, signupAvailable } from "@/lib/mail";
+import { mailCodeBox, mailLayout, mailNote, mailParagraph } from "@/lib/mail-template";
 import { hashPassword, sha256, verifyPassword } from "@/lib/password";
 
 /** `secret` : valeur affichée une seule fois (mot de passe provisoire, jeton d'API). */
@@ -103,10 +104,33 @@ async function setSignupCookie(email: string) {
 }
 
 async function mailCode(email: string, code: string) {
+  const intro = "Voici votre code de vérification pour créer votre compte AxynWeb :";
+  const note = "Il est valable 15 minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message : aucun compte ne sera créé.";
   await sendMail(
     email,
     `Votre code de vérification AxynWeb : ${code}`,
-    `Bonjour,\n\nVotre code de vérification AxynWeb est : ${code}\n\nIl est valable 15 minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message : aucun compte ne sera créé.\n\nAxynWeb`
+    `Bonjour,\n\n${intro}\n\n${code}\n\n${note}\n\nAxynWeb`,
+    mailLayout({
+      title: "Votre code de vérification",
+      preheader: `Votre code : ${code}. Valable 15 minutes.`,
+      body: mailParagraph(intro) + mailCodeBox(code) + mailNote(note),
+    })
+  );
+}
+
+async function mailAlreadyRegistered(email: string) {
+  const text =
+    "Quelqu'un a tenté de créer un compte AxynWeb avec cette adresse, mais un compte existe déjà. Connectez-vous depuis la page de connexion. Si vous avez oublié votre mot de passe, contactez-nous.";
+  const note = "Si ce n'était pas vous, ignorez ce message : rien n'a été modifié.";
+  await sendMail(
+    email,
+    "Vous avez déjà un compte AxynWeb",
+    `Bonjour,\n\n${text}\n\n${note}\n\nAxynWeb`,
+    mailLayout({
+      title: "Vous avez déjà un compte",
+      preheader: "Un compte existe déjà avec cette adresse.",
+      body: mailParagraph(text) + mailNote(note),
+    })
   );
 }
 
@@ -139,11 +163,7 @@ export async function startSignup(_prev: FormState, formData: FormData): Promise
   try {
     if (get("SELECT 1 AS x FROM users WHERE email = ?", email)) {
       // On ne révèle pas qu'un compte existe : même parcours, mais le message prévient la personne concernée.
-      await sendMail(
-        email,
-        "Vous avez déjà un compte AxynWeb",
-        "Bonjour,\n\nQuelqu'un a tenté de créer un compte AxynWeb avec cette adresse, mais un compte existe déjà. Connectez-vous sur la page de connexion. Si vous avez oublié votre mot de passe, contactez-nous.\n\nSi ce n'était pas vous, ignorez ce message.\n\nAxynWeb"
-      );
+      await mailAlreadyRegistered(email);
     } else {
       const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
       const now = Date.now();

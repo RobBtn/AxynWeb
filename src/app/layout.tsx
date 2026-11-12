@@ -17,6 +17,14 @@ const serif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: { default: `${brand.name} — Sites web 3D, sécurisés et accompagnés`, template: `%s — ${brand.name}` },
+  // Icône d'onglet : version verte sur thème clair, version claire sur thème sombre.
+  // favicon.ico et apple-icon.png (src/app) servent de repli pour les anciens navigateurs et iOS.
+  icons: {
+    icon: [
+      { url: "/logo/axynweb-icone.svg", type: "image/svg+xml", media: "(prefers-color-scheme: light)" },
+      { url: "/logo/axynweb-icone-clair.svg", type: "image/svg+xml", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
   description:
     "Studio de création de sites web. Des sites immersifs en 3D, relus et sécurisés par un étudiant ingénieur en cybersécurité, livrés en quelques jours à prix juste. Espace client inclus.",
 };

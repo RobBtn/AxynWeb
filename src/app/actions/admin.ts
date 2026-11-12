@@ -21,6 +21,8 @@ import {
 import { contentFields, getTemplate, resolveContent } from "@/lib/templates";
 import { removeSiteMedia } from "@/lib/media";
 import { isProspectTag, parseTags } from "@/lib/prospect-tags";
+import { mailConfigured, sendMail } from "@/lib/mail";
+import { mailLayout, mailNote, mailParagraph } from "@/lib/mail-template";
 import { randomToken, sha256 } from "@/lib/password";
 import type { FormState } from "./public";
 
@@ -46,6 +48,31 @@ export async function createClientAction(_p: FormState, fd: FormData): Promise<F
     audit(actor, "client.create", c.email);
     return { ok: true, message: `Compte créé pour ${c.email}. Mot de passe provisoire (affiché une seule fois) :`, secret: c.password };
   });
+}
+
+/* ---------- E-mails ---------- */
+/** Envoie un message de test à l'adresse de l'administrateur connecté, pour vérifier les réglages SMTP. */
+export async function sendTestMailAction(): Promise<FormState> {
+  const user = await requireUser("admin");
+  if (!rateLimit(`testmail:${user.id}`, 5, 600_000)) return { error: "Trop d'essais. Réessayez dans quelques minutes." };
+  try {
+    const text = "Si vous lisez ce message, l'envoi d'e-mails de votre application AxynWeb fonctionne.";
+    await sendMail(
+      user.email,
+      "Test d'envoi AxynWeb",
+      `Bonjour,\n\n${text}\n\nAxynWeb`,
+      mailLayout({ title: "L'envoi d'e-mails fonctionne", preheader: "E-mail de test AxynWeb.", body: mailParagraph(text) + mailNote("Vous pouvez supprimer ce message.") })
+    );
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : "erreur inconnue";
+    return { error: `Échec de l'envoi : ${reason.slice(0, 250)}` };
+  }
+  return {
+    ok: true,
+    message: mailConfigured
+      ? `E-mail envoyé à ${user.email}. Vérifiez votre boîte de réception et vos courriers indésirables.`
+      : "SMTP non configuré : le message s'affiche dans la console du serveur (mode développement).",
+  };
 }
 
 /* ---------- Utilisateurs et droits ---------- */

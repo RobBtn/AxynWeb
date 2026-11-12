@@ -1,16 +1,24 @@
+import Image from "next/image";
 import Link from "next/link";
 import { brand } from "@/lib/config";
 import MobileMenu from "./MobileMenu";
 
-export function Logo({ className = "" }: { className?: string }) {
+/**
+ * Logo AxynWeb (fichiers dans public/logo). `tone="light"` : version claire, pour les fonds sombres
+ * (.zone-dark, pied de page) ; par défaut, version verte pour les fonds clairs.
+ */
+export function Logo({ className = "", tone = "dark", height = 28 }: { className?: string; tone?: "dark" | "light"; height?: number }) {
   return (
-    <Link href="/" className={`flex items-center gap-2 ${className}`} aria-label={`${brand.name} — accueil`}>
-      <span className="grid size-8 place-items-center rounded-full border border-bone bg-accent text-on-accent">
-        <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M3 6l4.5 12L12 8l4.5 10L21 6" />
-        </svg>
-      </span>
-      <span className="display text-xl">{brand.name}</span>
+    <Link href="/" className={`flex items-center ${className}`} aria-label={`${brand.name} — accueil`}>
+      <Image
+        src={tone === "light" ? "/logo/axynweb-logo-clair.svg" : "/logo/axynweb-logo.svg"}
+        alt=""
+        width={Math.round((height * 500) / 112)}
+        height={height}
+        unoptimized
+        priority
+        style={{ height, width: "auto" }}
+      />
     </Link>
   );
 }
@@ -53,6 +61,7 @@ export function Nav() {
 export function Footer() {
   return (
     <footer className="zone-dark relative z-10 overflow-hidden px-6 pb-10 pt-24 md:px-10">
+      <Logo tone="light" height={36} className="mb-10" />
       <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
         <p className="display max-w-3xl text-5xl md:text-7xl">
           Votre site peut être en ligne <em>dans trois jours.</em>
