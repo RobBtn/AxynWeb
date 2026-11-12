@@ -12,14 +12,19 @@ const boxes = () => [...document.querySelectorAll<HTMLInputElement>(`input[type=
  * Barre d'actions de la liste de messages. Chaque ligne porte une case `form="mail-bulk"` : l'envoi emporte exactement
  * les messages cochés. La suppression demande confirmation.
  */
-export default function MailBulkBar({ folders }: { folders: { id: string; name: string }[] }) {
+export default function MailBulkBar({ folders, openId, backHref }: { folders: { id: string; name: string }[]; openId?: string; backHref: string }) {
   const [state, action, pending] = useActionState<FormState, FormData>(mailActionAction, undefined);
   const [count, setCount] = useState(0);
   const [asking, setAsking] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const opRef = useRef<HTMLInputElement>(null);
 
-  const recount = useCallback(() => setCount(boxes().filter((b) => b.checked).length), []);
+  const recount = useCallback(() => {
+    const n = boxes().filter((b) => b.checked).length;
+    setCount(n);
+    if (n > 0) document.documentElement.setAttribute("data-mail-selecting", "");
+    else document.documentElement.removeAttribute("data-mail-selecting");
+  }, []);
 
   useEffect(() => {
     const onChange = (e: Event) => {
@@ -32,6 +37,7 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
     const first = requestAnimationFrame(recount);
     return () => {
       document.removeEventListener("change", onChange);
+      document.documentElement.removeAttribute("data-mail-selecting");
       observer.disconnect();
       cancelAnimationFrame(first);
     };
@@ -45,23 +51,28 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
     boxes().forEach((b) => (b.checked = checked));
     recount();
   };
-  const none = count === 0 || pending;
+  // Sans case cochée, les actions visent le message ouvert (sélectionné dans la liste).
+  const targets = count > 0 ? count : openId ? 1 : 0;
+  const none = targets === 0 || pending;
 
   return (
     <form
       id={FORM_ID}
       ref={formRef}
       action={action}
-      className="flex flex-wrap items-center gap-1 rounded-xl bg-ink-3 px-2.5 py-2 text-sm"
+      className={`flex-wrap items-center gap-1 rounded-xl bg-ink-3 px-2.5 py-2 text-sm ${targets === 0 ? "hidden" : "flex"}`}
       onSubmit={(e) => {
-        if (count === 0) e.preventDefault();
+        if (targets === 0) e.preventDefault();
       }}
     >
       <input ref={opRef} type="hidden" name="op" defaultValue="" />
+      <input type="hidden" name="from" value="reading" />
+      <input type="hidden" name="back" value={backHref} />
+      {openId && count === 0 && <input type="hidden" name="id" value={openId} />}
       {asking && (
         <ConfirmDialog
-          message={`Supprimer ${count} message${count > 1 ? "s" : ""} ? Ils sont déplacés dans la corbeille de la messagerie.`}
-          confirmLabel={`Supprimer ${count}`}
+          message={`Supprimer ${targets} message${targets > 1 ? "s" : ""} ? ${targets > 1 ? "Ils sont déplacés" : "Il est déplacé"} dans la corbeille de la messagerie.`}
+          confirmLabel={targets > 1 ? `Supprimer ${targets}` : "Supprimer"}
           danger
           onCancel={() => setAsking(false)}
           onConfirm={() => {
@@ -73,7 +84,7 @@ export default function MailBulkBar({ folders }: { folders: { id: string; name: 
       <label className="mr-1 flex cursor-pointer items-center gap-2">
         <input type="checkbox" className="size-4 accent-accent" aria-label="Tout sélectionner" onChange={(e) => setAll(e.target.checked)} checked={count > 0 && count === boxes().length} />
         <span aria-live="polite" className="text-xs text-mute">
-          {count === 0 ? "Tout" : `${count} sél.`}
+          {count === 0 ? "Message ouvert" : `${count} sél.`}
         </span>
       </label>
       <button type="button" className="btn btn-ghost !px-2.5 !py-1 !text-xs" disabled={none} onClick={() => submit("read")}>

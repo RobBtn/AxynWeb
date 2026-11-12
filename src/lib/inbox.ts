@@ -497,6 +497,7 @@ export function listMailMessages(o: { box?: "inbox" | "sent"; folders?: string[]
   if (o.box) {
     where.push("m.box = ?");
     params.push(o.box);
+    where.push("t.folder_id IS NULL"); // rangé dans un dossier : il n'est plus dans la réception ni dans les envoyés
   }
   if (o.folders?.length) {
     where.push(`t.folder_id IN (${o.folders.map(() => "?").join(",")})`);
@@ -519,10 +520,11 @@ export function listMailMessages(o: { box?: "inbox" | "sent"; folders?: string[]
   return { items, total, pages: Math.max(1, Math.ceil(total / o.per)) };
 }
 
+const BOX_FROM = "FROM mail_messages m JOIN mail_threads t ON t.id = m.thread_id WHERE t.folder_id IS NULL";
 export const boxCounts = () => ({
-  inbox: get<{ n: number }>("SELECT COUNT(*) AS n FROM mail_messages WHERE box = 'inbox'")?.n ?? 0,
-  unread: get<{ n: number }>("SELECT COUNT(*) AS n FROM mail_messages WHERE box = 'inbox' AND seen = 0")?.n ?? 0,
-  sent: get<{ n: number }>("SELECT COUNT(*) AS n FROM mail_messages WHERE box = 'sent'")?.n ?? 0,
+  inbox: get<{ n: number }>(`SELECT COUNT(*) AS n ${BOX_FROM} AND m.box = 'inbox'`)?.n ?? 0,
+  unread: get<{ n: number }>(`SELECT COUNT(*) AS n ${BOX_FROM} AND m.box = 'inbox' AND m.seen = 0`)?.n ?? 0,
+  sent: get<{ n: number }>(`SELECT COUNT(*) AS n ${BOX_FROM} AND m.box = 'sent'`)?.n ?? 0,
 });
 
 /** Un message, avec les autres messages de sa conversation. */

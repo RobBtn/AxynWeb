@@ -21,9 +21,11 @@ import {
   replyToRequest,
   setSiteHtml,
   setSiteStatus,
+  tagProspects,
   updateProspect,
   updateSiteContent,
 } from "./data";
+import { adminTools } from "./mcp-tools-admin";
 import { prospectTags } from "./prospect-tags";
 import { contentFields, getTemplate, resolveContent, templates } from "./templates";
 
@@ -32,7 +34,7 @@ type Tool = {
   name: string;
   description: string;
   inputSchema: { type: "object"; properties: Record<string, unknown>; required?: string[] };
-  handler: (args: Args) => unknown;
+  handler: (args: Args) => unknown | Promise<unknown>;
 };
 
 const s = (description: string, extra: Record<string, unknown> = {}) => ({ type: "string", description, ...extra });
@@ -70,7 +72,7 @@ export const HTML_GUIDE = `Règles pour le HTML d'un site sur-mesure :
 - Accessibilité : un seul <h1>, textes alternatifs, navigation au clavier.
 - Pied de page : coordonnées du client et lien vers ses mentions légales.`;
 
-export const tools: Tool[] = [
+const coreTools: Tool[] = [
   {
     name: "get_overview",
     description:
@@ -385,6 +387,32 @@ export const tools: Tool[] = [
     },
   },
   {
+    name: "tag_prospects",
+    description:
+      "Range plusieurs entreprises d'un coup dans une ou plusieurs catégories de suivi (cases) : " +
+      prospectTags.map((t) => `\`${t.id}\` = ${t.label}`).join(", ") +
+      ". Exemple : après avoir envoyé un e-mail à des entreprises, coche `mail` pour toutes (add_tags). " +
+      "Les entreprises se désignent par identifiant ou nom exact (200 au plus par appel) ; les cases déjà cochées le restent, " +
+      "et `remove_tags` en décoche. Une référence introuvable ou ambiguë n'empêche pas les autres : elle est listée avec la raison. " +
+      "Pour une seule entreprise avec d'autres changements, utilise update_prospect.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        prospects: { type: "array", items: { type: "string" }, description: "Identifiants ou noms exacts des entreprises" },
+        add_tags: { type: "array", items: { type: "string", enum: prospectTags.map((t) => t.id) }, description: "Catégories à cocher" },
+        remove_tags: { type: "array", items: { type: "string", enum: prospectTags.map((t) => t.id) }, description: "Catégories à décocher" },
+      },
+      required: ["prospects"],
+    },
+    handler: (a) => {
+      const result = tagProspects(Array.isArray(a.prospects) ? a.prospects : [], { add: a.add_tags, remove: a.remove_tags });
+      if (result.updated > 0) {
+        audit("mcp", "prospect.tag", `${result.updated} fiche(s) : +${JSON.stringify(a.add_tags ?? [])} -${JSON.stringify(a.remove_tags ?? [])}`.slice(0, 500));
+      }
+      return result;
+    },
+  },
+  {
     name: "delete_prospects",
     description:
       "SUPPRIME DÉFINITIVEMENT des prospects de la liste de prospection (200 au plus par appel). Action irréversible : n'appelle cet outil que sur demande explicite de l'administrateur, " +
@@ -416,3 +444,6 @@ export const tools: Tool[] = [
     handler: () => all<LeadRow>("SELECT id, name, email, company, message, estimate, status, created_at FROM leads ORDER BY created_at DESC LIMIT 100"),
   },
 ];
+
+/** Tous les outils : le cœur (clients, sites, prospection) et l'administration (comptes, domaines, devis, messagerie). */
+export const tools: Tool[] = [...coreTools, ...adminTools];

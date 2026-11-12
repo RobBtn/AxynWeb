@@ -552,6 +552,36 @@ export function updateProspect(idOrName: string, patch: Record<string, unknown>)
  * Supprime des prospects (200 au plus par appel), désignés par identifiant ou par nom exact. Définitif.
  * Une référence introuvable ou ambiguë n'empêche pas les autres : elle est listée avec la raison.
  */
+export function tagProspects(refs: unknown[], change: { add?: unknown; remove?: unknown }) {
+  if (!Array.isArray(refs) || refs.length === 0) throw new DataError("Aucun prospect désigné.");
+  if (refs.length > MAX_PROSPECTS_PER_CALL) throw new DataError(`${MAX_PROSPECTS_PER_CALL} prospects au maximum par appel.`);
+  const add = checkTags(change.add);
+  const remove = checkTags(change.remove);
+  if (add.length === 0 && remove.length === 0) throw new DataError("Indique au moins une case à cocher (add_tags) ou à décocher (remove_tags).");
+
+  const updated: { id: string; name: string; tags: string[] }[] = [];
+  const failed: { ref: string; error: string }[] = [];
+  const seen = new Set<string>();
+  for (const raw of refs) {
+    const ref = typeof raw === "string" ? raw.trim() : "";
+    if (!ref) {
+      failed.push({ ref: String(raw), error: "Référence vide." });
+      continue;
+    }
+    try {
+      const p = findProspect(ref);
+      if (seen.has(p.id)) continue; // même fiche désignée deux fois
+      seen.add(p.id);
+      const done = updateProspect(p.id, { add_tags: add, remove_tags: remove });
+      updated.push({ id: p.id, name: p.name, tags: done.tags });
+    } catch (e) {
+      if (!(e instanceof DataError)) throw e;
+      failed.push({ ref, error: e.message });
+    }
+  }
+  return { updated: updated.length, updatedItems: updated, failed: failed.length, failedItems: failed };
+}
+
 export function deleteProspects(refs: unknown[]) {
   if (!Array.isArray(refs) || refs.length === 0) throw new DataError("Aucun prospect désigné.");
   if (refs.length > MAX_PROSPECTS_PER_CALL) throw new DataError(`${MAX_PROSPECTS_PER_CALL} prospects au maximum par appel.`);
