@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import LegalPage from "@/components/LegalPage";
 import { brand } from "@/lib/config";
 
-export const metadata: Metadata = { title: "Accessibilité" };
+export const metadata: Metadata = { title: "Accessibilité", alternates: { canonical: "/accessibilite" } };
 
 export default function Accessibilite() {
   return (

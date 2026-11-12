@@ -6,7 +6,8 @@ import { templates } from "@/lib/templates";
 
 export const metadata: Metadata = {
   title: "Modèles de sites 3D",
-  description: "Quatre modèles de sites immersifs avec scène 3D animée au défilement. Ouvrez-les et testez-les en direct.",
+  description: "Quatre modèles de sites vitrines avec scène 3D animée : restaurant, artisan, coach, boutique. Ouvrez-les et testez-les en direct.",
+  alternates: { canonical: "/modeles" },
 };
 
 export default function ModelesPage() {

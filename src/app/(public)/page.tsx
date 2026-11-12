@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
 import Stage3D from "@/components/Stage3D";
 import Estimator from "@/components/Estimator";
 import TemplateCard from "@/components/TemplateCard";
 import { pricing } from "@/lib/config";
+import { metiers } from "@/lib/metiers";
+import { area, faqLd, openGraph, organizationLd, websiteLd } from "@/lib/seo";
 import { templates } from "@/lib/templates";
+
+export const metadata: Metadata = { alternates: { canonical: "/" }, openGraph: openGraph("/") };
 
 const sectors = ["Restaurants", "Artisans", "Coachs", "Créateurs", "Architectes", "Boutiques", "Thérapeutes", "Associations"];
 
@@ -36,6 +42,14 @@ const faq = [
     a: "Le studio est porté par un étudiant ingénieur en cybersécurité, en cours de cursus. Nous travaillons avec des outils modernes, dont l'assistance par IA, et nous connaissons les failles qu'ils peuvent introduire dans le code : chaque site est relu, sécurisé avant la mise en ligne, puis tenu à jour.",
   },
   {
+    q: `Combien coûte la création d'un site internet ?`,
+    a: `Un site une page basé sur un modèle 3D coûte ${pricing.offers[0].price} €, un site jusqu'à 5 pages ${pricing.offers[1].price} €, un site sur-mesure à partir de ${pricing.offers[2].price} €. S'y ajoutent ${pricing.maintenanceMonthly} € par mois pour l'hébergement, la sécurité et l'espace client, sans engagement. Le simulateur ci-dessous donne un prix précis.`,
+  },
+  {
+    q: `Travaillez-vous seulement à ${area.mainCity} ?`,
+    a: `Non. Le studio est basé au Rheu, près de ${area.mainCity}, et crée des sites pour toute la France : tout se fait à distance depuis l'espace client.`,
+  },
+  {
     q: "Le site m'appartient-il ?",
     a: "Oui. Le nom de domaine est enregistré à votre nom et vous pouvez récupérer votre contenu à tout moment.",
   },
@@ -59,26 +73,33 @@ const facts = [
   { big: "100 %", label: "des sites relus, sécurisés et tenus à jour" },
 ];
 
-/** Pastille ronde dont le texte tourne : signature visuelle du héros. */
-function Sticker() {
-  const text = `Dès ${pricing.offers[0].price} € · En ligne en 72 h · Sites sécurisés · `;
+/**
+ * Carte d'offre du héros : prix d'appel, délai et accès direct au devis. Fixe et lisible ;
+ * sur téléphone elle est masquée, le texte d'introduction reprend déjà le prix et le délai.
+ */
+function OfferCard() {
   return (
     <Link
       href="/#contact"
-      aria-label="Estimer mon site"
-      className="group relative grid size-36 place-items-center rounded-full border border-bone bg-accent text-on-accent shadow-[5px_5px_0_var(--color-bone)] transition-transform hover:scale-105 max-md:size-28 md:size-44"
+      className="group flex w-64 flex-col gap-5 rounded-2xl border border-bone bg-ink-2/80 p-5 shadow-[5px_5px_0_var(--color-bone)] backdrop-blur-md transition-transform hover:-translate-y-1"
     >
-      <svg viewBox="0 0 200 200" className="spin-slow absolute inset-0 size-full" aria-hidden="true">
-        <defs>
-          <path id="sticker-ring" d="M100,100 m-76,0 a76,76 0 1,1 152,0 a76,76 0 1,1 -152,0" />
-        </defs>
-        <text className="font-mono" fontSize="13.5" letterSpacing="1.5" fill="currentColor">
-          <textPath href="#sticker-ring">{(text + text).toUpperCase().slice(0, 62)}</textPath>
-        </text>
-      </svg>
-      <span className="display text-4xl transition-transform duration-300 group-hover:rotate-45" aria-hidden="true">
-        ↗
+      <span className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider">
+        <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
+        Devis instantané
       </span>
+      <span className="flex items-end justify-between gap-4">
+        <span>
+          <span className="block text-sm text-mute">Site complet dès</span>
+          <span className="display text-5xl">{pricing.offers[0].price} €</span>
+        </span>
+        <span
+          className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-xl text-on-accent transition-transform duration-300 group-hover:rotate-45"
+          aria-hidden="true"
+        >
+          ↗
+        </span>
+      </span>
+      <span className="border-t border-line pt-4 text-sm">En ligne en 72 h · Sécurité incluse</span>
     </Link>
   );
 }
@@ -86,16 +107,17 @@ function Sticker() {
 export default function Home() {
   return (
     <>
+      <JsonLd items={[organizationLd(), websiteLd(), faqLd(faq)]} />
       <Stage3D />
 
       {/* HÉROS */}
       <section data-stage="0" data-stage-alpha="0.85" data-stage-bg="#f3f0e6" data-stage-ink="#164a36" className="relative flex min-h-dvh flex-col justify-end px-6 pb-10 pt-32 md:px-10">
-        <div className="rise absolute right-5 top-24 md:right-16 md:top-40">
-          <Sticker />
+        <div className="rise absolute right-16 top-40 hidden md:block">
+          <OfferCard />
         </div>
 
-        <p className="kicker rise self-start">Studio web · Sécurité d&apos;abord</p>
-        <h1 className="display mt-8 text-[clamp(3.2rem,11.5vw,13rem)]">
+        <h1 className="kicker rise self-start">Création de site internet à {area.mainCity}</h1>
+        <p className="display mt-8 text-[clamp(3.2rem,11.5vw,13rem)]">
           <span className="line-mask">
             <span>Des sites qui</span>
           </span>
@@ -104,12 +126,12 @@ export default function Home() {
               coupent <em>le souffle.</em>
             </span>
           </span>
-        </h1>
+        </p>
 
         <div className="rise rise-3 mt-10 flex flex-col gap-8 border-t border-bone pt-8 md:flex-row md:items-end md:justify-between">
           <p className="max-w-md text-lg">
-            Un fond 3D qui vit, des animations qui sortent du défilement ordinaire, et un espace client pour tout gérer
-            vous-même.
+            Sites vitrines pour indépendants, commerces et TPE : un fond 3D qui vit, une sécurité vérifiée, et un espace
+            client pour tout gérer vous-même. En ligne en 72 h, dès {pricing.offers[0].price} €.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/modeles" className="btn btn-primary" data-magnetic>
@@ -303,6 +325,28 @@ export default function Home() {
             ))}
           </ul>
         </div>
+      </section>
+
+      {/* MÉTIERS — maillage vers les pages par activité */}
+      <section data-stage="3" data-stage-alpha="0.5" data-stage-bg="#fffdf6" data-stage-ink="#164a36" className="relative z-10 border-t border-bone bg-ink-2 px-6 py-32 md:px-10">
+        <p className="kicker" data-reveal>
+          Par métier
+        </p>
+        <h2 data-split className="display mt-6 max-w-4xl text-5xl md:text-7xl">
+          Un site pensé pour votre activité.
+        </h2>
+        <ul data-stagger className="mt-14 flex flex-wrap gap-3">
+          {metiers.map((m) => (
+            <li key={m.slug}>
+              <Link href={`/creation-site-internet/${m.slug}`} className="btn btn-ghost">
+                Site internet pour {m.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <Link href="/creation-site-internet" className="mt-8 inline-block underline underline-offset-4">
+          Création de site internet à {area.mainCity} : notre approche →
+        </Link>
       </section>
 
       {/* TARIFS */}

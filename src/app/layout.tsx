@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { headers } from "next/headers";
 import { brand } from "@/lib/config";
+import { area, seoDescription, siteUrl } from "@/lib/seo";
 import "./globals.css";
 
 // Polices auto-hébergées par Next.js : aucune requête vers Google côté visiteur (RGPD).
@@ -16,7 +17,17 @@ const serif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: { default: `${brand.name} — Sites web 3D, sécurisés et accompagnés`, template: `%s — ${brand.name}` },
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: `Création de site internet à ${area.mainCity} — ${brand.name}, sites 3D sécurisés`,
+    template: `%s — ${brand.name}`,
+  },
+  applicationName: brand.name,
+  // Pas de canonique ici : elle serait héritée par toutes les pages. Chaque page publique pose la sienne.
+  openGraph: { type: "website", locale: "fr_FR", siteName: brand.name },
+  twitter: { card: "summary_large_image" },
+  robots: { index: true, follow: true, googleBot: { "max-image-preview": "large", "max-snippet": -1 } },
+  formatDetection: { telephone: false, email: false, address: false },
   // Icône d'onglet : version verte sur thème clair, version claire sur thème sombre.
   // favicon.ico et apple-icon.png (src/app) servent de repli pour les anciens navigateurs et iOS.
   icons: {
@@ -25,8 +36,7 @@ export const metadata: Metadata = {
       { url: "/logo/axynweb-icone-clair.svg", type: "image/svg+xml", media: "(prefers-color-scheme: dark)" },
     ],
   },
-  description:
-    "Studio de création de sites web. Des sites immersifs en 3D, relus et sécurisés par un étudiant ingénieur en cybersécurité, livrés en quelques jours à prix juste. Espace client inclus.",
+  description: seoDescription,
 };
 
 export const viewport: Viewport = { themeColor: "#0c0d0a" };

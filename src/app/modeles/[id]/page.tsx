@@ -8,7 +8,9 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = getTemplate((await params).id);
-  return t ? { title: `Modèle ${t.name}`, description: t.pitch } : {};
+  return t
+    ? { title: `Modèle de site ${t.name} — ${t.sector}`, description: t.pitch, alternates: { canonical: `/modeles/${t.id}` } }
+    : {};
 }
 
 /** Démonstration plein écran d'un modèle, avec une barre flottante pour revenir ou le choisir. */

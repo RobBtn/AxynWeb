@@ -75,9 +75,14 @@ export function Footer() {
       </p>
       <div className="mt-10 flex flex-col gap-6 border-t border-line pt-8 text-sm text-mute md:flex-row md:items-center md:justify-between">
         <p>
-          © {new Date().getFullYear()} {brand.name}. Sites relus, sécurisés et tenus à jour.
+          © {new Date().getFullYear()} {brand.name}, création de sites internet à Rennes. Sites relus, sécurisés et tenus à jour.
         </p>
         <ul className="flex flex-wrap gap-x-6 gap-y-2">
+          <li>
+            <Link href="/creation-site-internet" className="hover:text-bone">
+              Création de site internet
+            </Link>
+          </li>
           <li>
             <Link href="/mentions-legales" className="hover:text-bone">
               Mentions légales

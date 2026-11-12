@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import LegalPage from "@/components/LegalPage";
 import { brand } from "@/lib/config";
 
-export const metadata: Metadata = { title: "Confidentialité et cookies" };
+export const metadata: Metadata = { title: "Confidentialité et cookies", alternates: { canonical: "/confidentialite" } };
 
 export default function Confidentialite() {
   const l = brand.legal;

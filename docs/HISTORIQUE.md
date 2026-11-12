@@ -95,7 +95,7 @@ Astuces apprises : la connexion est limitée à 5 essais par 15 minutes (relance
 - **DNS / HTTPS** : finaliser `axynweb.fr` (le DNS pointe déjà vers le serveur) et le `Caddyfile`.
 - **Sécurité du serveur** : fermer l'accès SSH root, supprimer la clé SSH sans phrase secrète utilisée pour l'installation, et régénérer tout jeton collé par erreur dans un champ « nom » d'un jeton MCP.
 - **Informations légales** : SIRET, forme juridique, médiateur, à renseigner dans `src/lib/config.ts` quand disponibles.
-- **SEO (étape 1 proposée, non implémentée)** : nouvelles balises `title`/meta/H1 pour l'accueil, page « hub » et pages par métier (restaurant, artisan, coach, coiffeur, boulangerie, ostéopathe), puis FAQ + JSON-LD, réalisations, blog, sitemap/robots, performance (LCP) et visibilité externe (Google Business Profile, Malt, Codeur).
+- **SEO** : fait — H1 et titres orientés « création de site internet à Rennes », page `/creation-site-internet` et pages par métier (`src/lib/metiers.ts`), données structurées JSON-LD (`src/lib/seo.ts`), `sitemap.xml`, `robots.txt` (robots IA admis), `llms.txt`, image de partage, canoniques. Réglage `SITE_URL` (défaut `https://axynweb.fr`). Reste : réalisations et avis réels, blog, visibilité externe (Google Business Profile, Malt, Codeur), soumission du sitemap dans Google Search Console.
 - **Idées non retenues pour l'instant** : démo avant/après pour les prospects, e-mails de notification et mot de passe oublié, validation client avec commentaires, devis/factures, rappels de prospection, sites multi-pages, statistiques respectueuses de la vie privée.
 
 ## 9. Conventions de travail
