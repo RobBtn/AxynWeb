@@ -18,6 +18,7 @@
     "nodemailer": "^10.5.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "sanitize-html": "^2.18.2",
     "server-only": "^0.0.1",
     "three": "^0.187.0",
     "zod": "^4.6.7"
@@ -29,6 +30,7 @@
     "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.2",
     "@types/three": "^0.187.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",

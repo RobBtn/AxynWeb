@@ -151,6 +151,7 @@ CREATE TABLE IF NOT EXISTS mail_messages (
   subject TEXT NOT NULL DEFAULT '',
   date TEXT NOT NULL,
   body TEXT NOT NULL DEFAULT '',
+  html TEXT NOT NULL DEFAULT '',
   seen INTEGER NOT NULL DEFAULT 0,
   sent_by TEXT NOT NULL DEFAULT '',
   UNIQUE (box, uid)
@@ -240,6 +241,10 @@ export function getDb(): DatabaseSync {
   for (const col of ["tags", "email", "website", "address", "notes", "updated_at"]) {
     if (!prospectCols.includes(col)) db.exec(`ALTER TABLE prospects ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
   }
+  const threadCols = (db.prepare("PRAGMA table_info(mail_threads)").all() as { name: string }[]).map((c) => c.name);
+  if (!threadCols.includes("status")) db.exec("ALTER TABLE mail_threads ADD COLUMN status TEXT NOT NULL DEFAULT 'open'");
+  const msgCols = (db.prepare("PRAGMA table_info(mail_messages)").all() as { name: string }[]).map((c) => c.name);
+  if (!msgCols.includes("html")) db.exec("ALTER TABLE mail_messages ADD COLUMN html TEXT NOT NULL DEFAULT ''");
   purgeExpired(db);
   setInterval(() => purgeExpired(db), 24 * 3600 * 1000).unref();
   seed(db);

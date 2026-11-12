@@ -4,6 +4,7 @@ import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
 import MailComposer from "nodemailer/lib/mail-composer";
 import nodemailer from "nodemailer";
+import sanitizeHtml from "sanitize-html";
 import { all, get, newId, run } from "./db";
 
 /**
@@ -32,6 +33,7 @@ export type MailMessage = {
   subject: string;
   date: string;
   body: string;
+  html: string;
   seen: number;
   sent_by: string;
 };
@@ -87,6 +89,37 @@ const htmlToText = (html: string) =>
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
+/**
+ * Nettoie le HTML d'un e-mail pour l'afficher tel que reçu : scripts, formulaires, cadres et gestionnaires d'événements
+ * sont retirés, les liens s'ouvrent dans un nouvel onglet. Les images « cid: » jointes au message sont intégrées.
+ * L'affichage se fait en plus dans un cadre isolé avec sa propre politique de sécurité (voir /api/mail-html).
+ */
+function cleanEmailHtml(html: string, attachments: { cid?: string; contentType: string; content: Buffer; size: number }[]): string {
+  let src = html;
+  let embedded = 0;
+  for (const a of attachments) {
+    if (!a.cid || !a.contentType.startsWith("image/") || a.contentType.includes("svg") || a.size > 1_500_000 || embedded >= 20) continue;
+    const cid = a.cid.replace(/^<|>$/g, "");
+    const uri = `data:${a.contentType};base64,${a.content.toString("base64")}`;
+    src = src.split(`cid:${cid}`).join(uri);
+    embedded++;
+  }
+  const out = sanitizeHtml(src, {
+    allowedTags: [...sanitizeHtml.defaults.allowedTags, "img", "font", "center", "style", "h1", "h2", "span", "u", "s", "small", "big", "hr", "figure", "figcaption", "section", "article", "header", "footer"],
+    allowedAttributes: {
+      "*": ["style", "class", "align", "valign", "width", "height", "bgcolor", "color", "dir", "lang", "title", "colspan", "rowspan", "cellpadding", "cellspacing", "border"],
+      a: ["href", "name", "target", "rel"],
+      img: ["src", "alt", "width", "height", "style", "align", "border"],
+      font: ["color", "face", "size"],
+    },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    allowedSchemesByTag: { img: ["http", "https", "data"] },
+    allowVulnerableTags: true,
+    transformTags: { a: sanitizeHtml.simpleTransform("a", { target: "_blank", rel: "noopener noreferrer nofollow" }) },
+  });
+  return out.length > 400_000 ? "" : out;
+}
+
 /** Trouve (ou crée) la conversation d'un message : par en-têtes de réponse, sinon par objet + correspondant. */
 function threadFor(m: { message_id: string; in_reply_to: string; refs: string; subject: string; from_addr: string; to_addr: string; box: string }): string {
   const ids = [m.in_reply_to, ...m.refs.split(/\s+/)].map(cleanId).filter(Boolean);
@@ -126,10 +159,11 @@ function storeMessage(m: Omit<MailMessage, "id" | "thread_id"> & { in_reply_to: 
   if (m.uid !== null && get("SELECT 1 FROM mail_messages WHERE box = ? AND uid = ?", m.box, m.uid)) return;
   const thread = threadFor(m);
   run(
-    "INSERT INTO mail_messages (id, thread_id, box, uid, message_id, in_reply_to, refs, from_addr, to_addr, subject, date, body, seen, sent_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-    newId(), thread, m.box, m.uid, m.message_id, m.in_reply_to, m.refs, m.from_addr, m.to_addr, m.subject, m.date, m.body, m.seen, m.sent_by
+    "INSERT INTO mail_messages (id, thread_id, box, uid, message_id, in_reply_to, refs, from_addr, to_addr, subject, date, body, html, seen, sent_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    newId(), thread, m.box, m.uid, m.message_id, m.in_reply_to, m.refs, m.from_addr, m.to_addr, m.subject, m.date, m.body, m.html, m.seen, m.sent_by
   );
-  run("UPDATE mail_threads SET last_at = MAX(last_at, ?) WHERE id = ?", m.date, thread);
+  // Un nouveau message (reçu ou envoyé) rouvre la conversation : elle redevient « à traiter » ou « en attente ».
+  run("UPDATE mail_threads SET last_at = MAX(last_at, ?), status = 'open' WHERE id = ?", m.date, thread);
 }
 
 /* ---------- Synchronisation ---------- */
@@ -160,6 +194,7 @@ async function syncBox(c: ImapFlow, path: string, box: "inbox" | "sent") {
         subject: (p.subject ?? "").slice(0, 300),
         date: new Date(p.date ?? Date.now()).toISOString(),
         body: (p.text?.trim() || (typeof p.html === "string" ? htmlToText(p.html) : "")).slice(0, 100_000),
+        html: typeof p.html === "string" ? cleanEmailHtml(p.html, p.attachments) : "",
         seen: box === "sent" || msg.flags?.has("\\Seen") ? 1 : 0,
         sent_by: "",
       });
@@ -189,6 +224,7 @@ export async function syncMailbox(force = false): Promise<void> {
 export type ThreadRow = {
   id: string;
   subject: string;
+  status: "open" | "done";
   folder_id: string | null;
   folder_name: string | null;
   last_at: string;
@@ -198,11 +234,46 @@ export type ThreadRow = {
   last_from: string;
   last_to: string;
   last_by: string;
+  last_body: string;
 };
 
+/**
+ * Vues de suivi :
+ *  - nonlus : au moins un message reçu non lu
+ *  - atraiter : le correspondant a écrit en dernier, la conversation n'est pas traitée
+ *  - attente : nous avons écrit en dernier, on attend sa réponse
+ *  - traites : conversations marquées traitées
+ */
+export type MailView = "tous" | "nonlus" | "atraiter" | "attente" | "traites";
+export const mailViews: { id: MailView; label: string }[] = [
+  { id: "atraiter", label: "À traiter" },
+  { id: "attente", label: "En attente de réponse" },
+  { id: "nonlus", label: "Non lus" },
+  { id: "traites", label: "Traitées" },
+  { id: "tous", label: "Toutes" },
+];
+
+const LAST = (col: string) => `(SELECT ${col} FROM mail_messages m WHERE m.thread_id = t.id ORDER BY date DESC LIMIT 1)`;
+const viewSql: Record<MailView, string> = {
+  tous: "1=1",
+  nonlus: "EXISTS (SELECT 1 FROM mail_messages m WHERE m.thread_id = t.id AND m.box = 'inbox' AND m.seen = 0)",
+  atraiter: `t.status = 'open' AND ${LAST("box")} = 'inbox'`,
+  attente: `t.status = 'open' AND ${LAST("box")} = 'sent'`,
+  traites: "t.status = 'done'",
+};
+export const isMailView = (v: string): v is MailView => v in viewSql;
+
+export function viewCounts(): Record<MailView, number> {
+  const out = {} as Record<MailView, number>;
+  for (const v of Object.keys(viewSql) as MailView[]) {
+    out[v] = get<{ n: number }>(`SELECT COUNT(*) AS n FROM mail_threads t WHERE ${viewSql[v]}`)?.n ?? 0;
+  }
+  return out;
+}
+
 /** Conversations, de la plus récente à la plus ancienne. `folder` : id de dossier, « none » (sans dossier) ou vide (toutes). */
-export function listThreads(opts: { folder?: string; query?: string; page: number; per: number }) {
-  const where: string[] = [];
+export function listThreads(opts: { view?: MailView; folder?: string; query?: string; page: number; per: number }) {
+  const where: string[] = [viewSql[opts.view ?? "tous"]];
   const params: (string | number)[] = [];
   if (opts.folder === "none") where.push("t.folder_id IS NULL");
   else if (opts.folder) {
@@ -216,21 +287,51 @@ export function listThreads(opts: { folder?: string; query?: string; page: numbe
     const like = `%${opts.query.replace(/[%_]/g, "")}%`;
     params.push(like, like, like, like);
   }
-  const w = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  const w = `WHERE ${where.join(" AND ")}`;
   const total = get<{ n: number }>(`SELECT COUNT(*) AS n FROM mail_threads t ${w}`, ...params)?.n ?? 0;
   const items = all<ThreadRow>(
-    `SELECT t.id, t.subject, t.folder_id, f.name AS folder_name, t.last_at,
+    `SELECT t.id, t.subject, t.status, t.folder_id, f.name AS folder_name, t.last_at,
        (SELECT COUNT(*) FROM mail_messages m WHERE m.thread_id = t.id) AS n,
        (SELECT COUNT(*) FROM mail_messages m WHERE m.thread_id = t.id AND m.box = 'inbox' AND m.seen = 0) AS unread,
-       (SELECT box FROM mail_messages m WHERE m.thread_id = t.id ORDER BY date DESC LIMIT 1) AS last_box,
-       (SELECT from_addr FROM mail_messages m WHERE m.thread_id = t.id ORDER BY date DESC LIMIT 1) AS last_from,
-       (SELECT to_addr FROM mail_messages m WHERE m.thread_id = t.id ORDER BY date DESC LIMIT 1) AS last_to,
-       (SELECT sent_by FROM mail_messages m WHERE m.thread_id = t.id ORDER BY date DESC LIMIT 1) AS last_by
+       ${LAST("box")} AS last_box, ${LAST("from_addr")} AS last_from, ${LAST("to_addr")} AS last_to, ${LAST("sent_by")} AS last_by,
+       substr(${LAST("body")}, 1, 140) AS last_body
      FROM mail_threads t LEFT JOIN mail_folders f ON f.id = t.folder_id ${w}
      ORDER BY t.last_at DESC LIMIT ? OFFSET ?`,
     ...params, opts.per, (opts.page - 1) * opts.per
   );
   return { items, total, pages: Math.max(1, Math.ceil(total / opts.per)) };
+}
+
+/* ---------- Lien avec les prospects ---------- */
+export type LinkedProspect = { id: string; name: string; status: string; tags: string; email: string };
+
+/** Fiches prospects dont l'e-mail correspond (clé : adresse en minuscules). */
+export function prospectsByEmail(emails: string[]): Map<string, LinkedProspect> {
+  const map = new Map<string, LinkedProspect>();
+  const uniq = [...new Set(emails.map((e) => e.toLowerCase()).filter(Boolean))];
+  if (!uniq.length) return map;
+  const rows = all<LinkedProspect>(`SELECT id, name, status, tags, email FROM prospects WHERE lower(email) IN (${uniq.map(() => "?").join(",")})`, ...uniq);
+  for (const r of rows) map.set(r.email.toLowerCase(), r);
+  return map;
+}
+
+/** Après un envoi à un prospect : coche « Mail envoyé » sur sa fiche. */
+export function tagProspectMailSent(email: string): string | null {
+  const p = get<{ id: string; name: string; tags: string }>("SELECT id, name, tags FROM prospects WHERE lower(email) = ?", email.toLowerCase());
+  if (!p) return null;
+  const tags = new Set(p.tags.split(",").filter(Boolean));
+  tags.add("mail");
+  run("UPDATE prospects SET tags = ?, updated_at = datetime('now') WHERE id = ?", [...tags].join(","), p.id);
+  return p.name;
+}
+
+/* ---------- Statut et classement (un ou plusieurs fils) ---------- */
+const idsClause = (ids: string[]) => ids.map(() => "?").join(",");
+export function setThreadsStatus(ids: string[], status: "open" | "done") {
+  if (ids.length) run(`UPDATE mail_threads SET status = ? WHERE id IN (${idsClause(ids)})`, status, ...ids);
+}
+export function moveThreads(ids: string[], folderId: string | null) {
+  if (ids.length) run(`UPDATE mail_threads SET folder_id = ? WHERE id IN (${idsClause(ids)})`, folderId, ...ids);
 }
 
 export const listFolders = () =>
@@ -248,7 +349,7 @@ export const mailCounts = () => ({
 });
 
 export function getThread(id: string) {
-  const thread = get<{ id: string; subject: string; folder_id: string | null }>("SELECT id, subject, folder_id FROM mail_threads WHERE id = ?", id);
+  const thread = get<{ id: string; subject: string; folder_id: string | null; status: "open" | "done" }>("SELECT id, subject, folder_id, status FROM mail_threads WHERE id = ?", id);
   if (!thread) return null;
   const messages = all<MailMessage>("SELECT * FROM mail_messages WHERE thread_id = ? ORDER BY date ASC", id);
   return { thread, messages };
@@ -310,7 +411,6 @@ export function createFolder(name: string, by: string): MailFolder {
   return { id, name };
 }
 export const deleteFolder = (id: string) => run("DELETE FROM mail_folders WHERE id = ?", id);
-export const moveThread = (id: string, folderId: string | null) => run("UPDATE mail_threads SET folder_id = ? WHERE id = ?", folderId, id);
 
 /** Supprime la conversation ici et déplace ses messages dans la corbeille de la messagerie. */
 export async function deleteThread(id: string): Promise<void> {
@@ -376,6 +476,7 @@ export async function sendFromInbox(m: { to: string; subject: string; text: stri
     subject: m.subject,
     date: now,
     body: m.text,
+    html: "",
     seen: 1,
     sent_by: m.by,
   });
