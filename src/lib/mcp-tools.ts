@@ -2,21 +2,28 @@ import "server-only";
 import { all, type LeadRow } from "./db";
 import {
   DataError,
+  PROSPECT_PRIORITIES,
+  PROSPECT_STATUSES,
   addDomain,
+  addProspects,
   createClient,
   createSiteFromBrief,
   createSiteFromTemplate,
   findSite,
+  getProspect,
   listClients,
   listDomains,
+  listProspects,
   listRequests,
   listSites,
   overview,
   replyToRequest,
   setSiteHtml,
   setSiteStatus,
+  updateProspect,
   updateSiteContent,
 } from "./data";
+import { prospectTags } from "./prospect-tags";
 import { contentFields, getTemplate, resolveContent, templates } from "./templates";
 
 type Args = Record<string, unknown>;
@@ -65,7 +72,8 @@ export const HTML_GUIDE = `Règles pour le HTML d'un site sur-mesure :
 export const tools: Tool[] = [
   {
     name: "get_overview",
-    description: "Vue d'ensemble de l'activité : nombre de clients, sites, briefs en attente, demandes ouvertes, prospects, domaines qui expirent.",
+    description:
+      "Vue d'ensemble de l'activité : nombre de clients, sites, briefs en attente, demandes ouvertes, demandes de devis, domaines qui expirent, et la prospection à froid (total, par statut, cases à rappeler / entretien / vu en présentiel / à repasser).",
     inputSchema: { type: "object", properties: {} },
     handler: () => overview(),
   },
@@ -269,8 +277,106 @@ export const tools: Tool[] = [
       }),
   },
   {
+    name: "list_prospects",
+    description:
+      "Liste la prospection à froid : les commerces repérés par le studio, SANS demande de leur part (à ne pas confondre avec list_leads, les demandes de devis reçues). " +
+      "Chaque prospect a : id, name, activity, phone, rating (note Google), category (« A. Aucun site », « B. Site cassé ou mort », « C. Site pourri ou daté », « D. Non évalué »), " +
+      "priority (« Haute », « Normale », « À vérifier »), finding (le constat sur son site), status (new = nouveau, contacted = contacté, won = gagné, lost = perdu), " +
+      `tags (cases de suivi cochées : ${prospectTags.map((t) => `${t.id} = ${t.label}`).join(", ")}) et created_at. ` +
+      "Tous les filtres sont facultatifs et se cumulent ; la réponse indique le total et se parcourt avec limit/offset (50 par défaut, 200 au plus).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        status: s("Statut", { enum: [...PROSPECT_STATUSES] }),
+        tag: s("Case de suivi cochée", { enum: prospectTags.map((t) => t.id) }),
+        category: s("Texte contenu dans la catégorie, ex. « Aucun site »"),
+        priority: s("Priorité", { enum: [...PROSPECT_PRIORITIES] }),
+        query: s("Recherche dans le nom, l'activité, le téléphone et le constat"),
+        limit: { type: "integer", description: "Nombre de résultats (50 par défaut, 200 au plus)" },
+        offset: { type: "integer", description: "Nombre de résultats à sauter" },
+      },
+    },
+    handler: (a) =>
+      listProspects({
+        status: text(a, "status", false) || undefined,
+        tag: text(a, "tag", false) || undefined,
+        category: text(a, "category", false) || undefined,
+        priority: text(a, "priority", false) || undefined,
+        query: text(a, "query", false) || undefined,
+        limit: typeof a.limit === "number" ? a.limit : undefined,
+        offset: typeof a.offset === "number" ? a.offset : undefined,
+      }),
+  },
+  {
+    name: "get_prospect",
+    description: "Détail d'un prospect, par identifiant ou par nom exact.",
+    inputSchema: { type: "object", properties: { prospect: s("Identifiant ou nom exact du prospect") }, required: ["prospect"] },
+    handler: (a) => getProspect(text(a, "prospect")),
+  },
+  {
+    name: "add_prospects",
+    description:
+      "Ajoute un ou plusieurs prospects à la liste de prospection (200 au plus par appel). Seul le nom est obligatoire. " +
+      "Un prospect déjà présent (même nom et même téléphone) n'est pas dupliqué : la réponse liste ce qui a été ajouté, ignoré (doublon) ou refusé (donnée invalide, avec la raison). " +
+      "N'invente aucune information : laisse vide ce que tu ne sais pas. Passe soit `prospects` (liste), soit directement les champs d'un seul prospect.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        prospects: {
+          type: "array",
+          description: "Liste de prospects à ajouter",
+          items: {
+            type: "object",
+            properties: {
+              name: s("Nom du commerce (obligatoire)"),
+              activity: s("Activité, ex. « Salon de coiffure »"),
+              phone: s("Téléphone, ex. « 02 99 06 40 36 »"),
+              rating: s("Note Google, ex. « 4,8 »"),
+              category: s("Catégorie, ex. « A. Aucun site »"),
+              priority: s("Priorité", { enum: [...PROSPECT_PRIORITIES] }),
+              finding: s("Constat sur son site actuel (1 000 car. max)"),
+              status: s("Statut (new par défaut)", { enum: [...PROSPECT_STATUSES] }),
+              tags: { type: "array", items: { type: "string", enum: prospectTags.map((t) => t.id) }, description: "Cases de suivi à cocher" },
+            },
+            required: ["name"],
+          },
+        },
+        name: s("Pour ajouter un seul prospect : son nom (avec les mêmes champs facultatifs que ci-dessus)"),
+      },
+    },
+    handler: (a) => addProspects(Array.isArray(a.prospects) ? a.prospects : a.name ? [a] : []),
+  },
+  {
+    name: "update_prospect",
+    description:
+      "Modifie un prospect (par identifiant ou nom exact) : son statut, ses cases de suivi (`tags` remplace tout, `add_tags` et `remove_tags` ajoutent ou retirent) " +
+      "et ses champs descriptifs. Seuls les champs fournis changent.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        prospect: s("Identifiant ou nom exact du prospect"),
+        status: s("Nouveau statut", { enum: [...PROSPECT_STATUSES] }),
+        tags: { type: "array", items: { type: "string", enum: prospectTags.map((t) => t.id) }, description: "Remplace toutes les cases cochées" },
+        add_tags: { type: "array", items: { type: "string", enum: prospectTags.map((t) => t.id) }, description: "Cases à cocher" },
+        remove_tags: { type: "array", items: { type: "string", enum: prospectTags.map((t) => t.id) }, description: "Cases à décocher" },
+        name: s("Nouveau nom"),
+        activity: s("Activité"),
+        phone: s("Téléphone"),
+        rating: s("Note Google"),
+        category: s("Catégorie"),
+        priority: s("Priorité", { enum: [...PROSPECT_PRIORITIES] }),
+        finding: s("Constat (remplace l'ancien)"),
+      },
+      required: ["prospect"],
+    },
+    handler: (a) => {
+      const { prospect, ...patch } = a;
+      return updateProspect(text({ prospect }, "prospect"), patch);
+    },
+  },
+  {
     name: "list_leads",
-    description: "Liste les demandes de devis reçues via le site vitrine (prospects).",
+    description: "Liste les demandes de devis reçues via le site vitrine (prospects ENTRANTS, qui ont fait la demande : à ne pas confondre avec list_prospects, la prospection à froid).",
     inputSchema: { type: "object", properties: {} },
     handler: () => all<LeadRow>("SELECT id, name, email, company, message, estimate, status, created_at FROM leads ORDER BY created_at DESC LIMIT 100"),
   },

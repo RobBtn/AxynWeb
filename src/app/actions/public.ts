@@ -10,8 +10,13 @@ import { sendMail, signupAvailable } from "@/lib/mail";
 import { mailCodeBox, mailLayout, mailNote, mailParagraph } from "@/lib/mail-template";
 import { hashPassword, sha256, verifyPassword } from "@/lib/password";
 
-/** `secret` : valeur affichée une seule fois (mot de passe provisoire, jeton d'API). */
-export type FormState = { ok?: boolean; error?: string; message?: string; secret?: string } | undefined;
+/**
+ * `secret` : valeur affichée une seule fois (mot de passe provisoire, jeton d'API, lien), avec `secretLabel` pour la nommer ;
+ * `extras` : autres valeurs à copier (par exemple la commande complète qui l'utilise).
+ */
+export type FormState =
+  | { ok?: boolean; error?: string; message?: string; secret?: string; secretLabel?: string; extras?: { label: string; value: string }[] }
+  | undefined;
 
 async function clientIp() {
   const h = await headers();

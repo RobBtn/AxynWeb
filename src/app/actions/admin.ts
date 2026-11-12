@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { audit, get, newId, run, type LeadRow, type RequestRow } from "@/lib/db";
 import { rateLimit, requireUser } from "@/lib/auth";
@@ -338,13 +339,34 @@ export async function deleteLeadAction(_p: FormState, fd: FormData): Promise<For
 }
 
 /* ---------- Jetons MCP ---------- */
+/** Un secret collé par erreur dans le champ « nom » serait enregistré et affiché en clair : on le refuse. */
+const looksLikeSecret = (v: string) => /^(sk-|wc_|ghp_|gho_|github_pat_|xox[bpoa]-|AKIA|eyJ)/i.test(v) || (v.length >= 30 && !/\s/.test(v));
+
 export async function createTokenAction(_p: FormState, fd: FormData): Promise<FormState> {
-  return adminAction((actor) => {
+  return adminAction(async (actor) => {
     const name = str(fd, "name") || "Claude";
+    if (looksLikeSecret(name)) {
+      throw new DataError("Ce champ est le nom du jeton (par exemple « Claude — poste de travail »), pas le jeton lui-même : ne collez jamais un secret ici.");
+    }
     const token = `wc_${randomToken(32)}`;
     run("INSERT INTO api_tokens (id, name, token_hash) VALUES (?, ?, ?)", newId(), name.slice(0, 60), sha256(token));
     audit(actor, "token.create", name);
-    return { ok: true, message: "Jeton créé. Copiez-le maintenant, il ne sera plus jamais affiché :", secret: token };
+
+    // Le jeton est le dernier élément du lien : un seul texte à coller dans Claude, sans en-tête à configurer.
+    const h = await headers();
+    const host = h.get("host") ?? "localhost:3000";
+    const local = /^(localhost|127\.0\.0\.1)(:|$)/.test(host);
+    const proto = h.get("x-forwarded-proto") ?? (local ? "http" : "https");
+    const link = `${proto}://${host}/api/mcp/${token}`;
+    return {
+      ok: true,
+      message:
+        "Lien créé. Copiez-le maintenant, il ne sera plus jamais affiché. Il contient le jeton : ne le partagez avec personne." +
+        (local ? " Attention : il utilise l'adresse locale, il ne marche donc que sur cet ordinateur. Pour claude.ai ou l'application Claude, créez-le depuis l'adresse publique du site." : ""),
+      secret: link,
+      secretLabel: "Lien à coller dans Claude",
+      extras: [{ label: "Ou la commande complète pour Claude Code (à lancer dans un terminal)", value: `claude mcp add --transport http axynweb ${link}` }],
+    };
   });
 }
 

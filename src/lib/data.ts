@@ -1,7 +1,8 @@
 import "server-only";
 import { z } from "zod";
-import { all, get, newId, run, type DomainRow, type RequestRow, type SiteRow, type UserRow } from "./db";
+import { all, get, newId, run, type DomainRow, type ProspectRow, type RequestRow, type SiteRow, type UserRow } from "./db";
 import { parseDomainName } from "./hosts";
+import { isProspectTag, parseTags, prospectTags } from "./prospect-tags";
 import { hashPassword, randomToken } from "./password";
 import { contentFields, getTemplate, photoSlots, resolveContent, type SiteContent } from "./templates";
 
@@ -318,10 +319,207 @@ export function resetClientPassword(clientId: string) {
   return { email: user.email, password };
 }
 
+/* ---------- Prospection à froid ---------- */
+// Commerces repérés, sans demande de leur part (distincts des demandes de devis, table « leads »).
+export const PROSPECT_STATUSES = ["new", "contacted", "won", "lost"] as const;
+export const PROSPECT_PRIORITIES = ["Haute", "Normale", "À vérifier"] as const;
+const MAX_PROSPECTS_PER_CALL = 200;
+
+/** Un prospect tel que le voit le MCP : toutes les colonnes, les cases cochées en liste. */
+export type ProspectView = Omit<ProspectRow, "tags"> & { tags: string[] };
+const prospectView = (p: ProspectRow): ProspectView => ({ ...p, tags: parseTags(p.tags) });
+
+const likePattern = (q: string) => "%" + q.replace(/[\\%_]/g, "\\$&") + "%";
+const squash = (v: unknown, max: number) => (typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, max) : "");
+
+/** « haute », « a verifier »… → valeurs d'usage ; toute autre valeur est conservée telle quelle. */
+function normalizePriority(v: unknown): string {
+  const raw = squash(v, 30);
+  const key = raw.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return PROSPECT_PRIORITIES.find((p) => p.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") === key) ?? raw;
+}
+
+function checkTags(v: unknown): string[] {
+  if (v === undefined || v === null) return [];
+  if (!Array.isArray(v)) throw new DataError("« tags » doit être une liste.");
+  const out = new Set<string>();
+  for (const t of v) {
+    if (typeof t !== "string" || !isProspectTag(t)) {
+      throw new DataError(`Case inconnue : ${JSON.stringify(t)}. Valeurs possibles : ${prospectTags.map((x) => x.id).join(", ")}.`);
+    }
+    out.add(t);
+  }
+  return [...out];
+}
+
+export function listProspects(f: { status?: string; tag?: string; category?: string; priority?: string; query?: string; limit?: number; offset?: number } = {}) {
+  const where: string[] = [];
+  const params: (string | number)[] = [];
+  if (f.status) {
+    if (!(PROSPECT_STATUSES as readonly string[]).includes(f.status)) throw new DataError(`Statut inconnu. Valeurs : ${PROSPECT_STATUSES.join(", ")}.`);
+    where.push("status = ?");
+    params.push(f.status);
+  }
+  if (f.tag) {
+    if (!isProspectTag(f.tag)) throw new DataError(`Case inconnue. Valeurs : ${prospectTags.map((x) => x.id).join(", ")}.`);
+    where.push("(',' || tags || ',') LIKE ?");
+    params.push(`%,${f.tag},%`);
+  }
+  if (f.category) {
+    where.push("category LIKE ? ESCAPE '\\'");
+    params.push(likePattern(f.category));
+  }
+  if (f.priority) {
+    where.push("priority = ?");
+    params.push(normalizePriority(f.priority));
+  }
+  if (f.query) {
+    where.push("(name LIKE ? ESCAPE '\\' OR activity LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\' OR finding LIKE ? ESCAPE '\\')");
+    const q = likePattern(f.query);
+    params.push(q, q, q, q);
+  }
+  const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  const total = get<{ n: number }>(`SELECT COUNT(*) AS n FROM prospects ${clause}`, ...params)?.n ?? 0;
+  const limit = clamp(Math.trunc(f.limit ?? 50), 1, MAX_PROSPECTS_PER_CALL);
+  const offset = Math.max(Math.trunc(f.offset ?? 0), 0);
+  const rows = all<ProspectRow>(
+    `SELECT * FROM prospects ${clause}
+      ORDER BY CASE priority WHEN 'Haute' THEN 0 WHEN 'Normale' THEN 1 ELSE 2 END, rowid
+      LIMIT ? OFFSET ?`,
+    ...params,
+    limit,
+    offset
+  );
+  return { total, returned: rows.length, offset, items: rows.map(prospectView) };
+}
+
+const clamp = (n: number, a: number, b: number) => Math.min(Math.max(Number.isFinite(n) ? n : a, a), b);
+
+/** Retrouve un prospect par identifiant, ou par nom exact (sans tenir compte de la casse). */
+export function findProspect(idOrName: string): ProspectRow {
+  const key = idOrName.trim();
+  const byId = get<ProspectRow>("SELECT * FROM prospects WHERE id = ?", key);
+  if (byId) return byId;
+  const byName = all<ProspectRow>("SELECT * FROM prospects WHERE lower(name) = lower(?)", key);
+  if (byName.length === 1) return byName[0];
+  if (byName.length > 1) throw new DataError(`Plusieurs prospects portent ce nom : précisez l'identifiant (${byName.map((p) => p.id).join(", ")}).`);
+  throw new DataError("Prospect introuvable.");
+}
+
+export function getProspect(idOrName: string): ProspectView {
+  return prospectView(findProspect(idOrName));
+}
+
+/**
+ * Ajoute des prospects (200 au plus par appel). Un prospect déjà présent (même nom et même téléphone, sans tenir
+ * compte de la casse) n'est pas dupliqué. Chaque ligne est contrôlée à part : les valides sont ajoutées, les autres
+ * sont listées avec la raison.
+ */
+export function addProspects(items: unknown[]) {
+  if (!Array.isArray(items) || items.length === 0) throw new DataError("Aucun prospect fourni.");
+  if (items.length > MAX_PROSPECTS_PER_CALL) throw new DataError(`${MAX_PROSPECTS_PER_CALL} prospects au maximum par appel.`);
+
+  const created: { id: string; name: string }[] = [];
+  const skipped: { index: number; name: string; reason: string }[] = [];
+  const rejected: { index: number; name: string; error: string }[] = [];
+  const seen = new Set<string>();
+
+  items.forEach((raw, index) => {
+    const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+    const name = squash(o.name, 120);
+    try {
+      if (name.length < 2) throw new DataError("Nom manquant (2 caractères minimum).");
+      const phone = squash(o.phone, 30);
+      const status = squash(o.status, 20) || "new";
+      if (!(PROSPECT_STATUSES as readonly string[]).includes(status)) throw new DataError(`Statut inconnu. Valeurs : ${PROSPECT_STATUSES.join(", ")}.`);
+      const tags = checkTags(o.tags);
+
+      const key = `${name.toLowerCase()}|${phone}`;
+      if (seen.has(key)) return void skipped.push({ index, name, reason: "doublon dans la liste fournie" });
+      seen.add(key);
+      if (get("SELECT 1 AS x FROM prospects WHERE lower(name) = lower(?) AND phone = ?", name, phone)) {
+        return void skipped.push({ index, name, reason: "déjà dans la liste" });
+      }
+
+      const id = newId();
+      run(
+        "INSERT INTO prospects (id, category, priority, name, activity, phone, rating, finding, status, tags) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        id,
+        squash(o.category, 80),
+        normalizePriority(o.priority),
+        name,
+        squash(o.activity, 120),
+        phone,
+        squash(o.rating, 12),
+        typeof o.finding === "string" ? o.finding.trim().slice(0, 1000) : "",
+        status,
+        tags.join(",")
+      );
+      created.push({ id, name });
+    } catch (e) {
+      if (!(e instanceof DataError)) throw e;
+      rejected.push({ index, name, error: e.message });
+    }
+  });
+  return { added: created.length, skipped: skipped.length, rejected: rejected.length, created, skippedItems: skipped, rejectedItems: rejected };
+}
+
+/** Met à jour un prospect : statut, cases cochées (remplacer / ajouter / retirer) et champs descriptifs. */
+export function updateProspect(idOrName: string, patch: Record<string, unknown>) {
+  const p = findProspect(idOrName);
+  const sets: string[] = [];
+  const params: (string | number)[] = [];
+  const set = (col: string, value: string) => {
+    sets.push(`${col} = ?`);
+    params.push(value);
+  };
+
+  if (patch.status !== undefined) {
+    const status = squash(patch.status, 20);
+    if (!(PROSPECT_STATUSES as readonly string[]).includes(status)) throw new DataError(`Statut inconnu. Valeurs : ${PROSPECT_STATUSES.join(", ")}.`);
+    set("status", status);
+  }
+  if (patch.tags !== undefined || patch.add_tags !== undefined || patch.remove_tags !== undefined) {
+    let tags = new Set<string>(patch.tags !== undefined ? checkTags(patch.tags) : parseTags(p.tags));
+    for (const t of checkTags(patch.add_tags)) tags.add(t);
+    for (const t of checkTags(patch.remove_tags)) tags.delete(t);
+    tags = new Set([...tags].filter(isProspectTag));
+    set("tags", [...tags].join(","));
+  }
+  if (patch.name !== undefined) {
+    const name = squash(patch.name, 120);
+    if (name.length < 2) throw new DataError("Nom invalide (2 caractères minimum).");
+    set("name", name);
+  }
+  if (patch.activity !== undefined) set("activity", squash(patch.activity, 120));
+  if (patch.phone !== undefined) set("phone", squash(patch.phone, 30));
+  if (patch.rating !== undefined) set("rating", squash(patch.rating, 12));
+  if (patch.category !== undefined) set("category", squash(patch.category, 80));
+  if (patch.priority !== undefined) set("priority", normalizePriority(patch.priority));
+  if (patch.finding !== undefined) set("finding", typeof patch.finding === "string" ? patch.finding.trim().slice(0, 1000) : "");
+
+  if (sets.length === 0) throw new DataError("Rien à modifier : fournissez au moins un champ.");
+  try {
+    run(`UPDATE prospects SET ${sets.join(", ")} WHERE id = ?`, ...params, p.id);
+  } catch {
+    throw new DataError("Un prospect avec ce nom et ce téléphone existe déjà.");
+  }
+  return getProspect(p.id);
+}
+
 /* ---------- Vue d'ensemble ---------- */
 export function overview() {
   const n = (sql: string) => (get<{ n: number }>(sql)?.n ?? 0);
+  const tagCount = (tag: string) => n(`SELECT COUNT(*) AS n FROM prospects WHERE (',' || tags || ',') LIKE '%,${tag},%'`);
   return {
+    prospects: {
+      total: n("SELECT COUNT(*) AS n FROM prospects"),
+      ...Object.fromEntries(PROSPECT_STATUSES.map((s) => [s, n(`SELECT COUNT(*) AS n FROM prospects WHERE status = '${s}'`)])),
+      aRappeler: tagCount("rappeler"),
+      entretien: tagCount("entretien"),
+      vusEnPresentiel: tagCount("presentiel"),
+      aRepasser: tagCount("repasser"),
+    },
     clients: n("SELECT COUNT(*) AS n FROM users WHERE role = 'client'"),
     sites: n("SELECT COUNT(*) AS n FROM sites"),
     sitesLive: n("SELECT COUNT(*) AS n FROM sites WHERE status = 'live'"),

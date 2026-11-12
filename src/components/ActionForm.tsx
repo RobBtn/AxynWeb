@@ -20,7 +20,6 @@ type Props = {
 export default function ActionForm({ action, children, submit, className = "", variant = "primary", confirm, reset }: Props) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const ref = useRef<HTMLFormElement>(null);
-  const [copied, setCopied] = useState(false);
   // Confirmation : on interrompe l'envoi, on affiche la fenêtre, puis on renvoie le formulaire une fois validé.
   const [asking, setAsking] = useState(false);
   const confirmed = useRef(false);
@@ -65,21 +64,37 @@ export default function ActionForm({ action, children, submit, className = "", v
           {state.error ?? state.message}
         </p>
       )}
-      {state?.secret && (
-        <div className="flex flex-wrap items-center gap-2">
-          <code className="select-all break-all rounded-lg bg-bone px-3 py-2 font-mono text-sm text-ink">{state.secret}</code>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={async () => {
-              await navigator.clipboard.writeText(state.secret!);
-              setCopied(true);
-            }}
-          >
-            {copied ? "Copié ✓" : "Copier"}
-          </button>
-        </div>
-      )}
+      {state?.secret && <CopyBox label={state.secretLabel} value={state.secret} />}
+      {state?.extras?.map((x) => (
+        <CopyBox key={x.label} label={x.label} value={x.value} />
+      ))}
     </form>
+  );
+}
+
+/** Valeur à copier (mot de passe provisoire, lien, commande…) avec son bouton « Copier ». */
+function CopyBox({ label, value }: { label?: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="flex flex-col gap-1.5">
+      {label && <p className="text-xs font-medium text-mute">{label}</p>}
+      <div className="flex flex-wrap items-center gap-2">
+        <code className="select-all break-all rounded-lg bg-bone px-3 py-2 font-mono text-sm text-ink">{value}</code>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(value);
+              setCopied(true);
+            } catch {
+              setCopied(false); // presse-papiers refusé : la valeur reste sélectionnable d'un clic (select-all)
+            }
+          }}
+        >
+          {copied ? "Copié ✓" : "Copier"}
+        </button>
+      </div>
+    </div>
   );
 }

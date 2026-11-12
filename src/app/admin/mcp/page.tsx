@@ -18,29 +18,40 @@ export default async function AdminMcp() {
     <>
       <PageTitle kicker="Administration" title="Claude (MCP)" />
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="1. Créer un jeton d'accès">
-          <ActionForm action={createTokenAction} submit="Générer un jeton" reset className="flex flex-col gap-3">
+        <Card title="1. Créer un lien d'accès">
+          <ActionForm action={createTokenAction} submit="Générer le lien" reset className="flex flex-col gap-3">
             <label className="field">
-              Nom du jeton
+              Nom (pour le retrouver dans la liste)
               <input className="input" name="name" placeholder="Claude — poste de travail" maxLength={60} />
             </label>
           </ActionForm>
           <p className="mt-4 text-xs text-mute">
-            Le jeton donne un accès administrateur complet via Claude. Il n&apos;est stocké que sous forme
-            d&apos;empreinte : gardez-le secret et révoquez-le au moindre doute.
+            Le lien contient un jeton qui donne un accès administrateur complet via Claude. Il n&apos;est affiché qu&apos;une seule fois et
+            stocké sous forme d&apos;empreinte : ne le partagez avec personne et révoquez-le au moindre doute.
           </p>
         </Card>
 
-        <Card title="2. Brancher Claude">
-          <p className="text-sm text-bone/80">Dans un terminal, avec Claude Code :</p>
-          <pre className="mt-3 overflow-x-auto zone-dark rounded-xl p-4 font-mono text-xs leading-relaxed">
-            {`claude mcp add --transport http axynweb ${url} \\\n  --header "Authorization: Bearer VOTRE_JETON"`}
-          </pre>
+        <Card title="2. Ajouter à Claude">
+          <ol className="list-decimal space-y-3 pl-5 text-sm text-bone/85">
+            <li>
+              <strong>Claude Code</strong> : copiez la commande donnée à la création du lien et lancez-la dans un terminal.
+            </li>
+            <li>
+              <strong>claude.ai ou l&apos;application Claude</strong> : <em>Paramètres → Connecteurs → Ajouter un connecteur personnalisé</em>, puis
+              collez le lien. Il faut pour cela une adresse publique en https (pas <code className="font-mono">localhost</code>).
+            </li>
+          </ol>
+          <p className="mt-4 text-xs text-mute">
+            Adresse du serveur : <code className="font-mono">{url}</code>. Le lien est cette adresse suivie de <code className="font-mono">/</code> et du jeton. Si
+            vous préférez ne pas mettre le jeton dans l&apos;adresse, envoyez-le en en-tête{" "}
+            <code className="font-mono">Authorization: Bearer …</code> sur l&apos;adresse du serveur.
+          </p>
           <p className="mt-4 text-sm text-bone/80">Puis demandez par exemple :</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-mute">
             <li>« Crée un site pour la boulangerie Dupont à partir du modèle Aurore. »</li>
             <li>« Génère les sites des briefs en attente. »</li>
-            <li>« Traite les nouvelles demandes de modification. »</li>
+            <li>« Ajoute ces commerces à ma liste de prospection : … »</li>
+            <li>« Quels prospects dois-je rappeler aujourd&apos;hui ? »</li>
           </ul>
         </Card>
       </div>
