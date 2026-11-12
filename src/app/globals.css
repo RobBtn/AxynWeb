@@ -619,3 +619,27 @@ html[data-mail-selecting] .mail-check { opacity: 1; }
 @media (hover: none) { .mail-check { opacity: 1; } }
 [data-drop-folder][data-over] { outline: 2px dashed var(--color-accent); outline-offset: 2px; background: color-mix(in srgb, var(--color-accent) 14%, transparent); }
 [data-mail-id][data-dragging] { opacity: 0.45; }
+
+
+/* Touches de couleur : une teinte (--h) pilote pastilles, puces et filets */
+.hue-amber { --h: #c98a0f; }
+.hue-blue { --h: #2f6fb0; }
+.hue-green { --h: #2f8a5f; }
+.hue-coral { --h: #c2401f; }
+.hue-violet { --h: #7a4fb5; }
+.hue-slate { --h: #6b7280; }
+.hue { color: var(--h); }
+.chip-h {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.12rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--h) 72%, var(--color-bone));
+  background: color-mix(in srgb, var(--h) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--h) 32%, transparent);
+}
+.dot-h { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--h); flex-shrink: 0; }
