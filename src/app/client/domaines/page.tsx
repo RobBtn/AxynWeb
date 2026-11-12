@@ -1,3 +1,4 @@
+import DomainPublication, { DomainHelp } from "@/components/DomainPublication";
 import { Card, Empty, PageTitle, frDate } from "@/components/Shell";
 import { requireUser } from "@/lib/auth";
 import { listDomains } from "@/lib/data";
@@ -18,6 +19,7 @@ export default async function ClientDomains() {
                 <tr>
                   <th>Domaine</th>
                   <th>Site</th>
+                  <th>Publication</th>
                   <th>Expiration</th>
                   <th>Renouvellement</th>
                 </tr>
@@ -27,6 +29,9 @@ export default async function ClientDomains() {
                   <tr key={d.id}>
                     <td className="font-mono">{d.name}</td>
                     <td>{d.site_name ?? "—"}</td>
+                    <td>
+                      <DomainPublication name={d.name} siteStatus={d.site_status} />
+                    </td>
                     <td>
                       {frDate(d.expires_at)}{" "}
                       {d.days_left !== null && d.days_left < 30 && (
@@ -45,6 +50,9 @@ export default async function ClientDomains() {
         <p className="mt-5 text-sm text-mute">
           Vos domaines sont enregistrés à votre nom. Pour un transfert ou un changement, ouvrez une demande.
         </p>
+      </Card>
+      <Card title="Relier votre nom de domaine à votre site" tone="info" className="mt-6">
+        <DomainHelp />
       </Card>
     </>
   );

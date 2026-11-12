@@ -6,6 +6,7 @@ Une seule application qui regroupe :
 - **quatre modèles de sites** (`/modeles`) : Aurore, Monolithe, Pulse, Atelier — fond 3D animé, cadres photo, infos pratiques ;
 - **l'espace client** (`/client`) : textes et photos en direct avec aperçu ordinateur/mobile, avancement du site, demandes de modification, domaines, export et suppression des données ;
 - **l'espace admin** (`/admin`) : création de site guidée (`/admin/sites/nouveau`), publication en un clic, clients, briefs, demandes (Kanban), domaines, prospects, journal d'activité ;
+- **les domaines des clients** : un site « En ligne » est servi sur son propre nom de domaine, avec certificat HTTPS automatique ;
 - **un serveur MCP** (`/api/mcp`) : Claude crée et modifie les sites directement.
 
 ## Démarrer
@@ -81,4 +82,4 @@ Pas-à-pas complet pour un serveur Hetzner (Node, Caddy, service, sauvegardes) :
 4. Servir en HTTPS derrière un reverse proxy qui transmet `X-Forwarded-For` et `X-Forwarded-Proto`.
 5. Changer les mots de passe de `.env.local`, supprimer le client de démonstration.
 6. Brancher l'envoi d'e-mails (notification de devis, remise des identifiants) : non inclus.
-7. Relier les noms de domaine des clients à leurs sites (`/s/<slug>`) : routage par nom d'hôte à ajouter.
+7. Pour publier un site sur le domaine d'un client : réglages `PLATFORM_HOSTS` et `SERVER_IP`, et bloc « Domaines des clients » du Caddyfile (voir [DEPLOIEMENT.md](DEPLOIEMENT.md), point 14).

@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { all, get, newId, run, type DomainRow, type RequestRow, type SiteRow, type UserRow } from "./db";
+import { parseDomainName } from "./hosts";
 import { hashPassword, randomToken } from "./password";
 import { contentFields, getTemplate, photoSlots, resolveContent, type SiteContent } from "./templates";
 
@@ -197,12 +198,16 @@ export function setSiteStatus(idOrSlug: string, status: string) {
 }
 
 /* ---------- Domaines ---------- */
-export type DomainListItem = DomainRow & { site_name: string | null; days_left: number | null };
+export type DomainListItem = DomainRow & {
+  site_name: string | null;
+  site_status: SiteRow["status"] | null;
+  days_left: number | null;
+};
 
 export function listDomains(clientId?: string) {
   const where = clientId ? "WHERE s.client_id = ?" : "";
   return all<DomainListItem>(
-    `SELECT d.*, s.name AS site_name,
+    `SELECT d.*, s.name AS site_name, s.status AS site_status,
             CAST(julianday(d.expires_at) - julianday('now') AS INTEGER) AS days_left
        FROM domains d LEFT JOIN sites s ON s.id = d.site_id ${where}
       ORDER BY d.expires_at IS NULL, d.expires_at ASC`,
@@ -211,10 +216,9 @@ export function listDomains(clientId?: string) {
 }
 
 export function addDomain(input: { name: string; site?: string | null; registrar?: string; expiresAt?: string; autoRenew?: boolean }) {
-  const name = input.name.trim().toLowerCase();
-  if (!/^(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/.test(name)) {
-    throw new DataError("Nom de domaine invalide (exemple : mon-site.fr).");
-  }
+  const parsed = parseDomainName(input.name);
+  if (!parsed.ok) throw new DataError(parsed.error);
+  const name = parsed.name;
   if (get("SELECT 1 AS x FROM domains WHERE name = ?", name)) throw new DataError("Ce domaine est déjà enregistré.");
   const expires = input.expiresAt?.trim() || null;
   if (expires && !/^\d{4}-\d{2}-\d{2}$/.test(expires)) throw new DataError("Date d'expiration attendue au format AAAA-MM-JJ.");

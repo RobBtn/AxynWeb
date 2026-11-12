@@ -1,4 +1,5 @@
 import ActionForm from "@/components/ActionForm";
+import DomainPublication, { DomainHelp } from "@/components/DomainPublication";
 import { Card, Empty, PageTitle, frDate } from "@/components/Shell";
 import { addDomainAction, deleteDomainAction } from "@/app/actions/admin";
 import { requireUser } from "@/lib/auth";
@@ -11,8 +12,8 @@ export default async function AdminDomains() {
   return (
     <>
       <PageTitle kicker="Administration" title="Domaines" />
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-        <Card>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <Card className="min-w-0">
           {domains.length === 0 ? (
             <Empty>Aucun domaine.</Empty>
           ) : (
@@ -22,31 +23,38 @@ export default async function AdminDomains() {
                   <tr>
                     <th>Domaine</th>
                     <th>Site</th>
-                    <th>Registrar</th>
+                    <th>Publication</th>
                     <th>Expiration</th>
-                    <th>Renouv.</th>
-                    <th />
                   </tr>
                 </thead>
                 <tbody>
                   {domains.map((d) => (
                     <tr key={d.id}>
-                      <td className="font-mono">{d.name}</td>
+                      <td className="min-w-[12rem]">
+                        <span className="block font-mono">{d.name}</span>
+                        {d.registrar && <span className="block text-xs text-mute">{d.registrar}</span>}
+                        <div className="mt-2">
+                          <ActionForm action={deleteDomainAction} submit="Retirer" variant="danger" confirm={`Retirer ${d.name} de la liste ?`}>
+                            <input type="hidden" name="id" value={d.id} />
+                          </ActionForm>
+                        </div>
+                      </td>
                       <td>{d.site_name ?? "—"}</td>
-                      <td>{d.registrar || "—"}</td>
                       <td>
-                        {frDate(d.expires_at)}
-                        {d.days_left !== null && d.days_left < 30 && (
-                          <span className="pill pill-bad ml-2">{Math.max(d.days_left, 0)} j</span>
-                        )}
+                        <DomainPublication name={d.name} siteStatus={d.site_status} />
                       </td>
                       <td>
-                        <span className={`pill ${d.auto_renew ? "pill-ok" : "pill-warn"}`}>{d.auto_renew ? "auto" : "manuel"}</span>
-                      </td>
-                      <td className="text-right">
-                        <ActionForm action={deleteDomainAction} submit="Retirer" variant="danger" confirm={`Retirer ${d.name} de la liste ?`}>
-                          <input type="hidden" name="id" value={d.id} />
-                        </ActionForm>
+                        <div className="flex flex-col items-start gap-1.5">
+                          <span>
+                            {frDate(d.expires_at)}
+                            {d.days_left !== null && d.days_left < 30 && (
+                              <span className="pill pill-bad ml-2">{Math.max(d.days_left, 0)} j</span>
+                            )}
+                          </span>
+                          <span className={`pill ${d.auto_renew ? "pill-ok" : "pill-warn"}`}>
+                            {d.auto_renew ? "renouvellement auto" : "renouvellement manuel"}
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -87,8 +95,13 @@ export default async function AdminDomains() {
             </label>
           </ActionForm>
           <p className="mt-4 text-xs text-mute">
-            Ce tableau est un registre de suivi : l&apos;achat et le renouvellement se font chez le registrar.
+            Un domaine rattaché à un site « En ligne » est servi automatiquement une fois son DNS relié au serveur. L&apos;achat et le
+            renouvellement se font chez le registrar.
           </p>
+        </Card>
+
+        <Card title="Relier le domaine d'un client" className="h-fit lg:col-start-2" tone="info">
+          <DomainHelp admin />
         </Card>
       </div>
     </>

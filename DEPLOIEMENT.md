@@ -196,21 +196,47 @@ sudo nano /etc/caddy/Caddyfile
 Remplace tout le contenu par :
 
 ```
+{
+	# Certificats HTTPS « à la demande » pour les domaines de clients : avant d'en créer un, Caddy
+	# demande à l'application si ce nom est bien enregistré (sinon n'importe qui pourrait en réclamer).
+	on_demand_tls {
+		ask http://127.0.0.1:3000/api/domain-check
+	}
+}
+
 exemple.fr {
-    encode zstd gzip
-    reverse_proxy 127.0.0.1:3000
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3000
 }
 
 www.exemple.fr {
-    redir https://exemple.fr{uri} permanent
+	redir https://exemple.fr{uri} permanent
+}
+
+# Domaines des clients (et sous-domaines de exemple.fr)
+https:// {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3000
+}
+
+http:// {
+	redir https://{host}{uri} permanent
 }
 ```
 
+Vérifie la syntaxe, puis recharge :
+
 ```bash
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 sudo systemctl reload caddy
 ```
 
 Caddy demande le certificat à Let's Encrypt tout seul, dès que le DNS du point 2 est propagé. Ouvre `https://exemple.fr`. Si ça échoue : `sudo journalctl -u caddy -n 50 --no-pager`.
+
+Le bloc d'options du début et les deux derniers blocs servent aux domaines des clients (point 14). Si tu ne comptes pas en proposer tout de suite, tu peux les omettre : le site fonctionne sans.
 
 Utilise toujours `https://`. Le cookie de connexion est marqué `Secure` en production : en `http://`, tu ne pourrais pas te connecter.
 
@@ -324,7 +350,33 @@ claude mcp add --transport http axynweb-prod https://exemple.fr/api/mcp --header
 
 Un jeton donne les pleins pouvoirs de l'admin sur le site. Ne le colle nulle part en public, et révoque-le dans l'admin s'il fuite.
 
-## 14. Envoyer des e-mails (inscription par code)
+## 14. Publier le site d'un client sur son nom de domaine
+
+L'application sert chaque site sur son propre domaine (`boulangerie-dupont.fr`) en plus de l'adresse `exemple.fr/s/nom-du-site`. Deux réglages de `.env.local` la préparent :
+
+```
+PLATFORM_HOSTS=exemple.fr,www.exemple.fr,localhost,127.0.0.1
+SERVER_IP=IP_DU_SERVEUR
+```
+
+- `PLATFORM_HOSTS` : les noms qui servent la plateforme elle-même. **Toute autre visite est traitée comme le domaine d'un client**, et ne voit que son site.
+- `SERVER_IP` : l'adresse à donner aux clients, et que l'admin compare au DNS de leur domaine.
+
+Redémarre ensuite (`sudo systemctl restart axynweb`) et utilise le bloc « Domaines des clients » du `Caddyfile` (point 8).
+
+**Pour chaque client :**
+
+1. Le client (ou toi) crée chez son registrar un enregistrement DNS **A** pour `@` vers `IP_DU_SERVEUR`, et un **CNAME** pour `www` vers son nom de domaine. Il **ne supprime pas** les enregistrements MX et TXT de sa messagerie.
+2. Dans l'admin, onglet **Domaines**, ajoute le domaine en le rattachant au site. La colonne « Publication » indique si le DNS est relié et si le site est en ligne.
+3. Passe le site **« En ligne »**. À la première visite, Caddy crée le certificat HTTPS en quelques secondes, mais seulement parce que l'application lui confirme que ce domaine est enregistré.
+
+**Sous-domaines gratuits** (`boulangerie.exemple.fr`) : ajoute un enregistrement DNS **A** pour `*` vers `IP_DU_SERVEUR` chez le gestionnaire de `exemple.fr`, puis attribue un nom à un seul niveau depuis l'admin. Ne supprime pas les MX et TXT de `exemple.fr`.
+
+**Ce que voit un visiteur sur le domaine d'un client :** uniquement son site, ses photos et son cadre HTML. L'administration, la connexion, l'inscription et les API de la plateforme répondent 404 sur ces domaines.
+
+**Limites actuelles :** le site d'un client est servi sur la page d'accueil (`/`) de son domaine, et son icône d'onglet n'est pas encore personnalisable.
+
+## 15. Envoyer des e-mails (inscription par code)
 
 L'app envoie un code à 6 chiffres par e-mail quand quelqu'un crée un compte. Il lui faut un **serveur SMTP**, c'est-à-dire un compte chez un service d'envoi ou une boîte mail de ton domaine. Tu en as besoin de :
 
@@ -347,13 +399,13 @@ Pour tester, le plus simple : connecte-toi en admin, ouvre **Mon compte**, carte
 
 Le logo est joint aux e-mails sous forme d'image PNG (`public/logo/axynweb-logo-1000.png`) : il s'affiche sans dépendre du site.
 
-## 15. Avant d'ouvrir au public
+## 16. Avant d'ouvrir au public
 
 - Compléter `src/lib/config.ts` quand ton statut existera : raison sociale ou nom, forme juridique, SIRET, TVA, directeur de la publication, médiateur de la consommation, coordonnées complètes de l'hébergeur. Les champs laissés vides ne sont pas affichés sur les pages légales, donc rien ne s'affiche à moitié rempli. Ces informations restent obligatoires pour une activité professionnelle : renseigne-les dès que possible.
 - Faire relire les CGV par un juriste et désigner un médiateur de la consommation.
 - L'envoi d'e-mails sert aujourd'hui au code d'inscription. Les notifications de devis et la remise des identifiants ne sont pas encore envoyées par e-mail.
 - Mentionner dans la politique de confidentialité la création de compte par inscription (nom, e-mail, mot de passe haché).
-- Router les noms de domaine des clients vers leurs sites : pas encore fait, les sites sont servis sur `/s/<slug>`.
+- Les sites des clients sont servis sur leur propre domaine (point 14) ou, à défaut, sur `/s/<slug>`.
 
 ## En cas de problème
 

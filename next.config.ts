@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 // En-têtes de sécurité appliqués à toutes les réponses.
-// La Content-Security-Policy (avec nonce) est posée par src/proxy.ts.
+// La Content-Security-Policy (avec nonce) et Strict-Transport-Security sont posés par src/proxy.ts :
+// HSTS dépend du nom de domaine (plateforme ou domaine d'un client).
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -9,10 +10,6 @@ const securityHeaders = [
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
-  },
-  {
-    key: "Strict-Transport-Security",
-    value: "max-age=63072000; includeSubDomains; preload",
   },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];

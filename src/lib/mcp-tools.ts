@@ -246,7 +246,8 @@ export const tools: Tool[] = [
   },
   {
     name: "add_domain",
-    description: "Ajoute un nom de domaine au registre de suivi (n'achète rien : l'enregistrement se fait chez le registrar).",
+    description:
+      "Ajoute un nom de domaine et le rattache à un site : une fois le DNS du domaine pointé vers le serveur (enregistrement A) et le site « En ligne », le site est servi sur ce domaine avec HTTPS automatique. N'achète rien : l'enregistrement se fait chez le registrar.",
     inputSchema: {
       type: "object",
       properties: {
