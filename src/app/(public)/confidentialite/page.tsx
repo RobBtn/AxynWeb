@@ -16,7 +16,8 @@ export default function Confidentialite() {
 
       <h2>Responsable du traitement</h2>
       <p>
-        {l.companyName}, {l.address}. Contact pour toute question relative à vos données :{" "}
+        {l.companyName || brand.name}
+        {l.address && `, ${l.address}`}. Contact pour toute question relative à vos données :{" "}
         <a href={`mailto:${l.dpoEmail}`}>{l.dpoEmail}</a>.
       </p>
 

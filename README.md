@@ -39,7 +39,7 @@ Deux façons de créer un site :
 
 | Dossier | Rôle |
 | --- | --- |
-| `src/lib/config.ts` | Nom, coordonnées, mentions légales, tarifs — **à compléter** |
+| `src/lib/config.ts` | Nom, coordonnées, mentions légales, tarifs — les champs vides ne s'affichent pas |
 | `src/lib/templates.ts` | Définition des modèles et des champs éditables |
 | `src/components/Scene3D.tsx` | Fonds 3D des modèles (three.js + shaders) : `silk`, `waves`, `grid` |
 | `src/components/ParticleStage.tsx` | Scène de l'accueil : particules qui changent de forme par section (attributs `data-stage-*`) et fond de page animé |
@@ -75,7 +75,7 @@ Ajouter un modèle : une entrée dans `templates.ts` et une mise en page dans `T
 
 Pas-à-pas complet pour un serveur Hetzner (Node, Caddy, service, sauvegardes) : [DEPLOIEMENT.md](DEPLOIEMENT.md).
 
-1. Compléter `src/lib/config.ts` (raison sociale, SIRET, hébergeur, e-mail, tarifs).
+1. Compléter `src/lib/config.ts` dès que le statut existe (raison sociale, SIRET, TVA, médiateur, hébergeur).
 2. Faire relire les CGV par un juriste et désigner un médiateur de la consommation.
 3. Choisir un hébergement dans l'Union européenne avec disque persistant (VPS) : la base est un fichier SQLite et les photos sont des fichiers. Mettre en place une sauvegarde de `data/`.
 4. Servir en HTTPS derrière un reverse proxy qui transmet `X-Forwarded-For` et `X-Forwarded-Proto`.

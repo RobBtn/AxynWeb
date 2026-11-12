@@ -6,25 +6,41 @@ export const metadata: Metadata = { title: "Mentions légales" };
 
 export default function MentionsLegales() {
   const l = brand.legal;
+  // Les informations non renseignées dans config.ts ne sont pas affichées.
+  const lines: React.ReactNode[] = [
+    [l.companyName || brand.name, l.legalForm].filter(Boolean).join(" — "),
+    l.address && `Siège : ${l.address}`,
+    l.siret && `SIRET : ${l.siret}`,
+    l.vat && `TVA : ${l.vat}`,
+    <>
+      Contact : <a href={`mailto:${brand.email}`}>{brand.email}</a>
+      {brand.phone && ` — ${brand.phone}`}
+    </>,
+  ].filter(Boolean);
+
   return (
     <LegalPage title="Mentions légales" updated="novembre 2026">
       <h2>Éditeur du site</h2>
       <p>
-        {l.companyName} — {l.legalForm}
-        <br />
-        Siège : {l.address}
-        <br />
-        SIRET : {l.siret}
-        <br />
-        TVA : {l.vat}
-        <br />
-        Contact : <a href={`mailto:${brand.email}`}>{brand.email}</a>
-        {brand.phone && ` — ${brand.phone}`}
+        {lines.map((line, i) => (
+          <span key={i}>
+            {i > 0 && <br />}
+            {line}
+          </span>
+        ))}
       </p>
-      <h2>Directeur de la publication</h2>
-      <p>{l.director}</p>
-      <h2>Hébergement</h2>
-      <p>{l.host}</p>
+      {l.director && (
+        <>
+          <h2>Directeur de la publication</h2>
+          <p>{l.director}</p>
+        </>
+      )}
+      {l.host && (
+        <>
+          <h2>Hébergement</h2>
+          <p>{l.host}</p>
+        </>
+      )}
       <h2>Propriété intellectuelle</h2>
       <p>
         Les textes, visuels, modèles, animations et le code de ce site sont la propriété de {brand.name}, sauf mention

@@ -6,18 +6,13 @@ export const metadata: Metadata = { title: "Conditions générales de vente" };
 
 export default function Cgv() {
   return (
+    // Ces conditions sont un modèle de base : à faire relire par un professionnel du droit, puis à adapter à l'activité.
     <LegalPage title="Conditions générales de vente" updated="novembre 2026">
-      <p>
-        <em>
-          Modèle de base à faire relire par un professionnel du droit avant publication, puis à adapter à votre
-          activité.
-        </em>
-      </p>
-
       <h2>1. Objet</h2>
       <p>
         Les présentes conditions régissent les prestations de création, d&apos;hébergement et de maintenance de sites
-        web fournies par {brand.name} ({brand.legal.companyName}) à ses clients, professionnels ou consommateurs.
+        web fournies par {brand.name}
+        {brand.legal.companyName && ` (${brand.legal.companyName})`} à ses clients, professionnels ou consommateurs.
       </p>
 
       <h2>2. Commande et devis</h2>
@@ -74,8 +69,9 @@ export default function Cgv() {
 
       <h2>10. Médiation et droit applicable</h2>
       <p>
-        Les présentes conditions sont soumises au droit français. En cas de litige, le consommateur peut recourir
-        gratuitement à un médiateur de la consommation : À COMPLÉTER — nom et coordonnées du médiateur.
+        Les présentes conditions sont soumises au droit français.
+        {brand.legal.mediator &&
+          ` En cas de litige, le consommateur peut recourir gratuitement à un médiateur de la consommation : ${brand.legal.mediator}.`}
       </p>
     </LegalPage>
   );

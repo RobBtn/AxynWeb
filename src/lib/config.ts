@@ -1,21 +1,28 @@
 /**
- * Réglages de l'entreprise. Tout ce qui est marqué « À COMPLÉTER » doit être
- * remplacé par vos vraies informations avant la mise en ligne
- * (obligations légales : LCEN art. 6-III, RGPD art. 13).
+ * Réglages de l'entreprise. Les champs laissés vides ("") ne sont pas affichés
+ * sur les pages légales : renseignez-les au fur et à mesure (statut, SIRET…).
+ * Obligations d'information : LCEN art. 6-III, RGPD art. 13.
  */
 export const brand = {
   name: "AxynWeb",
   tagline: "Des sites à couper le souffle. Sécurisés, accompagnés, à prix juste.",
   email: "contact@axynweb.fr",
-  phone: "", // À COMPLÉTER
+  phone: "",
   legal: {
-    companyName: "À COMPLÉTER — raison sociale",
-    legalForm: "À COMPLÉTER — forme juridique (EI, SASU, SARL…)",
-    siret: "À COMPLÉTER — SIRET",
-    vat: "À COMPLÉTER — n° TVA intracommunautaire ou mention de franchise",
-    address: "À COMPLÉTER — adresse du siège",
-    director: "À COMPLÉTER — directeur de la publication",
-    host: "À COMPLÉTER — nom, adresse et téléphone de l'hébergeur (UE)",
+    /** Raison sociale ou nom de l'entrepreneur ; vide : le nom de la marque est utilisé. */
+    companyName: "",
+    /** EI, SASU, SARL… */
+    legalForm: "",
+    siret: "",
+    /** N° de TVA intracommunautaire, ou mention de franchise en base. */
+    vat: "",
+    address: "Rue le Ptit Cheval, Le Rheu",
+    /** Directeur de la publication. */
+    director: "",
+    /** Hébergeur : nom, adresse et téléphone. */
+    host: "Hostinger",
+    /** Médiateur de la consommation : nom et coordonnées (obligatoire pour vendre aux consommateurs). */
+    mediator: "",
     dpoEmail: "contact@axynweb.fr",
   },
 };

@@ -349,7 +349,7 @@ Le logo est joint aux e-mails sous forme d'image PNG (`public/logo/axynweb-logo-
 
 ## 15. Avant d'ouvrir au public
 
-- Compléter `src/lib/config.ts` : raison sociale, SIRET, hébergeur (Hetzner Online GmbH), e-mail, tarifs. Ces informations alimentent les mentions légales.
+- Compléter `src/lib/config.ts` quand ton statut existera : raison sociale ou nom, forme juridique, SIRET, TVA, directeur de la publication, médiateur de la consommation, coordonnées complètes de l'hébergeur. Les champs laissés vides ne sont pas affichés sur les pages légales, donc rien ne s'affiche à moitié rempli. Ces informations restent obligatoires pour une activité professionnelle : renseigne-les dès que possible.
 - Faire relire les CGV par un juriste et désigner un médiateur de la consommation.
 - L'envoi d'e-mails sert aujourd'hui au code d'inscription. Les notifications de devis et la remise des identifiants ne sont pas encore envoyées par e-mail.
 - Mentionner dans la politique de confidentialité la création de compte par inscription (nom, e-mail, mot de passe haché).
