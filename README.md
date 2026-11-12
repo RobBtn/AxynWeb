@@ -73,6 +73,8 @@ Ajouter un modèle : une entrée dans `templates.ts` et une mise en page dans `T
 
 ## Avant la mise en ligne
 
+Pas-à-pas complet pour un serveur Hetzner (Node, Caddy, service, sauvegardes) : [DEPLOIEMENT.md](DEPLOIEMENT.md).
+
 1. Compléter `src/lib/config.ts` (raison sociale, SIRET, hébergeur, e-mail, tarifs).
 2. Faire relire les CGV par un juriste et désigner un médiateur de la consommation.
 3. Choisir un hébergement dans l'Union européenne avec disque persistant (VPS) : la base est un fichier SQLite et les photos sont des fichiers. Mettre en place une sauvegarde de `data/`.

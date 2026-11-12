@@ -20,6 +20,7 @@ import {
 } from "@/lib/data";
 import { contentFields, getTemplate, resolveContent } from "@/lib/templates";
 import { removeSiteMedia } from "@/lib/media";
+import { isProspectTag, parseTags } from "@/lib/prospect-tags";
 import { randomToken, sha256 } from "@/lib/password";
 import type { FormState } from "./public";
 
@@ -238,6 +239,37 @@ export async function setLeadStatusAction(_p: FormState, fd: FormData): Promise<
     const status = str(fd, "status");
     if (!["new", "contacted", "won", "lost"].includes(status)) throw new DataError("Statut invalide.");
     run("UPDATE leads SET status = ? WHERE id = ?", status, str(fd, "id"));
+    return { ok: true };
+  });
+}
+
+export async function setProspectStatusAction(_p: FormState, fd: FormData): Promise<FormState> {
+  return adminAction(() => {
+    const status = str(fd, "status");
+    if (!["new", "contacted", "won", "lost"].includes(status)) throw new DataError("Statut invalide.");
+    run("UPDATE prospects SET status = ? WHERE id = ?", status, str(fd, "id"));
+    return { ok: true };
+  });
+}
+
+/** Coche ou décoche une case de suivi (« à rappeler », « entretien », …) sur un prospect. */
+export async function setProspectTagAction(id: string, tag: string, on: boolean): Promise<FormState> {
+  return adminAction(() => {
+    if (!isProspectTag(tag)) throw new DataError("Case inconnue.");
+    const row = get<{ tags: string }>("SELECT tags FROM prospects WHERE id = ?", id);
+    if (!row) throw new DataError("Prospect introuvable.");
+    const next = new Set(parseTags(row.tags));
+    if (on) next.add(tag);
+    else next.delete(tag);
+    run("UPDATE prospects SET tags = ? WHERE id = ?", [...next].join(","), id);
+    return { ok: true };
+  });
+}
+
+export async function deleteProspectAction(_p: FormState, fd: FormData): Promise<FormState> {
+  return adminAction((actor) => {
+    run("DELETE FROM prospects WHERE id = ?", str(fd, "id"));
+    audit(actor, "prospect.delete", str(fd, "id"));
     return { ok: true };
   });
 }

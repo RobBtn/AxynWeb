@@ -82,6 +82,20 @@ CREATE TABLE IF NOT EXISTS leads (
   consent_at TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS prospects (
+  id TEXT PRIMARY KEY,
+  category TEXT NOT NULL DEFAULT '',
+  priority TEXT NOT NULL DEFAULT '',
+  name TEXT NOT NULL,
+  activity TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  rating TEXT NOT NULL DEFAULT '',
+  finding TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','contacted','won','lost')),
+  tags TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (name, phone)
+);
 CREATE TABLE IF NOT EXISTS api_tokens (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -151,6 +165,11 @@ export function getDb(): DatabaseSync {
   const db = new DatabaseSync(path.join(dir, "webcrea.db"));
   db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;");
   db.exec(SCHEMA);
+  // Migration : « tags » a été ajoutée après la création de la table sur les bases existantes.
+  const prospectCols = db.prepare("PRAGMA table_info(prospects)").all() as { name: string }[];
+  if (!prospectCols.some((c) => c.name === "tags")) {
+    db.exec("ALTER TABLE prospects ADD COLUMN tags TEXT NOT NULL DEFAULT ''");
+  }
   seed(db);
   globalForDb.__webcreaDb = db;
   return db;
@@ -234,6 +253,21 @@ export type LeadRow = {
   estimate: string;
   status: "new" | "contacted" | "won" | "lost";
   consent_at: string;
+  created_at: string;
+};
+/** Prospection à froid (commerces repérés, sans demande de leur part) : distincte des demandes de devis. */
+export type ProspectRow = {
+  id: string;
+  category: string;
+  priority: string;
+  name: string;
+  activity: string;
+  phone: string;
+  rating: string;
+  finding: string;
+  status: "new" | "contacted" | "won" | "lost";
+  /** Cases cochées, séparées par des virgules (voir prospect-tags.ts). */
+  tags: string;
   created_at: string;
 };
 export type TokenRow = {
