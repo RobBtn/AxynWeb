@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ParticleStage from "@/components/ParticleStage";
+import Stage3D from "@/components/Stage3D";
 import Estimator from "@/components/Estimator";
 import TemplateCard from "@/components/TemplateCard";
 import { pricing } from "@/lib/config";
@@ -86,10 +86,10 @@ function Sticker() {
 export default function Home() {
   return (
     <>
-      <ParticleStage />
+      <Stage3D />
 
       {/* HÉROS */}
-      <section data-stage="0" data-stage-alpha="0.66" data-stage-bg="#f3f0e6" data-stage-ink="#12150d" className="relative flex min-h-dvh flex-col justify-end px-6 pb-10 pt-32 md:px-10">
+      <section data-stage="0" data-stage-alpha="0.85" data-stage-bg="#f3f0e6" data-stage-ink="#164a36" className="relative flex min-h-dvh flex-col justify-end px-6 pb-10 pt-32 md:px-10">
         <div className="rise absolute right-5 top-24 md:right-16 md:top-40">
           <Sticker />
         </div>
@@ -279,7 +279,7 @@ export default function Home() {
       </section>
 
       {/* SÉCURITÉ */}
-      <section data-stage="4" data-stage-alpha="0.45" data-stage-bg="#10130b" data-stage-ink="#cfe3c4" className="zone-dark relative z-10 px-6 py-40 md:px-10">
+      <section data-stage="5" data-stage-alpha="0.45" data-stage-bg="#10130b" data-stage-ink="#cfe3c4" className="zone-dark relative z-10 px-6 py-40 md:px-10">
         <div className="grid gap-16 lg:grid-cols-[1fr_1.5fr]">
           <div>
             <p className="kicker" data-reveal>
@@ -306,7 +306,7 @@ export default function Home() {
       </section>
 
       {/* TARIFS */}
-      <section id="tarifs" data-stage="5" data-stage-alpha="0.46" data-stage-bg="#f3f0e6" data-stage-ink="#12150d" className="relative z-10 scroll-mt-24 border-t border-bone bg-ink px-6 py-40 md:px-10">
+      <section id="tarifs" data-stage="0" data-stage-alpha="0.5" data-stage-bg="#f3f0e6" data-stage-ink="#164a36" className="relative z-10 scroll-mt-24 border-t border-bone bg-ink px-6 py-40 md:px-10">
         <p className="kicker" data-reveal>
           Tarifs
         </p>
@@ -347,7 +347,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section data-stage="5" data-stage-alpha="0.4" data-stage-bg="#fffdf6" data-stage-ink="#164a36" className="relative z-10 border-t border-bone bg-ink-2 px-6 py-32 md:px-10">
+      <section data-stage="0" data-stage-alpha="0.4" data-stage-bg="#fffdf6" data-stage-ink="#164a36" className="relative z-10 border-t border-bone bg-ink-2 px-6 py-32 md:px-10">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.6fr]">
           <h2 data-split className="display text-5xl md:text-6xl">
             Questions fréquentes

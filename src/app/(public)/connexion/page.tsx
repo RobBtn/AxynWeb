@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import ParticleStage from "@/components/ParticleStage";
+import Stage3D from "@/components/Stage3D";
 import LoginForm from "./LoginForm";
 import { getUser } from "@/lib/auth";
 import { signupAvailable } from "@/lib/mail";
@@ -14,10 +14,10 @@ export default async function ConnexionPage() {
 
   return (
     <>
-      {/* Même fond de particules que l'accueil : il couvre tout l'écran, quelle que soit sa taille. */}
-      <ParticleStage />
+      {/* Même fond 3D que l'accueil : il couvre tout l'écran, quelle que soit sa taille. */}
+      <Stage3D />
       <section
-        data-stage="4"
+        data-stage="0"
         data-stage-alpha="0.5"
         data-stage-bg="#f3f0e6"
         data-stage-ink="#164a36"

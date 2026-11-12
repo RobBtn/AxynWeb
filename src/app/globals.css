@@ -401,7 +401,7 @@ select.input option {
 .rise-3 {
   animation-delay: 0.34s;
 }
-/* Scène de particules (accueil) : elle peint le fond de page, les sections deviennent transparentes. */
+/* Scène 3D (Stage3D) : elle peint le fond de page, les sections deviennent transparentes. */
 .stage-backdrop {
   background: var(--color-ink);
 }

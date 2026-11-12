@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import ParticleStage from "@/components/ParticleStage";
+import Stage3D from "@/components/Stage3D";
 import SignupForm from "./SignupForm";
 import { getUser } from "@/lib/auth";
 import { signupAvailable } from "@/lib/mail";
@@ -15,9 +15,9 @@ export default async function InscriptionPage() {
 
   return (
     <>
-      <ParticleStage />
+      <Stage3D />
       <section
-        data-stage="4"
+        data-stage="0"
         data-stage-alpha="0.5"
         data-stage-bg="#f3f0e6"
         data-stage-ink="#164a36"

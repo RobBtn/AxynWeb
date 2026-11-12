@@ -141,6 +141,9 @@ export default function Scene3D({
       }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
       renderer.setClearColor(0x000000, 0);
+      // Sans cette contrainte, un canvas sur un écran à forte densité de pixels prend la taille de ses pixels réels
+      // (2 à 3 fois trop grande) et déborde.
+      renderer.domElement.style.cssText = "display:block;width:100%;height:100%";
       el.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
