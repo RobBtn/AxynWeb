@@ -39,7 +39,12 @@ export default async function ClientRequests() {
 
         <Card title="Nouvelle demande" className="h-fit">
           {sites.length === 0 ? (
-            <Empty>Disponible dès que votre site est créé.</Empty>
+            <div className="flex flex-col items-start gap-3">
+              <p className="text-sm text-mute">Les demandes de modification servent une fois votre site créé. Pour démarrer un projet, demandez un devis.</p>
+              <Link href="/client/devis" className="btn btn-primary btn-sm">
+                Demander un devis →
+              </Link>
+            </div>
           ) : (
             <ActionForm action={createRequest} submit="Envoyer la demande" className="flex flex-col gap-3">
               <label className="field">

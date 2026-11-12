@@ -593,6 +593,7 @@ export function overview() {
       entretien: tagCount("entretien"),
       vusEnPresentiel: tagCount("presentiel"),
       aRepasser: tagCount("repasser"),
+      mailEnvoye: tagCount("mail"),
     },
     clients: n("SELECT COUNT(*) AS n FROM users WHERE role = 'client'"),
     sites: n("SELECT COUNT(*) AS n FROM sites"),

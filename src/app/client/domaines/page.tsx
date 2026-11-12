@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { get } from "@/lib/db";
 import DomainPublication, { DomainHelp } from "@/components/DomainPublication";
 import { Card, Empty, PageTitle, frDate } from "@/components/Shell";
 import { requireUser } from "@/lib/auth";
@@ -6,12 +8,24 @@ import { listDomains } from "@/lib/data";
 export default async function ClientDomains() {
   const user = await requireUser("client");
   const domains = listDomains(user.id);
+  const hasSite = !!get("SELECT 1 FROM sites WHERE client_id = ?", user.id);
   return (
     <>
       <PageTitle kicker="Noms de domaine" title="Domaines" />
       <Card>
         {domains.length === 0 ? (
-          <Empty>Aucun nom de domaine rattaché à vos sites pour l&apos;instant.</Empty>
+          <Empty>
+            Aucun nom de domaine rattaché à vos sites pour l&apos;instant.
+            {!hasSite && (
+              <>
+                {" "}
+                <Link href="/client/devis" className="underline">
+                  Demandez un devis
+                </Link>{" "}
+                pour créer votre premier site.
+              </>
+            )}
+          </Empty>
         ) : (
           <div className="overflow-x-auto">
             <table className="table">

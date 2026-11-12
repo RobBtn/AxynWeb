@@ -125,6 +125,38 @@ CREATE TABLE IF NOT EXISTS audit (
   detail TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- Messagerie partagée : copie locale de la boîte mail, regroupée en conversations et classée en dossiers.
+CREATE TABLE IF NOT EXISTS mail_folders (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  created_by TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS mail_threads (
+  id TEXT PRIMARY KEY,
+  subject TEXT NOT NULL DEFAULT '',
+  folder_id TEXT REFERENCES mail_folders(id) ON DELETE SET NULL,
+  last_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS mail_messages (
+  id TEXT PRIMARY KEY,
+  thread_id TEXT NOT NULL REFERENCES mail_threads(id) ON DELETE CASCADE,
+  box TEXT NOT NULL CHECK (box IN ('inbox','sent')),
+  uid INTEGER,
+  message_id TEXT NOT NULL DEFAULT '',
+  in_reply_to TEXT NOT NULL DEFAULT '',
+  refs TEXT NOT NULL DEFAULT '',
+  from_addr TEXT NOT NULL DEFAULT '',
+  to_addr TEXT NOT NULL DEFAULT '',
+  subject TEXT NOT NULL DEFAULT '',
+  date TEXT NOT NULL,
+  body TEXT NOT NULL DEFAULT '',
+  seen INTEGER NOT NULL DEFAULT 0,
+  sent_by TEXT NOT NULL DEFAULT '',
+  UNIQUE (box, uid)
+);
+CREATE INDEX IF NOT EXISTS idx_mail_msg_thread ON mail_messages(thread_id);
+CREATE INDEX IF NOT EXISTS idx_mail_msg_mid ON mail_messages(message_id);
 CREATE INDEX IF NOT EXISTS idx_sites_client ON sites(client_id);
 CREATE INDEX IF NOT EXISTS idx_requests_site ON requests(site_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
@@ -185,6 +217,7 @@ export function purgeExpired(db: DatabaseSync = getDb()) {
     "DELETE FROM prospects WHERE status != 'won' AND COALESCE(NULLIF(updated_at, ''), created_at) < datetime('now', '-3 years')"
   );
   const audit = n("DELETE FROM audit WHERE created_at < datetime('now', '-12 months') AND action != 'purge'");
+  n("DELETE FROM mail_threads WHERE last_at < datetime('now', '-3 years')");
   n("DELETE FROM signup_codes WHERE expires_at < ?", now);
   n("DELETE FROM sessions WHERE expires_at < ?", now);
   if (leads || prospects || audit) {

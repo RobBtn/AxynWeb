@@ -16,6 +16,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  serverExternalPackages: ["imapflow", "mailparser"],
   // Envoi de photos par Server Action (5 Mo par photo, contrôlé dans src/lib/media.ts).
   experimental: { serverActions: { bodySizeLimit: "6mb" } },
   turbopack: {

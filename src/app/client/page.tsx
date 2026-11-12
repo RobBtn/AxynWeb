@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Card, Empty, PageTitle, StatusPill } from "@/components/Shell";
+import { Card, Empty, PageTitle, StatusPill, frDate } from "@/components/Shell";
 import { requireUser } from "@/lib/auth";
-import { all, type SiteRow } from "@/lib/db";
+import { all, type LeadRow, type SiteRow } from "@/lib/db";
 import SiteProgress from "@/components/SiteProgress";
 import { listDomains, listRequests, siteProgress, statusLabel } from "@/lib/data";
 import { getTemplate } from "@/lib/templates";
@@ -10,6 +10,7 @@ export default async function ClientHome() {
   const user = await requireUser("client");
   const sites = all<SiteRow>("SELECT * FROM sites WHERE client_id = ? ORDER BY updated_at DESC", user.id);
   const requests = listRequests({ clientId: user.id }).filter((r) => r.status !== "done").slice(0, 4);
+  const quotes = all<LeadRow>("SELECT * FROM leads WHERE email = ? ORDER BY created_at DESC LIMIT 3", user.email.toLowerCase());
   const expiring = listDomains(user.id).filter((d) => d.days_left !== null && d.days_left < 30);
 
   return (
@@ -29,7 +30,31 @@ export default async function ClientHome() {
       ))}
 
       {sites.length === 0 ? (
-        <Empty>Aucun site pour l&apos;instant. Votre site apparaîtra ici dès sa création.</Empty>
+        <section className="rounded-2xl border border-line bg-ink-2 p-8 md:p-10">
+          <p className="kicker">Commençons</p>
+          <h2 className="display mt-3 text-3xl md:text-4xl">Vous n&apos;avez pas encore de site.</h2>
+          <p className="mt-3 max-w-xl text-mute">
+            {quotes.length > 0
+              ? "Votre demande de devis est bien reçue : nous revenons vers vous sous 24 h ouvrées. Vous pouvez en envoyer une autre si vous avez un second projet."
+              : "Décrivez votre projet et recevez une estimation. C'est gratuit et sans engagement."}
+          </p>
+          <ol className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
+            {[
+              ["1", "Vous demandez un devis", "Estimation en direct, puis un message sur votre projet."],
+              ["2", "Nous créons votre site", "Vous validez la maquette avant la mise en ligne."],
+              ["3", "Vous le modifiez ici", "Textes, photos et demandes de retouches, depuis cet espace."],
+            ].map(([n, t, d]) => (
+              <li key={n} className="rounded-xl border border-line p-4">
+                <span className="font-mono text-xs text-accent">{n}</span>
+                <p className="mt-1 font-medium">{t}</p>
+                <p className="mt-1 text-xs text-mute">{d}</p>
+              </li>
+            ))}
+          </ol>
+          <Link href="/client/devis" className="btn btn-primary mt-6">
+            {quotes.length > 0 ? "Demander un autre devis" : "Demander un devis →"}
+          </Link>
+        </section>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
           {sites.map((s) => {
@@ -71,6 +96,22 @@ export default async function ClientHome() {
         </div>
       )}
 
+      {quotes.length > 0 && (
+        <Card title="Mes demandes de devis" className="mt-8">
+          <ul className="divide-y divide-white/5">
+            {quotes.map((q) => (
+              <li key={q.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                <span className="min-w-0">
+                  <span className="block truncate">{q.estimate || q.message}</span>
+                  <span className="text-xs text-mute">Envoyée le {frDate(q.created_at)}</span>
+                </span>
+                <StatusPill status={q.status} label={q.status === "new" ? "Reçue" : statusLabel[q.status]} />
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       <Card title="Demandes en cours" className="mt-8">
         {requests.length === 0 ? (
           <Empty>Aucune demande en cours.</Empty>
@@ -86,9 +127,15 @@ export default async function ClientHome() {
             ))}
           </ul>
         )}
-        <Link href="/client/demandes" className="btn btn-ghost btn-sm mt-4">
-          Nouvelle demande
-        </Link>
+        {sites.length > 0 ? (
+          <Link href="/client/demandes" className="btn btn-ghost btn-sm mt-4">
+            Nouvelle demande
+          </Link>
+        ) : (
+          <Link href="/client/devis" className="btn btn-ghost btn-sm mt-4">
+            Demander un devis
+          </Link>
+        )}
       </Card>
     </>
   );

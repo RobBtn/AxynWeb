@@ -21,6 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/demandes", label: "Demandes", badge: o.requestsOpen },
         { href: "/admin/domaines", label: "Domaines", badge: o.domainsExpiring },
         { href: "/admin/prospects", label: "Prospects", badge: o.leadsNew },
+        { href: "/admin/messagerie", label: "Messagerie" },
         { href: "/admin/mcp", label: "Claude (MCP)" },
         { href: "/admin/compte", label: "Mon compte" },
       ]}

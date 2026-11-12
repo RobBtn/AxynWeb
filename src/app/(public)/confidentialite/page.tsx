@@ -43,6 +43,11 @@ export default function Confidentialite() {
           donnée n&apos;est cédée à des tiers.
         </li>
         <li>
+          <strong>Échanges par e-mail</strong> — messages que vous nous écrivez ou auxquels nous répondons (adresse, objet,
+          contenu). Finalité : répondre et suivre la relation. Conservation : 3 ans après le dernier message de
+          l&apos;échange.
+        </li>
+        <li>
           <strong>Journal de sécurité</strong> — connexions et actions sensibles. Finalité : sécurité du service
           (intérêt légitime). Conservation : 12 mois.
         </li>

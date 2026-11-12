@@ -8,7 +8,7 @@ import { pricing } from "@/lib/config";
 const euro = (n: number) => n.toLocaleString("fr-FR") + " €";
 
 /** Simulateur de prix en direct + formulaire de demande de devis. */
-export default function Estimator() {
+export default function Estimator({ defaults }: { defaults?: { name?: string; email?: string; company?: string } } = {}) {
   const sim = pricing.simulator;
   const [pages, setPages] = useState(1);
   const [options, setOptions] = useState<string[]>([]);
@@ -92,16 +92,16 @@ export default function Estimator() {
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="field">
             Nom
-            <input className="input" name="name" required maxLength={80} autoComplete="name" />
+            <input className="input" name="name" required maxLength={80} autoComplete="name" defaultValue={defaults?.name} />
           </label>
           <label className="field">
             E-mail
-            <input className="input" type="email" name="email" required maxLength={120} autoComplete="email" />
+            <input className="input" type="email" name="email" required maxLength={120} autoComplete="email" defaultValue={defaults?.email} />
           </label>
         </div>
         <label className="field">
           Entreprise (facultatif)
-          <input className="input" name="company" maxLength={120} autoComplete="organization" />
+          <input className="input" name="company" maxLength={120} autoComplete="organization" defaultValue={defaults?.company} />
         </label>
         <label className="field">
           Votre projet

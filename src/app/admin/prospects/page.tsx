@@ -131,9 +131,10 @@ function ProspectCard({ p }: { p: ProspectRow }) {
   );
 }
 
-export default async function AdminLeads({ searchParams }: { searchParams: Promise<{ vue?: string }> }) {
+export default async function AdminLeads({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string }> }) {
   await requireUser("admin");
-  const { vue } = await searchParams;
+  const { vue, q: rawQ } = await searchParams;
+  const q = (rawQ ?? "").trim().slice(0, 80);
   const view = vue && isProspectTag(vue) ? vue : "tous";
 
   const leads = all<LeadRow>("SELECT * FROM leads ORDER BY created_at DESC");
@@ -141,7 +142,18 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
     "SELECT * FROM prospects ORDER BY CASE priority WHEN 'Haute' THEN 0 WHEN 'Normale' THEN 1 ELSE 2 END, rowid"
   );
   const counts = Object.fromEntries(prospectTags.map((t) => [t.id, prospects.filter((p) => parseTags(p.tags).includes(t.id)).length]));
-  const shown = view === "tous" ? prospects : prospects.filter((p) => parseTags(p.tags).includes(view));
+  const needle = q.toLowerCase();
+  const matches = (p: ProspectRow) =>
+    !needle || [p.name, p.activity, p.phone, p.email, p.website, p.address].some((v) => v.toLowerCase().includes(needle));
+  const inView = view === "tous" ? prospects : prospects.filter((p) => parseTags(p.tags).includes(view));
+  const shown = inView.filter(matches);
+  const qs = (v: string) => {
+    const params = new URLSearchParams();
+    if (v !== "tous") params.set("vue", v);
+    if (q) params.set("q", q);
+    const s = params.toString();
+    return `/admin/prospects${s ? `?${s}` : ""}#prospection`;
+  };
   const categories = [...new Set(shown.map((p) => p.category))].sort();
 
   const tabs = [{ id: "tous", label: "Tous", n: prospects.length }, ...prospectTags.map((t) => ({ id: t.id, label: t.label, n: counts[t.id] }))];
@@ -202,11 +214,27 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
         {prospects.length} commerces repérés, sans demande de leur part. Coche une case sur une fiche : elle apparaît dans l&apos;onglet correspondant.
       </p>
 
+      <form action="/admin/prospects#prospection" method="get" role="search" className="mb-4 flex flex-wrap items-center gap-2">
+        {view !== "tous" && <input type="hidden" name="vue" value={view} />}
+        <input className="input !w-auto min-w-64 flex-1" type="search" name="q" defaultValue={q} placeholder="Rechercher un nom, une activité, un téléphone…" aria-label="Rechercher un prospect" maxLength={80} />
+        <button className="btn btn-primary btn-sm">Rechercher</button>
+        {q && (
+          <Link href={view === "tous" ? "/admin/prospects#prospection" : `/admin/prospects?vue=${view}#prospection`} className="btn btn-ghost btn-sm">
+            Effacer
+          </Link>
+        )}
+      </form>
+      {q && (
+        <p className="mb-4 text-sm text-mute">
+          {shown.length} résultat{shown.length > 1 ? "s" : ""} pour « {q} »
+        </p>
+      )}
+
       <nav aria-label="Vues de la prospection" className="mb-6 flex flex-wrap gap-2">
         {tabs.map((t) => (
           <Link
             key={t.id}
-            href={t.id === "tous" ? "/admin/prospects#prospection" : `/admin/prospects?vue=${t.id}#prospection`}
+            href={qs(t.id)}
             aria-current={view === t.id ? "page" : undefined}
             className={`btn btn-sm ${view === t.id ? "btn-primary" : "btn-ghost"}`}
           >
@@ -219,7 +247,9 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
 
       {shown.length === 0 ? (
         <Empty>
-          {view === "tous"
+          {q
+            ? "Aucun résultat."
+            : view === "tous"
             ? "Aucun commerce repéré pour l'instant."
             : "Personne dans cet onglet. Coche la case correspondante sur une fiche de l'onglet « Tous »."}
         </Empty>

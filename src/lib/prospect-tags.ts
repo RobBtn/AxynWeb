@@ -4,6 +4,7 @@ export const prospectTags = [
   { id: "entretien", label: "Entretien" },
   { id: "presentiel", label: "Vu en présentiel" },
   { id: "repasser", label: "À repasser" },
+  { id: "mail", label: "Mail envoyé" },
 ] as const;
 
 export type ProspectTagId = (typeof prospectTags)[number]["id"];
