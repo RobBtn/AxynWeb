@@ -275,6 +275,49 @@ html.lenis body {
   background: var(--color-coral);
   color: var(--color-ink);
 }
+/* Version pleine, pour le bouton de confirmation d'une action destructrice */
+.btn-danger-solid {
+  border-color: var(--color-coral);
+  background: var(--color-coral);
+  color: #fffdf6;
+}
+.btn-danger-solid:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--color-bone);
+}
+
+/* Fenêtre de confirmation (remplace window.confirm) */
+.confirm-dialog {
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-bone);
+  width: min(30rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: visible;
+}
+.confirm-dialog::backdrop {
+  background: rgb(16 19 11 / 0.5);
+  backdrop-filter: blur(3px);
+}
+.confirm-dialog[open] {
+  animation: dialog-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.confirm-dialog[open]::backdrop {
+  animation: dialog-fade 0.22s ease-out;
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+@keyframes dialog-fade {
+  from {
+    opacity: 0;
+  }
+}
 
 /* Formulaires */
 .field {
@@ -556,7 +599,9 @@ html.stage-on [data-stage] {
   .rise,
   .line-mask > span,
   .marquee-track,
-  .spin-slow {
+  .spin-slow,
+  .confirm-dialog[open],
+  .confirm-dialog[open]::backdrop {
     animation: none;
   }
   .scrub-word {

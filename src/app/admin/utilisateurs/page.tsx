@@ -46,27 +46,32 @@ export default async function AdminUsers() {
                         </span>
                       </td>
                       <td>
-                        {u.id === me.id ? (
-                          <span className="pill pill-ok">Administrateur</span>
-                        ) : (
-                          <ActionForm
-                            action={setUserRoleAction}
-                            submit="OK"
-                            variant="ghost"
-                            className="flex items-center gap-2"
-                            confirm={
-                              u.role === "admin"
-                                ? `Retirer les droits d'administration à ${u.name} ? Elle ou il redeviendra simple client.`
-                                : undefined
-                            }
-                          >
-                            <input type="hidden" name="id" value={u.id} />
-                            <select className="input !w-auto !py-2 text-sm" name="role" defaultValue={u.role} aria-label={`Rôle de ${u.name}`}>
-                              <option value="client">Client</option>
-                              <option value="admin">Administrateur</option>
-                            </select>
-                          </ActionForm>
-                        )}
+                        <div className="flex flex-col items-start gap-2">
+                          {/* Le rôle actuel s'affiche en étiquette ; un bouton à part sert à le changer. */}
+                          <span className={`pill ${u.role === "admin" ? "pill-ok" : ""}`}>{u.role === "admin" ? "Administrateur" : "Client"}</span>
+                          {u.id !== me.id &&
+                            (u.role === "admin" ? (
+                              <ActionForm
+                                action={setUserRoleAction}
+                                submit="Retirer les droits admin"
+                                variant="danger"
+                                confirm={`Retirer les droits d'administration à ${u.name} ? Cette personne redeviendra simple client.`}
+                              >
+                                <input type="hidden" name="id" value={u.id} />
+                                <input type="hidden" name="role" value="client" />
+                              </ActionForm>
+                            ) : (
+                              <ActionForm
+                                action={setUserRoleAction}
+                                submit="Donner les droits admin"
+                                variant="ghost"
+                                confirm={`Donner les droits d'administration à ${u.name} ? Cette personne verra tous les clients, sites et prospects.`}
+                              >
+                                <input type="hidden" name="id" value={u.id} />
+                                <input type="hidden" name="role" value="admin" />
+                              </ActionForm>
+                            ))}
+                        </div>
                       </td>
                       <td>{u.sites}</td>
                       <td>{frDate(u.created_at)}</td>

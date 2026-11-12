@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { FormState } from "@/app/actions/public";
+import ConfirmDialog from "./ConfirmDialog";
 
 type Props = {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
@@ -20,6 +21,9 @@ export default function ActionForm({ action, children, submit, className = "", v
   const [state, formAction, pending] = useActionState(action, undefined);
   const ref = useRef<HTMLFormElement>(null);
   const [copied, setCopied] = useState(false);
+  // Confirmation : on interrompe l'envoi, on affiche la fenêtre, puis on renvoie le formulaire une fois validé.
+  const [asking, setAsking] = useState(false);
+  const confirmed = useRef(false);
 
   useEffect(() => {
     if (state?.ok && reset) ref.current?.reset();
@@ -31,9 +35,27 @@ export default function ActionForm({ action, children, submit, className = "", v
       action={formAction}
       className={className}
       onSubmit={(e) => {
-        if (confirm && !window.confirm(confirm)) e.preventDefault();
+        if (confirm && !confirmed.current) {
+          e.preventDefault();
+          setAsking(true);
+          return;
+        }
+        confirmed.current = false;
       }}
     >
+      {asking && confirm && (
+        <ConfirmDialog
+          message={confirm}
+          confirmLabel={submit}
+          danger={variant === "danger"}
+          onCancel={() => setAsking(false)}
+          onConfirm={() => {
+            setAsking(false);
+            confirmed.current = true;
+            ref.current?.requestSubmit();
+          }}
+        />
+      )}
       {children}
       <button className={`btn btn-sm btn-${variant} self-start`} disabled={pending}>
         {pending ? "…" : submit}
