@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Photo from "@/components/Photo";
+import BottomDock from "./BottomDock";
 import Scene3D from "@/components/Scene3D";
 import ScrollFX from "@/components/ScrollFX";
 import type { PhotoKey, SiteContent, TemplateDef } from "@/lib/templates";
@@ -35,10 +36,8 @@ const icons = {
 } as const;
 
 /**
- * Sur téléphone : appeler, venir ou écrire en un geste, dans un panneau ancré en bas de l'écran. Sur iPhone,
- * Safari ne déplace les éléments fixes qu'à la fin du défilement quand sa barre se replie : le fond du
- * panneau se prolonge donc sous le bord (::after) pour qu'aucun trou n'apparaisse, et la zone de sécurité
- * (barre d'accueil) est respectée. Sur une page d'exemple, il porte aussi
+ * Sur téléphone : appeler, venir ou écrire en un geste, dans un panneau collé au bas de la zone visible
+ * (voir BottomDock, qui contourne le calcul de Safari sur iPhone) ; la zone de sécurité est respectée. Sur une page d'exemple, il porte aussi
  * le retour aux exemples et la demande de devis, pour n'avoir qu'une seule barre.
  */
 function MobileActions({ c, demo }: { c: SiteContent; demo: boolean }) {
@@ -51,9 +50,10 @@ function MobileActions({ c, demo }: { c: SiteContent; demo: boolean }) {
   return (
     <>
       <div className={`md:hidden ${demo ? "h-32" : "h-20"}`} aria-hidden="true" />
+      <BottomDock className="md:hidden">
       <nav
         aria-label="Contact rapide"
-        className="fixed inset-x-0 bottom-0 z-40 rounded-t-3xl border-t border-white/10 bg-[#111214] pb-[env(safe-area-inset-bottom)] text-[#f3f0e6] shadow-[0_-12px_40px_rgba(0,0,0,0.25)] after:absolute after:inset-x-0 after:top-full after:h-40 after:bg-[#111214] md:hidden"
+        className="rounded-t-3xl border-t border-white/10 bg-[#111214] pb-[env(safe-area-inset-bottom)] text-[#f3f0e6] shadow-[0_-12px_40px_rgba(0,0,0,0.25)]"
       >
         {demo && (
           <div className="flex items-center gap-2 border-b border-white/10 p-2 text-sm">
@@ -83,6 +83,7 @@ function MobileActions({ c, demo }: { c: SiteContent; demo: boolean }) {
           </div>
         )}
       </nav>
+      </BottomDock>
     </>
   );
 }
