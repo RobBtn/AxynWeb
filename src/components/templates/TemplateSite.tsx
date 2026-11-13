@@ -139,41 +139,54 @@ function Aurore({ template, content: c, bare }: Props) {
       <Background template={template} />
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-[#140a06]/20 via-[#140a06]/60 to-[#140a06]/90" />
 
-      <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between bg-gradient-to-b from-[#140a06]/90 to-transparent px-6 py-5 md:px-12">
-        <span className="serif text-2xl italic">{c.brand}</span>
-        <nav aria-label="Navigation" className="hidden gap-8 text-sm md:flex">
-          {nav.map((n) => (
-            <a key={n.href} href={n.href} className="opacity-75 transition-opacity hover:opacity-100">
-              {n.label}
+      <header className="fixed inset-x-0 top-0 z-30 bg-gradient-to-b from-[#140a06]/95 to-transparent px-6 py-5 md:px-12">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-6">
+          <nav aria-label="Navigation" className="hidden gap-8 text-sm md:flex">
+            {nav.slice(0, 2).map((n) => (
+              <a key={n.href} href={n.href} className="opacity-75 transition-opacity hover:opacity-100">
+                {n.label}
+              </a>
+            ))}
+          </nav>
+          <span className="serif col-start-2 text-center text-3xl italic">{c.brand}</span>
+          <div className="flex items-center justify-end gap-8 text-sm">
+            {nav.slice(2, 3).map((n) => (
+              <a key={n.href} href={n.href} className="hidden opacity-75 transition-opacity hover:opacity-100 md:inline">
+                {n.label}
+              </a>
+            ))}
+            <a href="#contact" className="rounded-full border border-[#ffd27a]/60 px-5 py-2 text-[#ffd27a] transition-colors hover:bg-[#ffd27a] hover:text-[#140a06]">
+              Réserver
             </a>
-          ))}
-        </nav>
-        <a href="#contact" className="rounded-full border border-[#ffd27a]/60 px-5 py-2 text-sm text-[#ffd27a] transition-colors hover:bg-[#ffd27a] hover:text-[#140a06]">
-          {c.cta}
-        </a>
+          </div>
+        </div>
       </header>
 
       <main className="relative z-10">
-        <section className="mx-auto grid min-h-dvh max-w-7xl items-center gap-12 px-6 pb-16 pt-28 md:grid-cols-[1.15fr_1fr] md:px-12">
-          <div>
-            <p className="rise text-sm tracking-wide text-[#ffd27a]">{c.kicker}</p>
-            <h1 className="serif rise rise-1 mt-6 text-[clamp(3rem,7.4vw,7.5rem)] italic">{c.heroTitle}</h1>
-            <p className="rise rise-2 mt-8 max-w-md text-lg text-[#fff1dc]/75">{c.heroSubtitle}</p>
-            <div className="rise rise-3 mt-10 flex flex-wrap items-center gap-6">
-              <a href="#contact" className="rounded-full bg-[#ffd27a] px-7 py-3.5 font-medium text-[#140a06]">
-                {c.cta}
-              </a>
+        <section className="relative mx-auto flex min-h-dvh max-w-6xl flex-col items-center justify-center px-6 pb-16 pt-32 text-center">
+          <div className="absolute left-1/2 top-24 w-[min(28rem,80vw)] -translate-x-1/2 opacity-60">
+            <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="aspect-[3/4] rounded-t-full" />
+          </div>
+          <div className="relative">
+            <p className="rise text-sm uppercase tracking-[0.25em] text-[#ffd27a]">{c.kicker}</p>
+            <h1 className="serif rise rise-1 mx-auto mt-6 max-w-5xl text-[clamp(3rem,8vw,8rem)] italic leading-[0.95] drop-shadow-[0_4px_30px_rgba(20,10,6,0.8)]">
+              {c.heroTitle}
+            </h1>
+            <p className="rise rise-2 mx-auto mt-8 max-w-xl text-lg text-[#fff1dc]/85">{c.heroSubtitle}</p>
+            <a href="#contact" className="rise rise-3 mt-10 inline-block rounded-full bg-[#ffd27a] px-8 py-4 font-medium text-[#140a06]">
+              {c.cta}
+            </a>
+          </div>
+          {(c.hours || c.phone) && (
+            <div className="rise rise-3 relative mt-16 flex flex-col gap-2 border-y border-[#ffd27a]/30 py-4 text-sm text-[#fff1dc]/80 md:flex-row md:gap-10">
+              {c.hours && <span>{c.hours}</span>}
               {c.phone && (
-                <a href={tel(c.phone)} className="underline underline-offset-4">
+                <a href={tel(c.phone)} className="text-[#ffd27a]">
                   {c.phone}
                 </a>
               )}
             </div>
-          </div>
-          <div className="relative mx-auto w-full max-w-md">
-            <div className="absolute -inset-3 rounded-t-full border border-[#ffd27a]/40" aria-hidden="true" />
-            <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="aspect-[3/4] rounded-t-full" />
-          </div>
+          )}
         </section>
 
         <section id="presentation" className="mx-auto grid max-w-7xl scroll-mt-24 items-center gap-14 px-6 py-32 md:grid-cols-2 md:px-12">
@@ -249,37 +262,43 @@ function Monolithe({ template, content: c, bare }: Props) {
     <div className="relative overflow-x-clip bg-[#e7e2d8] text-[#111214] [--photo-bg:#d4cec1]">
       <Background template={template} />
 
-      <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between border-b border-[#111214]/15 bg-[#e7e2d8]/90 px-6 py-4 text-sm backdrop-blur-md md:px-10">
-        <span className="font-bold uppercase tracking-wide">{c.brand}</span>
-        <nav aria-label="Navigation" className="hidden gap-8 md:flex">
-          {nav.map((n) => (
-            <a key={n.href} href={n.href} className="hover:text-[#ff5a1f]">
+      <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between border-b border-[#111214]/15 bg-[#e7e2d8]/95 px-6 py-4 text-sm md:inset-y-0 md:left-0 md:right-auto md:w-56 md:flex-col md:items-start md:justify-between md:border-b-0 md:border-r md:py-8">
+        <span className="text-lg font-black uppercase leading-none tracking-tight">{c.brand}</span>
+        <nav aria-label="Navigation" className="hidden flex-col gap-4 md:flex">
+          {nav.map((n, i) => (
+            <a key={n.href} href={n.href} className="group flex items-baseline gap-3 hover:text-[#ff5a1f]">
+              <span className="text-xs text-[#111214]/40 group-hover:text-[#ff5a1f]">0{i + 1}</span>
               {n.label}
             </a>
           ))}
         </nav>
-        <a href="#contact" className="bg-[#111214] px-5 py-2.5 font-medium text-[#e7e2d8] transition-colors hover:bg-[#ff5a1f]">
-          {c.cta}
-        </a>
+        <div className="flex items-center gap-3 md:flex-col md:items-start">
+          {c.phone && (
+            <a href={tel(c.phone)} className="hidden font-semibold md:block">
+              {c.phone}
+            </a>
+          )}
+          <a href="#contact" className="bg-[#ff5a1f] px-4 py-2.5 font-semibold text-[#111214]">
+            Devis gratuit
+          </a>
+        </div>
       </header>
 
-      <main className="relative z-10">
-        <section className="px-6 pb-16 pt-36 md:px-10">
-          <p className="rise text-sm text-[#ff5a1f]">{c.kicker}</p>
-          <h1 className="rise rise-1 mt-8 max-w-6xl text-[clamp(3rem,10.5vw,10.5rem)] font-black uppercase leading-[0.85] tracking-tighter">
-            {c.heroTitle}
-          </h1>
-          <div className="relative mt-12">
-            <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="aspect-[16/8] w-full" />
-            <span className="absolute bottom-0 left-0 bg-[#ff5a1f] px-4 py-2 text-sm font-medium text-[#111214]">{L.photoHero}</span>
-          </div>
-          <div className="rise rise-2 mt-8 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-            <p className="max-w-xl text-lg">{c.heroSubtitle}</p>
-            {c.phone && (
-              <a href={tel(c.phone)} className="text-lg font-semibold underline underline-offset-4">
-                {c.phone}
+      <main className="relative z-10 md:ml-56">
+        <section className="px-6 pb-16 pt-28 md:px-10 md:pt-16">
+          <p className="rise text-sm font-medium text-[#ff5a1f]">{c.kicker}</p>
+          <h1 className="rise rise-1 mt-6 text-[clamp(3rem,9vw,9.5rem)] font-black uppercase leading-[0.85] tracking-tighter">{c.heroTitle}</h1>
+          <div className="mt-10 grid gap-6 md:grid-cols-[1.6fr_1fr]">
+            <div className="relative">
+              <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="aspect-[16/10] w-full" />
+              <span className="absolute bottom-0 left-0 bg-[#ff5a1f] px-4 py-2 text-sm font-medium text-[#111214]">{L.photoHero}</span>
+            </div>
+            <div className="rise rise-2 flex flex-col justify-between gap-8 border-t-4 border-[#111214] pt-6">
+              <p className="text-lg">{c.heroSubtitle}</p>
+              <a href="#contact" className="bg-[#111214] px-6 py-4 text-center font-semibold text-[#e7e2d8] transition-colors hover:bg-[#ff5a1f] hover:text-[#111214]">
+                {c.cta} →
               </a>
-            )}
+            </div>
           </div>
         </section>
 
@@ -370,34 +389,44 @@ function Pulse({ template, content: c, bare }: Props) {
     <div className="relative overflow-x-clip bg-[#07060d] text-[#f4f4f4] [--photo-bg:#14131f]">
       <Background template={template} />
 
-      <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between bg-gradient-to-b from-[#07060d] to-transparent px-6 py-5 md:px-10">
+      <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-6 py-5 md:px-10">
         <span className="text-xl font-black italic tracking-tighter">{c.brand}</span>
-        <nav aria-label="Navigation" className="hidden gap-8 text-sm font-medium md:flex">
+        {c.phone && (
+          <a href={tel(c.phone)} className="text-sm font-bold text-[#c8ff4d]">
+            {c.phone}
+          </a>
+        )}
+      </div>
+      <header className="fixed bottom-5 left-1/2 z-30 hidden -translate-x-1/2 md:block">
+        <nav aria-label="Navigation" className="flex items-center gap-1 rounded-xl border border-white/15 bg-[#07060d]/90 p-1.5 text-sm font-medium backdrop-blur">
           {nav.map((n) => (
-            <a key={n.href} href={n.href} className="hover:text-[#c8ff4d]">
+            <a key={n.href} href={n.href} className="rounded-lg px-4 py-2 hover:bg-white/10">
               {n.label}
             </a>
           ))}
+          <a href="#contact" className="rounded-lg bg-[#c8ff4d] px-4 py-2 font-bold text-[#07060d]">
+            {c.cta}
+          </a>
         </nav>
-        <a href="#contact" className="rounded-md bg-[#c8ff4d] px-5 py-2.5 text-sm font-bold text-[#07060d]">
-          {c.cta}
-        </a>
       </header>
 
       <main className="relative z-10">
-        <section className="mx-auto grid min-h-dvh max-w-7xl items-center gap-10 px-6 pb-16 pt-28 md:grid-cols-[1.3fr_1fr] md:px-10">
-          <div>
-            <p className="rise text-sm font-medium text-[#c8ff4d]">{c.kicker}</p>
-            <h1 className="rise rise-1 mt-4 text-[clamp(3.2rem,9.5vw,9.5rem)] font-black uppercase italic leading-[0.82] tracking-tighter">
-              {c.heroTitle}
-            </h1>
-            <p className="rise rise-2 mt-8 max-w-md text-lg text-white/70">{c.heroSubtitle}</p>
-            <a href="#contact" className="rise rise-3 mt-10 inline-block rounded-md bg-[#c8ff4d] px-8 py-4 font-bold text-[#07060d]">
+        <section className="relative flex min-h-dvh flex-col justify-center px-6 pb-24 pt-28 md:px-10">
+          <div className="pointer-events-none absolute right-6 top-1/2 hidden w-72 -translate-y-1/2 rotate-3 md:block lg:right-16 lg:w-80">
+            <div className="absolute -inset-2 rounded-xl border-2 border-[#c8ff4d]" aria-hidden="true" />
+            <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="aspect-[4/5] rounded-lg" />
+          </div>
+          <p className="rise relative text-sm font-medium uppercase tracking-widest text-[#c8ff4d]">{c.kicker}</p>
+          <h1 className="rise rise-1 relative mt-4 max-w-[14ch] text-[clamp(3.4rem,11vw,11rem)] font-black uppercase italic leading-[0.8] tracking-tighter">
+            {c.heroTitle}
+          </h1>
+          <div className="rise rise-2 relative mt-10 flex flex-col gap-6 md:flex-row md:items-center">
+            <a href="#contact" className="self-start rounded-md bg-[#c8ff4d] px-8 py-4 font-bold text-[#07060d]">
               {c.cta} →
             </a>
+            <p className="max-w-md text-white/70">{c.heroSubtitle}</p>
           </div>
-          <div className="relative mx-auto w-full max-w-sm md:rotate-2">
-            <div className="absolute -inset-2 rounded-xl border-2 border-[#c8ff4d]" aria-hidden="true" />
+          <div className="mt-10 md:hidden">
             <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="aspect-[4/5] rounded-lg" />
           </div>
         </section>
@@ -482,32 +511,42 @@ function Atelier({ template, content: c, bare }: Props) {
       <Background template={template} />
       <div className="pointer-events-none fixed inset-0 bg-[#f6f1ec]/55" />
 
-      <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between border-b border-[#2a2420]/10 bg-[#f6f1ec]/85 px-6 py-4 backdrop-blur-md md:px-12">
-        <span className="serif text-2xl">{c.brand}</span>
-        <nav aria-label="Navigation" className="hidden gap-8 text-sm md:flex">
-          {nav.map((n) => (
-            <a key={n.href} href={n.href} className="opacity-70 transition-opacity hover:opacity-100">
-              {n.label}
-            </a>
-          ))}
-        </nav>
-        <a href="#contact" className="rounded-full bg-[#2a2420] px-5 py-2.5 text-sm text-[#f6f1ec]">
-          {c.cta}
-        </a>
+      <header className="sticky top-0 z-30">
+        {c.hours && <p className="bg-[#2a2420] px-6 py-2 text-center text-xs text-[#f6f1ec]">{c.hours}</p>}
+        <div className="flex items-center justify-between border-b border-[#2a2420]/10 bg-[#f6f1ec]/95 px-6 py-3 backdrop-blur-md md:px-12">
+          <details className="group relative">
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-[#2a2420]/20 px-4 py-2 text-sm">
+              <span aria-hidden="true">☰</span> Menu
+            </summary>
+            <nav aria-label="Navigation" className="absolute left-0 mt-2 flex w-56 flex-col rounded-2xl bg-white p-2 shadow-xl shadow-[#a8627a]/15">
+              {nav.map((n) => (
+                <a key={n.href} href={n.href} className="rounded-xl px-4 py-3 hover:bg-[#f6f1ec]">
+                  {n.label}
+                </a>
+              ))}
+            </nav>
+          </details>
+          <span className="serif text-2xl md:text-3xl">{c.brand}</span>
+          <a href="#contact" className="rounded-full bg-[#2a2420] px-5 py-2.5 text-sm text-[#f6f1ec]">
+            {c.cta}
+          </a>
+        </div>
       </header>
 
       <main className="relative z-10">
-        <section className="mx-auto grid min-h-dvh max-w-7xl items-center gap-12 px-6 pb-16 pt-28 md:grid-cols-[1.2fr_1fr] md:px-12">
-          <div>
+        <section className="mx-auto max-w-7xl px-6 pb-20 pt-12 md:px-12">
+          <div className="grid items-end gap-4 md:grid-cols-[1fr_1.3fr_1fr]">
+            <Photo src={c.photo1} label={L.photo1} bare={bare} className="hidden aspect-square rounded-t-full md:block" />
+            <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="aspect-[5/4] rounded-[2rem]" />
+            <Photo src={c.photo2} label={L.photo2} bare={bare} className="hidden aspect-square rounded-b-full md:block" />
+          </div>
+          <div className="relative mx-auto -mt-16 max-w-3xl rounded-[2rem] bg-[#f6f1ec] px-6 pt-10 text-center md:-mt-24">
             <p className="rise text-sm text-[#a8627a]">{c.kicker}</p>
-            <h1 className="serif rise rise-1 mt-6 text-[clamp(3rem,7vw,7rem)]">{c.heroTitle}</h1>
-            <p className="rise rise-2 mt-8 max-w-md text-lg text-[#2a2420]/70">{c.heroSubtitle}</p>
-            <a href="#contact" className="rise rise-3 mt-10 inline-block rounded-full bg-[#2a2420] px-7 py-3.5 text-[#f6f1ec]">
+            <h1 className="serif rise rise-1 mt-4 text-[clamp(2.8rem,6.5vw,6rem)] leading-[1]">{c.heroTitle}</h1>
+            <p className="rise rise-2 mx-auto mt-6 max-w-lg text-lg text-[#2a2420]/70">{c.heroSubtitle}</p>
+            <a href="#contact" className="rise rise-3 mt-8 inline-block rounded-full bg-[#2a2420] px-7 py-3.5 text-[#f6f1ec]">
               {c.cta}
             </a>
-          </div>
-          <div className="mx-auto w-full max-w-md rounded-[2rem] bg-white p-3 shadow-2xl shadow-[#a8627a]/15 md:rotate-2">
-            <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="aspect-[4/5] rounded-[1.4rem]" />
           </div>
         </section>
 
