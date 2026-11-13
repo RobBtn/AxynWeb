@@ -337,12 +337,12 @@ export const templates: TemplateDef[] = [
   },
 ];
 
-/** Ordre d'affichage : styles alternés, sobres et animés, pour montrer la diversité. */
-const SHOWCASE: TemplateDef["id"][] = ["cabinet", "pulse", "clarte", "aurore", "ligne", "monolithe", "atelier"];
+/** Ordre d'affichage : les plus marquants d'abord, en alternant styles sobres et animés. */
+const SHOWCASE: TemplateDef["id"][] = ["aurore", "ligne", "pulse", "atelier", "cabinet", "clarte", "monolithe"];
 export const showcase = SHOWCASE.map((id) => templates.find((t) => t.id === id)!).filter(Boolean);
 
-/** Sélection de l'accueil : quatre exemples volontairement très différents. */
-export const homeShowcase = (["cabinet", "pulse", "ligne", "aurore"] as const).map((id) => templates.find((t) => t.id === id)!);
+/** Sélection de l'accueil : les quatre plus beaux, dans des styles très différents. */
+export const homeShowcase = (["aurore", "ligne", "pulse", "atelier"] as const).map((id) => templates.find((t) => t.id === id)!);
 
 export function getTemplate(id: string | null | undefined): TemplateDef | undefined {
   return templates.find((t) => t.id === id);
