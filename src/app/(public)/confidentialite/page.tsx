@@ -59,6 +59,11 @@ export default function Confidentialite() {
         Elles ne sont ni vendues, ni louées, ni transférées hors de l&apos;Union européenne.
       </p>
       <p>
+        Si vous choisissez « Continuer avec Google », Google nous transmet uniquement votre nom, votre adresse e-mail
+        et un identifiant de compte, pour vous connecter. Nous ne recevons ni votre mot de passe Google, ni l&apos;accès
+        à vos autres données. Ce choix est facultatif : la connexion par e-mail et mot de passe reste disponible.
+      </p>
+      <p>
         Nos sites sont créés avec l&apos;assistance d&apos;outils d&apos;intelligence artificielle. Les éléments que
         vous nous transmettez pour créer votre site (brief, textes) peuvent être traités par notre prestataire
         d&apos;IA, dans le cadre d&apos;un contrat de sous-traitance conforme au RGPD. Nous ne lui transmettons aucune

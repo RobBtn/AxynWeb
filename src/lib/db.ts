@@ -248,6 +248,9 @@ export function getDb(): DatabaseSync {
   if (!folderCols.includes("parent_id")) db.exec("ALTER TABLE mail_folders ADD COLUMN parent_id TEXT REFERENCES mail_folders(id) ON DELETE CASCADE");
   const msgCols = (db.prepare("PRAGMA table_info(mail_messages)").all() as { name: string }[]).map((c) => c.name);
   if (!msgCols.includes("html")) db.exec("ALTER TABLE mail_messages ADD COLUMN html TEXT NOT NULL DEFAULT ''");
+  const userCols = (db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map((c) => c.name);
+  if (!userCols.includes("google_sub")) db.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_google_sub ON users(google_sub) WHERE google_sub IS NOT NULL");
   purgeExpired(db);
   setInterval(() => purgeExpired(db), 24 * 3600 * 1000).unref();
   seed(db);

@@ -136,6 +136,12 @@ SMTP_PORT=587
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=AxynWeb <contact@exemple.fr>
+
+# Connexion avec Google (facultatif). Sans ces deux lignes, le bouton n'apparaît pas.
+# Console Google Cloud → API et services → Identifiants → ID client OAuth (application Web),
+# URI de redirection autorisée : https://exemple.fr/api/auth/google/callback
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 ```
 
 > **Sans réglages SMTP, les inscriptions publiques sont fermées en production.** C'est voulu : l'app refuse de créer des comptes dont l'adresse n'a pas été vérifiée par un code. Le site fonctionne normalement pour le reste, et l'admin peut toujours créer des comptes depuis « Utilisateurs ». Pour fermer volontairement les inscriptions, ajoute `SIGNUP_OPEN=false`.
