@@ -20,7 +20,7 @@ export default async function TemplateDemo({ params }: Props) {
 
   return (
     <>
-      <TemplateSite template={template} content={template.content} />
+      <TemplateSite template={template} content={template.content} demo />
       <aside
         aria-label="Démonstration"
         className="zone-dark fixed bottom-20 left-1/2 md:bottom-4 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line p-1.5 pl-5 text-sm shadow-2xl"

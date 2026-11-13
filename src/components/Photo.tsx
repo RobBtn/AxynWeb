@@ -21,7 +21,7 @@ export default function Photo({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={label} loading="lazy" decoding="async" />
       ) : (
-        <div className="photo-empty" aria-hidden="true">
+        <div className="photo-empty" data-variant={[...label].reduce((n, ch) => n + ch.charCodeAt(0), 0) % 3} aria-hidden="true">
           {!bare && (
             <>
               <span>Photo</span>

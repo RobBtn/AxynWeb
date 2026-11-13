@@ -10,15 +10,19 @@ type Props = {
   content: SiteContent;
   /** Site en ligne : les cadres sans photo restent neutres, sans légende de maquette. */
   bare?: boolean;
+  /** Page d'exemple : les cadres vides reçoivent un visuel d'ambiance au lieu de la croix de maquette. */
+  demo?: boolean;
 };
 
 /** Rend un site client à partir d'un modèle et de son contenu. */
-export default function TemplateSite({ template, content, bare = false }: Props) {
+export default function TemplateSite({ template, content, bare = false, demo = false }: Props) {
   const Layout = { aurore: Aurore, monolithe: Monolithe, pulse: Pulse, atelier: Atelier, cabinet: Cabinet, clarte: Clarte, ligne: Ligne }[template.id];
   return (
     <>
       <ScrollFX />
-      <Layout template={template} content={content} bare={bare} />
+      <div className={demo ? "demo-visuals" : undefined} data-demo={demo ? template.id : undefined}>
+        <Layout template={template} content={content} bare={bare} />
+      </div>
       <MobileActions c={content} />
     </>
   );
@@ -62,9 +66,9 @@ const gallery: PhotoKey[] = ["photo1", "photo2", "photo3"];
 
 function services(c: SiteContent) {
   return [
-    { title: c.s1Title, text: c.s1Text },
-    { title: c.s2Title, text: c.s2Text },
-    { title: c.s3Title, text: c.s3Text },
+    { title: c.s1Title, text: c.s1Text, price: c.s1Price },
+    { title: c.s2Title, text: c.s2Text, price: c.s2Price },
+    { title: c.s3Title, text: c.s3Text, price: c.s3Price },
   ];
 }
 
@@ -209,6 +213,7 @@ function Aurore({ template, content: c, bare }: Props) {
                 <span className="serif text-3xl italic text-[#ffd27a]">0{i + 1}</span>
                 <h3 className="serif text-4xl italic md:text-6xl">{s.title}</h3>
                 <p className="text-lg text-[#fff1dc]/75">{s.text}</p>
+                {s.price && <p className="mt-5 w-fit whitespace-nowrap rounded-full border border-current/25 px-3 py-1 text-sm font-semibold">{s.price}</p>}
               </article>
             ))}
           </div>
@@ -329,6 +334,7 @@ function Monolithe({ template, content: c, bare }: Props) {
                 <span className="text-sm text-[#ff5a1f]">0{i + 1}</span>
                 <h3 className="text-4xl font-black uppercase tracking-tighter md:col-span-2 md:text-5xl">{s.title}</h3>
                 <p className="self-end text-lg md:col-span-3">{s.text}</p>
+                {s.price && <p className="mt-5 w-fit whitespace-nowrap rounded-full border border-current/25 px-3 py-1 text-sm font-semibold">{s.price}</p>}
               </article>
             ))}
           </div>
@@ -460,6 +466,7 @@ function Pulse({ template, content: c, bare }: Props) {
                 <span className="text-sm font-medium text-[#ff3df2]">0{i + 1}</span>
                 <h3 className="mt-14 text-4xl font-black uppercase italic tracking-tighter text-[#c8ff4d]">{s.title}</h3>
                 <p className="mt-3 text-white/70">{s.text}</p>
+                {s.price && <p className="mt-5 w-fit whitespace-nowrap rounded-full border border-current/25 px-3 py-1 text-sm font-semibold">{s.price}</p>}
               </article>
             ))}
           </div>
@@ -567,6 +574,7 @@ function Atelier({ template, content: c, bare }: Props) {
                 <span className="serif text-4xl text-[#c98a9a]">{i + 1}.</span>
                 <h3 className="serif mt-8 text-4xl">{s.title}</h3>
                 <p className="mt-3 text-[#2a2420]/70">{s.text}</p>
+                {s.price && <p className="mt-5 w-fit whitespace-nowrap rounded-full border border-current/25 px-3 py-1 text-sm font-semibold">{s.price}</p>}
               </article>
             ))}
           </div>
@@ -674,6 +682,7 @@ function Cabinet({ template, content: c, bare }: Props) {
                 <span className="serif text-3xl text-[#b08d57]">{["I", "II", "III"][i]}.</span>
                 <h3 className="serif text-3xl">{s.title}</h3>
                 <p className="text-[#14213d]/75">{s.text}</p>
+                {s.price && <p className="mt-5 w-fit whitespace-nowrap rounded-full border border-current/25 px-3 py-1 text-sm font-semibold">{s.price}</p>}
               </li>
             ))}
           </ol>
@@ -735,7 +744,11 @@ function Clarte({ template, content: c, bare }: Props) {
 
       <main>
         <section className="grid min-h-dvh md:grid-cols-2">
-          <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="min-h-[50vh] md:min-h-full" />
+          <div className="relative min-h-[50vh]">
+            <div className="absolute inset-0">
+              <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="size-full" />
+            </div>
+          </div>
           <div className="flex flex-col justify-center bg-[#f3f8f8] px-6 py-24 md:px-14">
             <p className="rise text-sm font-medium text-[#0f766e]">{c.kicker}</p>
             <h1 className="rise rise-1 mt-5 text-[clamp(2.4rem,4.6vw,4rem)] font-semibold leading-[1.08] tracking-tight">{c.heroTitle}</h1>
@@ -769,6 +782,7 @@ function Clarte({ template, content: c, bare }: Props) {
                 <span className="grid size-11 place-items-center rounded-2xl bg-white font-semibold text-[#0f766e] shadow-sm">{i + 1}</span>
                 <h3 className="mt-6 text-2xl font-semibold">{s.title}</h3>
                 <p className="mt-2 text-[#0f2a2e]/70">{s.text}</p>
+                {s.price && <p className="mt-5 w-fit whitespace-nowrap rounded-full border border-current/25 px-3 py-1 text-sm font-semibold">{s.price}</p>}
               </article>
             ))}
           </div>
@@ -877,6 +891,7 @@ function Ligne({ template, content: c, bare }: Props) {
                 <span className="text-xs uppercase tracking-[0.3em] text-[#8a8a8a]">0{i + 1}</span>
                 <h3 className="mt-6 text-3xl font-medium tracking-tight">{s.title}</h3>
                 <p className="mt-3 text-[#111]/70">{s.text}</p>
+                {s.price && <p className="mt-5 w-fit whitespace-nowrap rounded-full border border-current/25 px-3 py-1 text-sm font-semibold">{s.price}</p>}
               </article>
             ))}
           </div>

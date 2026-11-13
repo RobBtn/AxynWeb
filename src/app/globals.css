@@ -643,3 +643,66 @@ html[data-mail-selecting] .mail-check { opacity: 1; }
   border: 1px solid color-mix(in srgb, var(--h) 32%, transparent);
 }
 .dot-h { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--h); flex-shrink: 0; }
+
+/* Pages d'exemple : visuels d'ambiance à la place des croix de maquette (trois variantes par exemple). */
+.demo-visuals .photo-empty {
+  opacity: 1;
+  color: rgb(255 255 255 / 0.85);
+  justify-content: flex-end;
+  background-image: var(--demo-0);
+  background-size: cover;
+}
+.demo-visuals .photo-empty[data-variant="1"] { background-image: var(--demo-1); }
+.demo-visuals .photo-empty[data-variant="2"] { background-image: var(--demo-2); }
+.demo-visuals .photo-empty > span:first-child { display: none; }
+.demo-visuals .photo-empty > span:last-child {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: rgb(0 0 0 / 0.28);
+  backdrop-filter: blur(6px);
+}
+.demo-visuals .photo-empty::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  mix-blend-mode: overlay;
+  background-image: repeating-radial-gradient(circle at 17% 32%, #fff 0 0.6px, transparent 0.6px 3px);
+}
+[data-demo="aurore"] {
+  --demo-0: radial-gradient(circle at 30% 75%, #ff9b54 0, #b4481a 28%, transparent 55%), radial-gradient(circle at 75% 20%, #ffd27a80 0, transparent 40%), linear-gradient(160deg, #3a1d0e, #140a06);
+  --demo-1: radial-gradient(ellipse at 50% 110%, #ffd27a 0, #c2541c 30%, transparent 65%), linear-gradient(180deg, #24120a, #4a2412);
+  --demo-2: radial-gradient(circle at 70% 60%, #e8a15a 0, transparent 45%), radial-gradient(circle at 20% 20%, #7a2e10 0, transparent 50%), linear-gradient(120deg, #1c0b04, #3d1d0c);
+}
+[data-demo="monolithe"] {
+  --demo-0: linear-gradient(115deg, transparent 48%, #ff5a1f 48% 52%, transparent 52%), linear-gradient(160deg, #cfc8ba, #8f887a);
+  --demo-1: linear-gradient(180deg, #e7e2d8 0 55%, #b9b1a2 55%), linear-gradient(90deg, #111214 0 30%, transparent 30%);
+  --demo-2: repeating-linear-gradient(90deg, #bdb5a6 0 18px, #a59d8d 18px 20px), linear-gradient(#cfc8ba, #8f887a);
+}
+[data-demo="pulse"] {
+  --demo-0: radial-gradient(circle at 70% 30%, #ff3df2 0, transparent 45%), radial-gradient(circle at 25% 80%, #c8ff4d 0, transparent 40%), linear-gradient(160deg, #1a1630, #07060d);
+  --demo-1: linear-gradient(135deg, #c8ff4d 0 18%, transparent 18%), radial-gradient(circle at 60% 50%, #3b2bff 0, transparent 60%), linear-gradient(#0e0d16, #07060d);
+  --demo-2: radial-gradient(ellipse at 50% 100%, #ff3df2aa 0, transparent 60%), repeating-linear-gradient(0deg, #ffffff10 0 2px, transparent 2px 14px), linear-gradient(#14131f, #07060d);
+}
+[data-demo="atelier"] {
+  --demo-0: radial-gradient(circle at 35% 40%, #f2b8c6 0, transparent 45%), radial-gradient(circle at 70% 75%, #e9d8c4 0, transparent 50%), linear-gradient(160deg, #efe5dc, #d9c7bb);
+  --demo-1: radial-gradient(ellipse at 50% 70%, #c98a9a 0, #e6c9c0 40%, transparent 70%), linear-gradient(#f6f1ec, #e2d3c8);
+  --demo-2: radial-gradient(circle at 60% 35%, #fff 0, transparent 35%), linear-gradient(140deg, #d7c0b0, #b99a8c);
+}
+[data-demo="cabinet"] {
+  --demo-0: linear-gradient(90deg, transparent 0 62%, #b08d5733 62% 63%, transparent 63%), linear-gradient(160deg, #2a3a5e, #14213d);
+  --demo-1: radial-gradient(circle at 75% 25%, #f7f6f255 0, transparent 40%), linear-gradient(180deg, #8a7a62, #3a3428);
+  --demo-2: repeating-linear-gradient(90deg, #d8d2c4 0 40px, #cfc8b8 40px 42px), linear-gradient(#e7e4da, #c9c2b2);
+}
+[data-demo="clarte"] {
+  --demo-0: radial-gradient(circle at 30% 30%, #ffffff 0, transparent 40%), linear-gradient(150deg, #bfe3df, #5fb3a9);
+  --demo-1: radial-gradient(circle at 70% 60%, #0f766e55 0, transparent 50%), linear-gradient(180deg, #e6f2f1, #b7d9d5);
+  --demo-2: linear-gradient(120deg, #f3f8f8 0 45%, #9ccfc8 45%), linear-gradient(#e6f2f1, #e6f2f1);
+}
+[data-demo="ligne"] {
+  --demo-0: linear-gradient(105deg, transparent 0 40%, #ffffff40 40% 55%, transparent 55%), linear-gradient(160deg, #a8a29a, #3c3a37);
+  --demo-1: linear-gradient(180deg, #ecebe8 0 60%, #8f8a83 60%), linear-gradient(#ecebe8, #8f8a83);
+  --demo-2: radial-gradient(ellipse at 30% 40%, #f4f2ee 0, transparent 55%), linear-gradient(140deg, #c9c4bc, #6b6760);
+}

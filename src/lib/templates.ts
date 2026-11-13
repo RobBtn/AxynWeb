@@ -15,6 +15,10 @@ export type SiteContent = {
   s2Text: string;
   s3Title: string;
   s3Text: string;
+  /** Prix ou tarif indicatif de chaque prestation (« dès 25 € », « sur devis »…) ; vide : non affiché. */
+  s1Price: string;
+  s2Price: string;
+  s3Price: string;
   quote: string;
   quoteAuthor: string;
   email: string;
@@ -44,6 +48,9 @@ export const contentFields: { key: keyof SiteContent; label: string; group: stri
   { key: "s2Text", label: "Bloc 2 — texte", group: "Prestations", long: true, max: 300 },
   { key: "s3Title", label: "Bloc 3 — titre", group: "Prestations", max: 60 },
   { key: "s3Text", label: "Bloc 3 — texte", group: "Prestations", long: true, max: 300 },
+  { key: "s1Price", label: "Bloc 1 — prix", group: "Prestations", max: 40 },
+  { key: "s2Price", label: "Bloc 2 — prix", group: "Prestations", max: 40 },
+  { key: "s3Price", label: "Bloc 3 — prix", group: "Prestations", max: 40 },
   { key: "quote", label: "Citation / avis", group: "Témoignage", long: true, max: 300 },
   { key: "quoteAuthor", label: "Auteur de la citation", group: "Témoignage", max: 80 },
   { key: "email", label: "E-mail de contact", group: "Contact", max: 120 },
@@ -114,6 +121,9 @@ export const templates: TemplateDef[] = [
       s2Text: "Cinq temps autour de la braise, avec un accord de vins nature.",
       s3Title: "La table d'hôtes",
       s3Text: "Douze couverts face à la cuisine, pour vos soirées privées.",
+      s1Price: "Menu 32 €",
+      s2Price: "Menu 68 €",
+      s3Price: "Sur réservation",
       quote: "On vient pour le feu. On revient pour le silence qui suit la première bouchée.",
       quoteAuthor: "Un habitué",
       email: "bonjour@maison-aurore.example",
@@ -150,6 +160,9 @@ export const templates: TemplateDef[] = [
       s2Text: "Diagnostic, isolation, redistribution des volumes.",
       s3Title: "Suivi de chantier",
       s3Text: "Un seul interlocuteur, du premier coup de pioche à la remise des clés.",
+      s1Price: "Sur devis",
+      s2Price: "Sur devis",
+      s3Price: "Visite offerte",
       quote: "Ils ont enlevé tout ce qui était en trop. Il est resté notre maison.",
       quoteAuthor: "Claire et Julien, Annecy",
       email: "contact@atelier-monolithe.example",
@@ -185,6 +198,9 @@ export const templates: TemplateDef[] = [
       s2Text: "Fractionné et endurance, en salle ou en extérieur.",
       s3Title: "Nutrition",
       s3Text: "Des repères simples, adaptés à votre quotidien.",
+      s1Price: "Dès 15 € la séance",
+      s2Price: "Dès 59 € / mois",
+      s3Price: "Essai offert",
       quote: "Huit kilos en moins, et surtout l'envie d'y retourner.",
       quoteAuthor: "Mehdi, 34 ans",
       email: "go@pulse-coaching.example",
@@ -221,6 +237,9 @@ export const templates: TemplateDef[] = [
       s2Text: "Initiation au tour, le samedi, par groupes de quatre.",
       s3Title: "Sur commande",
       s3Text: "Services complets pour restaurants et listes de mariage.",
+      s1Price: "Dès 18 €",
+      s2Price: "Dès 35 €",
+      s3Price: "Sur devis",
       quote: "Mon café du matin n'a plus le même goût. Vraiment.",
       quoteAuthor: "Lucie, cliente depuis 2022",
       email: "bonjour@atelier-nacre.example",
@@ -256,6 +275,9 @@ export const templates: TemplateDef[] = [
       s2Text: "Recouvrement, litiges avec un fournisseur ou un client : négociation d'abord, tribunal si nécessaire.",
       s3Title: "Droit social",
       s3Text: "Embauche, rupture, contrôle : sécurisez vos décisions avant de les prendre.",
+      s1Price: "Forfait dès 450 €",
+      s2Price: "Honoraires annoncés",
+      s3Price: "1re consultation 90 €",
       quote: "Des réponses claires, des délais tenus. Exactement ce qu'on attend d'un avocat.",
       quoteAuthor: "Dirigeante d'une PME de 40 salariés",
       email: "contact@cabinet-delorme.example",
@@ -291,6 +313,9 @@ export const templates: TemplateDef[] = [
       s2Text: "Prévention des blessures, reprise après une pause, préparation d'une compétition.",
       s3Title: "Dos et posture",
       s3Text: "Lombalgies, cervicalgies, travail de bureau : soulager et prévenir.",
+      s1Price: "Remboursé",
+      s2Price: "Dès 25 €",
+      s3Price: "Dès 25 €",
       quote: "Un suivi sérieux et des explications à chaque séance. Je sais enfin ce que je fais et pourquoi.",
       quoteAuthor: "Une patiente",
       email: "cabinet@kine-laurent.example",
@@ -326,6 +351,9 @@ export const templates: TemplateDef[] = [
       s2Text: "Coordination des artisans et suivi du chantier jusqu'à la remise des clés.",
       s3Title: "Conseil",
       s3Text: "Une visite de deux heures pour repenser une pièce, avec un plan d'action écrit.",
+      s1Price: "Dès 1 500 €",
+      s2Price: "Sur devis",
+      s3Price: "Visite 180 €",
       quote: "Ils ont compris en une visite ce que nous cherchions depuis des mois.",
       quoteAuthor: "Claire et Thomas, rénovation d'une longère",
       email: "bonjour@studio-morel.example",
@@ -349,6 +377,8 @@ export function getTemplate(id: string | null | undefined): TemplateDef | undefi
 }
 
 /** Fusionne un contenu partiel (JSON stocké) avec les valeurs par défaut du modèle. */
+const PRICE_KEYS = ["s1Price", "s2Price", "s3Price"] as const;
+
 export function resolveContent(template: TemplateDef, raw: string | Partial<SiteContent> | null): SiteContent {
   let parsed: Partial<SiteContent> = {};
   if (typeof raw === "string") {
@@ -361,6 +391,8 @@ export function resolveContent(template: TemplateDef, raw: string | Partial<Site
     parsed = raw;
   }
   const out = { ...template.content };
+  // Les prix des exemples ne doivent jamais apparaître sur le site d'un client : vides tant qu'il ne les a pas saisis.
+  for (const k of PRICE_KEYS) out[k] = "";
   for (const f of contentFields) {
     const v = parsed[f.key];
     if (typeof v === "string") out[f.key] = v.slice(0, f.max);
