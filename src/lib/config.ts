@@ -5,7 +5,7 @@
  */
 export const brand = {
   name: "AxynWeb",
-  tagline: "Être trouvé. Être choisi. Des sites qui font venir les clients, sécurisés et à prix juste.",
+  tagline: "Votre site pro en 72 h, à petit prix. Rapide, sécurisé, sans mauvaise surprise.",
   email: "contact@axynweb.fr",
   phone: "",
   legal: {

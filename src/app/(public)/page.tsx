@@ -119,20 +119,19 @@ export default function Home() {
         <h1 className="kicker rise self-start">Création de site internet à {area.mainCity}</h1>
         <p className="display mt-8 text-[clamp(3.2rem,11.5vw,13rem)]">
           <span className="line-mask">
-            <span>Être trouvé.</span>
+            <span>Votre site pro</span>
           </span>
           <span className="line-mask">
             <span>
-              Être <em>choisi.</em>
+              en 72 h, <em>dès {pricing.offers[0].price} €.</em>
             </span>
           </span>
         </p>
 
         <div className="rise rise-3 mt-10 flex flex-col gap-8 border-t border-bone pt-8 md:flex-row md:items-end md:justify-between">
           <p className="max-w-md text-lg">
-            Vos clients comparent trois sites et choisissent en quelques secondes. On fait en sorte que ce soit le vôtre :
-            un design qui marque, des textes qui donnent envie, bien placé sur Google. En ligne en 72 h, dès{" "}
-            {pricing.offers[0].price} €.
+            Rapide, pas cher, et pourtant pas au rabais : un design qui marque, des textes qui donnent envie, bien placé
+            sur Google et sécurisé. Vous modifiez tout vous-même depuis votre espace client.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/modeles" className="btn btn-primary" data-magnetic>
