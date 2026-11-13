@@ -14,7 +14,7 @@ type Props = {
 
 /** Rend un site client à partir d'un modèle et de son contenu. */
 export default function TemplateSite({ template, content, bare = false }: Props) {
-  const Layout = { aurore: Aurore, monolithe: Monolithe, pulse: Pulse, atelier: Atelier }[template.id];
+  const Layout = { aurore: Aurore, monolithe: Monolithe, pulse: Pulse, atelier: Atelier, cabinet: Cabinet, clarte: Clarte, ligne: Ligne }[template.id];
   return (
     <>
       <ScrollFX />
@@ -69,6 +69,7 @@ function services(c: SiteContent) {
 }
 
 function Background({ template }: { template: TemplateDef }) {
+  if (!template.scene) return null;
   return <Scene3D preset={template.scene} colors={template.colors} opacity={template.sceneOpacity} light={template.light} />;
 }
 
@@ -560,6 +561,312 @@ function Atelier({ template, content: c, bare }: Props) {
             {c.cta}
           </h2>
           <Infos c={c} className="mt-14 border-t border-[#2a2420]/15 pt-10" />
+          <div className="mt-14">
+            <Credit />
+          </div>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* CABINET — avocat, comptable, conseil. Clair, bleu nuit, sérif, sans  */
+/* fond animé : la rigueur avant l'effet.                               */
+/* ------------------------------------------------------------------ */
+function Cabinet({ template, content: c, bare }: Props) {
+  const L = template.photoLabels;
+  return (
+    <div className="relative overflow-x-clip bg-[#f7f6f2] text-[#14213d] [--photo-bg:#e7e4da]">
+      <div className="bg-[#14213d] px-6 py-2 text-center text-xs text-[#f7f6f2]/80">
+        {[c.address, c.phone].filter(Boolean).join("  ·  ")}
+      </div>
+      <header className="border-b border-[#14213d]/10 bg-[#f7f6f2]">
+        <div className="mx-auto max-w-6xl px-6 pt-8 text-center">
+          <span className="serif text-4xl md:text-5xl">{c.brand}</span>
+          <p className="mt-2 text-xs uppercase tracking-[0.25em] text-[#b08d57]">{c.kicker}</p>
+          <nav aria-label="Navigation" className="mt-6 flex justify-center gap-6 border-t border-[#14213d]/10 py-4 text-sm md:gap-10">
+            {nav.map((n) => (
+              <a key={n.href} href={n.href} className="opacity-70 transition-opacity hover:opacity-100">
+                {n.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section className="bg-[#14213d] px-6 py-24 text-center text-[#f7f6f2] md:py-32">
+          <div className="mx-auto h-px w-16 bg-[#b08d57]" aria-hidden="true" />
+          <h1 className="serif rise mx-auto mt-10 max-w-4xl text-[clamp(2.6rem,6vw,5.2rem)] leading-[1.05]">{c.heroTitle}</h1>
+          <p className="rise rise-1 mx-auto mt-8 max-w-2xl text-lg text-[#f7f6f2]/75">{c.heroSubtitle}</p>
+          <div className="rise rise-2 mt-12 flex flex-wrap justify-center gap-4">
+            <a href="#contact" className="bg-[#b08d57] px-7 py-3.5 text-[#14213d]">
+              {c.cta}
+            </a>
+            <a href="#prestations" className="border border-[#f7f6f2]/40 px-7 py-3.5">
+              Nos domaines
+            </a>
+          </div>
+        </section>
+
+        <section id="presentation" className="scroll-mt-24 border-y border-[#14213d]/10 bg-white">
+          <div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 md:grid-cols-[1fr_1.6fr]">
+            <h2 data-reveal className="serif text-4xl md:text-5xl">
+              {c.aboutTitle}
+            </h2>
+            <div>
+              <p data-reveal className="text-xl leading-relaxed text-[#14213d]/80">
+                {c.aboutText}
+              </p>
+              <div className="mt-12 grid gap-6 sm:grid-cols-2">
+                <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="aspect-[4/5]" />
+                <Photo src={c.photoAbout} label={L.photoAbout} bare={bare} className="aspect-[4/5]" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="prestations" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#b08d57]">Domaines d&apos;intervention</p>
+          <ol data-stagger className="mt-10 border-t border-[#14213d]/15">
+            {services(c).map((s, i) => (
+              <li key={i} className="grid gap-4 border-b border-[#14213d]/15 py-10 md:grid-cols-[6rem_1fr_1.4fr] md:items-baseline">
+                <span className="serif text-3xl text-[#b08d57]">{["I", "II", "III"][i]}.</span>
+                <h3 className="serif text-3xl">{s.title}</h3>
+                <p className="text-[#14213d]/75">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section id="galerie" className="mx-auto max-w-6xl scroll-mt-24 px-6 pb-24">
+          <div className="grid gap-6 md:grid-cols-3">
+            {gallery.map((k) => (
+              <figure key={k}>
+                <Photo src={c[k]} label={L[k]} bare={bare} className="aspect-square" />
+                <figcaption className="mt-3 text-sm text-[#14213d]/60">{L[k]}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+
+        <section className="bg-white px-6 py-24 text-center">
+          <div className="mx-auto h-px w-16 bg-[#b08d57]" aria-hidden="true" />
+          <blockquote className="serif mx-auto mt-10 max-w-3xl text-3xl italic leading-snug md:text-4xl">« {c.quote} »</blockquote>
+          <p className="mt-6 text-sm text-[#14213d]/60">{c.quoteAuthor}</p>
+        </section>
+
+        <footer id="contact" className="scroll-mt-24 bg-[#14213d] text-[#f7f6f2]">
+          <div className="mx-auto max-w-6xl px-6 py-24">
+            <h2 className="serif text-4xl md:text-6xl">{c.cta}</h2>
+            <Infos c={c} className="mt-14 border-t border-white/15 pt-10" />
+            <div className="mt-14">
+              <Credit />
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* CLARTÉ — santé, paramédical. Blanc, vert d'eau, cartes arrondies.    */
+/* ------------------------------------------------------------------ */
+function Clarte({ template, content: c, bare }: Props) {
+  const L = template.photoLabels;
+  return (
+    <div className="relative overflow-x-clip bg-white text-[#0f2a2e] [--photo-bg:#e6f2f1]">
+      <header className="fixed inset-x-0 top-4 z-30 flex justify-center px-4">
+        <div className="flex items-center gap-2 rounded-full border border-[#0f2a2e]/10 bg-white/95 p-1.5 pl-4 shadow-lg shadow-[#0f2a2e]/5 backdrop-blur">
+          <span className="mr-2 text-sm font-semibold">{c.brand}</span>
+          <nav aria-label="Navigation" className="hidden gap-1 text-sm md:flex">
+            {nav.map((n) => (
+              <a key={n.href} href={n.href} className="rounded-full px-3 py-2 text-[#0f2a2e]/70 hover:bg-[#e6f2f1] hover:text-[#0f766e]">
+                {n.label}
+              </a>
+            ))}
+          </nav>
+          <a href="#contact" className="rounded-full bg-[#0f766e] px-4 py-2 text-sm font-medium text-white">
+            Rendez-vous
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section className="grid min-h-dvh md:grid-cols-2">
+          <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="min-h-[50vh] md:min-h-full" />
+          <div className="flex flex-col justify-center bg-[#f3f8f8] px-6 py-24 md:px-14">
+            <p className="rise text-sm font-medium text-[#0f766e]">{c.kicker}</p>
+            <h1 className="rise rise-1 mt-5 text-[clamp(2.4rem,4.6vw,4rem)] font-semibold leading-[1.08] tracking-tight">{c.heroTitle}</h1>
+            <p className="rise rise-2 mt-6 max-w-lg text-lg text-[#0f2a2e]/70">{c.heroSubtitle}</p>
+            <a href="#contact" className="rise rise-3 mt-10 self-start rounded-full bg-[#0f766e] px-8 py-4 font-medium text-white">
+              {c.cta}
+            </a>
+            {(c.hours || c.phone) && (
+              <div className="rise rise-3 mt-10 grid gap-4 rounded-2xl bg-white p-5 text-sm shadow-sm sm:grid-cols-2">
+                {c.hours && (
+                  <p>
+                    <span className="block font-semibold text-[#0f766e]">Horaires</span>
+                    {c.hours}
+                  </p>
+                )}
+                {c.phone && (
+                  <p>
+                    <span className="block font-semibold text-[#0f766e]">Téléphone</span>
+                    <a href={tel(c.phone)}>{c.phone}</a>
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section id="prestations" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
+          <div data-stagger className="grid gap-5 md:grid-cols-3">
+            {services(c).map((s, i) => (
+              <article key={i} className="rounded-3xl bg-[#f3f8f8] p-8">
+                <span className="grid size-11 place-items-center rounded-2xl bg-white font-semibold text-[#0f766e] shadow-sm">{i + 1}</span>
+                <h3 className="mt-6 text-2xl font-semibold">{s.title}</h3>
+                <p className="mt-2 text-[#0f2a2e]/70">{s.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="presentation" className="mx-auto grid max-w-6xl scroll-mt-24 items-center gap-12 px-6 pb-24 md:grid-cols-2">
+          <Photo src={c.photoAbout} label={L.photoAbout} bare={bare} className="aspect-[4/5] rounded-3xl" />
+          <div>
+            <h2 data-reveal className="text-4xl font-semibold tracking-tight md:text-5xl">
+              {c.aboutTitle}
+            </h2>
+            <p data-reveal className="mt-6 text-lg leading-relaxed text-[#0f2a2e]/75">
+              {c.aboutText}
+            </p>
+            <blockquote className="mt-10 border-l-4 border-[#0f766e] pl-6">
+              <p className="text-lg italic">« {c.quote} »</p>
+              <footer className="mt-2 text-sm text-[#0f2a2e]/60">{c.quoteAuthor}</footer>
+            </blockquote>
+          </div>
+        </section>
+
+        <section id="galerie" className="mx-auto max-w-6xl scroll-mt-24 px-6 pb-24">
+          <div className="grid gap-5 md:grid-cols-3">
+            {gallery.map((k) => (
+              <figure key={k}>
+                <Photo src={c[k]} label={L[k]} bare={bare} className="aspect-[4/3] rounded-3xl" />
+                <figcaption className="mt-3 text-sm text-[#0f2a2e]/60">{L[k]}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+
+        <footer id="contact" className="scroll-mt-24 px-6 pb-16">
+          <div className="mx-auto max-w-6xl rounded-3xl bg-[#e6f2f1] p-8 md:p-14">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <h2 className="text-3xl font-semibold tracking-tight md:text-5xl">{c.cta}</h2>
+              {c.phone && (
+                <a href={tel(c.phone)} className="rounded-full bg-[#0f766e] px-7 py-3.5 text-center font-medium text-white">
+                  Appeler le cabinet
+                </a>
+              )}
+            </div>
+            <Infos c={c} className="mt-12 border-t border-[#0f2a2e]/10 pt-10" />
+            <div className="mt-12">
+              <Credit />
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* LIGNE — immobilier, architecture intérieure, conseil. Noir sur       */
+/* blanc, grille éditoriale, grandes photos.                            */
+/* ------------------------------------------------------------------ */
+function Ligne({ template, content: c, bare }: Props) {
+  const L = template.photoLabels;
+  return (
+    <div className="relative overflow-x-clip bg-white text-[#111] [--photo-bg:#eeeeec]">
+      <main>
+        <section className="relative flex min-h-dvh flex-col justify-between bg-[#1a1a1a] text-white">
+          <div className="absolute inset-0">
+            <Photo src={c.photoHero} label={L.photoHero} bare={bare} className="size-full opacity-90" />
+          </div>
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/40" />
+          <header className="relative z-10 flex items-center justify-between px-6 py-6 md:px-10">
+            <span className="text-sm font-semibold uppercase tracking-[0.3em]">{c.brand}</span>
+            <a href="#contact" className="text-xs uppercase tracking-[0.2em] underline underline-offset-8">
+              {c.cta}
+            </a>
+          </header>
+          <div className="relative z-10 px-6 pb-12 md:px-10">
+            <p className="rise text-xs uppercase tracking-[0.3em] text-white/70">{c.kicker}</p>
+            <h1 className="rise rise-1 mt-5 max-w-5xl text-[clamp(2.8rem,7vw,6.5rem)] font-medium leading-[0.98] tracking-tight">{c.heroTitle}</h1>
+            <div className="rise rise-2 mt-8 flex flex-col gap-6 border-t border-white/25 pt-6 md:flex-row md:items-end md:justify-between">
+              <p className="max-w-xl text-lg text-white/80">{c.heroSubtitle}</p>
+              <nav aria-label="Navigation" className="flex flex-wrap gap-6 text-xs uppercase tracking-[0.2em] text-white/70">
+                {nav.map((n) => (
+                  <a key={n.href} href={n.href} className="hover:text-white">
+                    {n.label}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          </div>
+        </section>
+
+        <section id="presentation" className="grid scroll-mt-24 gap-10 px-6 py-24 md:grid-cols-[1fr_2fr] md:px-10">
+          <p className="text-xs uppercase tracking-[0.3em] text-[#8a8a8a]">01 — Le studio</p>
+          <div>
+            <h2 data-reveal className="text-4xl font-medium tracking-tight md:text-6xl">
+              {c.aboutTitle}
+            </h2>
+            <p data-reveal className="mt-8 max-w-2xl text-xl leading-relaxed text-[#111]/75">
+              {c.aboutText}
+            </p>
+          </div>
+        </section>
+
+        <section id="prestations" className="scroll-mt-24 border-y border-[#111]/15 px-6 md:px-10">
+          <div className="grid md:grid-cols-3">
+            {services(c).map((s, i) => (
+              <article key={i} className="border-b border-[#111]/15 py-12 last:border-b-0 md:border-b-0 md:border-r md:px-8 md:first:pl-0 md:last:border-r-0">
+                <span className="text-xs uppercase tracking-[0.3em] text-[#8a8a8a]">0{i + 1}</span>
+                <h3 className="mt-6 text-3xl font-medium tracking-tight">{s.title}</h3>
+                <p className="mt-3 text-[#111]/70">{s.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="galerie" className="scroll-mt-24 px-6 py-24 md:px-10">
+          <p className="text-xs uppercase tracking-[0.3em] text-[#8a8a8a]">02 — Réalisations</p>
+          <div className="mt-10 grid gap-4 md:grid-cols-2 md:grid-rows-2">
+            <figure className="md:row-span-2">
+              <Photo src={c.photo1} label={L.photo1} bare={bare} className="aspect-[4/5] md:aspect-auto md:h-full" />
+            </figure>
+            <figure>
+              <Photo src={c.photo2} label={L.photo2} bare={bare} className="aspect-[16/10]" />
+            </figure>
+            <figure>
+              <Photo src={c.photo3} label={L.photo3} bare={bare} className="aspect-[16/10]" />
+            </figure>
+          </div>
+          <Photo src={c.photoAbout} label={L.photoAbout} bare={bare} className="mt-4 aspect-[21/9]" />
+        </section>
+
+        <section className="bg-[#111] px-6 py-28 text-white md:px-10">
+          <blockquote className="max-w-4xl text-3xl font-medium leading-tight tracking-tight md:text-5xl">“{c.quote}”</blockquote>
+          <p className="mt-8 text-xs uppercase tracking-[0.3em] text-white/50">{c.quoteAuthor}</p>
+        </section>
+
+        <footer id="contact" className="scroll-mt-24 px-6 py-24 md:px-10">
+          <h2 className="text-4xl font-medium tracking-tight md:text-7xl">{c.cta}</h2>
+          <Infos c={c} className="mt-14 border-t border-[#111]/15 pt-10" />
           <div className="mt-14">
             <Credit />
           </div>

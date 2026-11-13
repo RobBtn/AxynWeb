@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Scene3D from "@/components/Scene3D";
 import TemplateCard from "@/components/TemplateCard";
-import { templates } from "@/lib/templates";
+import { showcase } from "@/lib/templates";
 
 export const metadata: Metadata = {
   title: "Exemples de sites internet",
-  description: "Exemples de sites vitrines avec fond 3D animé : restaurant, artisan, coach, boutique. Chaque site client est ensuite créé sur mesure.",
+  description: "Exemples de sites vitrines, sobres ou animés en 3D : avocat, kiné, architecte d'intérieur, restaurant, artisan, coach. Chaque site client est créé sur mesure.",
   alternates: { canonical: "/exemples" },
 };
 
@@ -20,14 +20,14 @@ export default function ExemplesPage() {
           De quoi vous <em>inspirer</em>.
         </h1>
         <p className="rise rise-2 mt-8 max-w-xl text-lg text-bone/70">
-          Quatre exemples de ce qu&apos;on crée : ouvrez-les et faites défiler. Votre site ne sera pas une copie : il est
+          Du plus sobre au plus spectaculaire : ouvrez-les et faites défiler. Votre site ne sera pas une copie : il est
           conçu de zéro, avec vos textes, vos photos, vos couleurs et un fond 3D à votre image.
         </p>
       </section>
 
       <section className="px-6 pb-32 md:px-10">
         <div data-stagger className="grid gap-x-6 gap-y-14 md:grid-cols-2">
-          {templates.map((t) => (
+          {showcase.map((t) => (
             <TemplateCard key={t.id} t={t} className="h-[36rem]" />
           ))}
         </div>

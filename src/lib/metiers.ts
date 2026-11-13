@@ -123,12 +123,12 @@ export const metiers: Metier[] = [
     slug: "therapeute",
     name: "thérapeute",
     plural: "Ostéopathes et thérapeutes",
-    template: "atelier",
+    template: "clarte",
     intro:
       "Ostéopathe, kinésithérapeute, sophrologue, psychologue : vos patients cherchent à être rassurés avant de prendre rendez-vous. Un site sobre et clair explique votre approche, vos tarifs et l'accès au cabinet.",
     needs: ["Votre approche et les motifs de consultation", "Le déroulé d'une séance et les tarifs", "La prise de rendez-vous", "L'accès au cabinet et l'accessibilité"],
     sections: [
-      { title: "Un ton apaisant", text: "Un fond clair et nacré, comme dans notre exemple Atelier, installe une atmosphère calme et professionnelle." },
+      { title: "Un ton apaisant", text: "Blanc, vert d'eau et repères clairs, comme dans notre exemple Clarté : une atmosphère calme et professionnelle." },
       { title: "Des réponses avant la séance", text: "Déroulé, durée, tarifs, remboursement : les questions que les patients se posent, traitées sur la page." },
       { title: "Confidentialité respectée", text: "Aucun traceur, formulaires sécurisés, hébergement en Europe : un site conforme au RGPD." },
     ],

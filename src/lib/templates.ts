@@ -69,11 +69,13 @@ export const MEDIA_PATH = /^\/api\/media\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png
 const noPhotos = { photoHero: "", photoAbout: "", photo1: "", photo2: "", photo3: "" };
 
 export type TemplateDef = {
-  id: "aurore" | "monolithe" | "pulse" | "atelier";
+  id: "aurore" | "monolithe" | "pulse" | "atelier" | "cabinet" | "clarte" | "ligne";
   name: string;
   sector: string;
   pitch: string;
-  scene: ScenePreset;
+  /** Fond 3D animé ; absent pour les exemples sobres, sans animation de fond. */
+  scene?: ScenePreset;
+  /** Couleurs du fond 3D, reprises par l'aperçu de l'espace client. */
   colors: [string, string, string];
   /** Opacité du fond 3D et type de fond (clair ou sombre). */
   sceneOpacity: number;
@@ -228,7 +230,119 @@ export const templates: TemplateDef[] = [
       ...noPhotos,
     },
   },
+  {
+    id: "cabinet",
+    name: "Cabinet",
+    sector: "Avocat · Expert-comptable · Conseil",
+    pitch: "Sobre et rassurant : typographie classique, bleu nuit, une mise en page aussi rigoureuse que votre métier.",
+    colors: ["#f7f6f2", "#14213d", "#b08d57"],
+    sceneOpacity: 0,
+    light: true,
+    photoLabels: { photoHero: "Le cabinet", photoAbout: "L'équipe", photo1: "Les bureaux", photo2: "La salle de réunion", photo3: "L'accueil" },
+    preview: { bg: "#f7f6f2", fg: "#14213d", accent: "#b08d57" },
+    content: {
+      brand: "Cabinet Delorme",
+      kicker: "Avocats associés — Rennes",
+      heroTitle: "Le droit des affaires, expliqué simplement",
+      heroSubtitle:
+        "Nous accompagnons les dirigeants de TPE et de PME : contrats, litiges commerciaux, droit du travail. Un interlocuteur unique, des honoraires annoncés à l'avance.",
+      cta: "Prendre rendez-vous",
+      aboutTitle: "Un cabinet à taille humaine",
+      aboutText:
+        "Trois avocats, vingt ans d'expérience cumulée et une règle : vous répondre sous 48 heures. Chaque dossier est suivi par un associé, du premier échange jusqu'à sa conclusion.",
+      s1Title: "Contrats",
+      s1Text: "Rédaction et relecture de vos contrats commerciaux, conditions générales et pactes d'associés.",
+      s2Title: "Contentieux",
+      s2Text: "Recouvrement, litiges avec un fournisseur ou un client : négociation d'abord, tribunal si nécessaire.",
+      s3Title: "Droit social",
+      s3Text: "Embauche, rupture, contrôle : sécurisez vos décisions avant de les prendre.",
+      quote: "Des réponses claires, des délais tenus. Exactement ce qu'on attend d'un avocat.",
+      quoteAuthor: "Dirigeante d'une PME de 40 salariés",
+      email: "contact@cabinet-delorme.example",
+      phone: "02 00 00 00 00",
+      address: "8 place de Bretagne, 35000 Rennes",
+      hours: "Du lundi au vendredi, 9 h – 18 h 30, sur rendez-vous.",
+      ...noPhotos,
+    },
+  },
+  {
+    id: "clarte",
+    name: "Clarté",
+    sector: "Santé · Kiné · Dentiste",
+    pitch: "Blanc, aéré, des repères clairs : un site qui rassure avant même la première consultation.",
+    colors: ["#ffffff", "#0f766e", "#e6f2f1"],
+    sceneOpacity: 0,
+    light: true,
+    photoLabels: { photoHero: "Le cabinet", photoAbout: "La praticienne", photo1: "La salle de soin", photo2: "L'équipement", photo3: "L'accueil" },
+    preview: { bg: "#ffffff", fg: "#0f2a2e", accent: "#0f766e" },
+    content: {
+      brand: "Kiné Laurent",
+      kicker: "Cabinet de kinésithérapie — Cesson-Sévigné",
+      heroTitle: "Retrouver le mouvement, à votre rythme",
+      heroSubtitle:
+        "Rééducation, sport, douleurs du dos : des séances individuelles de 45 minutes, dans un cabinet de plain-pied accessible à tous.",
+      cta: "Prendre rendez-vous",
+      aboutTitle: "Une prise en charge globale",
+      aboutText:
+        "Chaque patient commence par un bilan complet. Nous construisons ensuite un programme adapté, avec des exercices simples à refaire chez vous entre deux séances.",
+      s1Title: "Rééducation",
+      s1Text: "Après une opération, une fracture ou une entorse, sur prescription médicale.",
+      s2Title: "Kiné du sport",
+      s2Text: "Prévention des blessures, reprise après une pause, préparation d'une compétition.",
+      s3Title: "Dos et posture",
+      s3Text: "Lombalgies, cervicalgies, travail de bureau : soulager et prévenir.",
+      quote: "Un suivi sérieux et des explications à chaque séance. Je sais enfin ce que je fais et pourquoi.",
+      quoteAuthor: "Une patiente",
+      email: "cabinet@kine-laurent.example",
+      phone: "02 00 00 00 00",
+      address: "3 rue des Peupliers, 35510 Cesson-Sévigné",
+      hours: "Du lundi au vendredi, 8 h – 20 h. Samedi matin sur rendez-vous.",
+      ...noPhotos,
+    },
+  },
+  {
+    id: "ligne",
+    name: "Ligne",
+    sector: "Immobilier · Architecte d'intérieur · Consultant",
+    pitch: "Noir sur blanc, grandes photos, une grille éditoriale : l'élégance sans effet.",
+    colors: ["#ffffff", "#111111", "#8a8a8a"],
+    sceneOpacity: 0,
+    light: true,
+    photoLabels: { photoHero: "Le projet", photoAbout: "Le studio", photo1: "Salon", photo2: "Cuisine", photo3: "Chambre" },
+    preview: { bg: "#ffffff", fg: "#111111", accent: "#8a8a8a" },
+    content: {
+      brand: "Studio Morel",
+      kicker: "Architecture intérieure",
+      heroTitle: "Des intérieurs pensés pour durer",
+      heroSubtitle:
+        "Rénovation d'appartements et de maisons, de la conception au suivi de chantier. Un seul interlocuteur, un budget tenu.",
+      cta: "Parler de votre projet",
+      aboutTitle: "Moins, mais mieux",
+      aboutText:
+        "Nous partons de votre façon de vivre, pas d'une tendance. Matériaux durables, artisans locaux, plans précis : chaque projet est livré clé en main.",
+      s1Title: "Conception",
+      s1Text: "Plans, rendus 3D et choix des matériaux, validés avec vous étape par étape.",
+      s2Title: "Rénovation",
+      s2Text: "Coordination des artisans et suivi du chantier jusqu'à la remise des clés.",
+      s3Title: "Conseil",
+      s3Text: "Une visite de deux heures pour repenser une pièce, avec un plan d'action écrit.",
+      quote: "Ils ont compris en une visite ce que nous cherchions depuis des mois.",
+      quoteAuthor: "Claire et Thomas, rénovation d'une longère",
+      email: "bonjour@studio-morel.example",
+      phone: "02 00 00 00 00",
+      address: "21 rue de Saint-Malo, 35000 Rennes",
+      hours: "Du lundi au vendredi, 9 h – 18 h, visites sur rendez-vous.",
+      ...noPhotos,
+    },
+  },
 ];
+
+/** Ordre d'affichage : styles alternés, sobres et animés, pour montrer la diversité. */
+const SHOWCASE: TemplateDef["id"][] = ["cabinet", "pulse", "clarte", "aurore", "ligne", "monolithe", "atelier"];
+export const showcase = SHOWCASE.map((id) => templates.find((t) => t.id === id)!).filter(Boolean);
+
+/** Sélection de l'accueil : quatre exemples volontairement très différents. */
+export const homeShowcase = (["cabinet", "pulse", "ligne", "aurore"] as const).map((id) => templates.find((t) => t.id === id)!);
 
 export function getTemplate(id: string | null | undefined): TemplateDef | undefined {
   return templates.find((t) => t.id === id);

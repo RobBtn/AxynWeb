@@ -7,7 +7,7 @@ import TemplateCard from "@/components/TemplateCard";
 import { pricing } from "@/lib/config";
 import { metiers } from "@/lib/metiers";
 import { area, faqLd, openGraph, organizationLd, websiteLd } from "@/lib/seo";
-import { templates } from "@/lib/templates";
+import { homeShowcase } from "@/lib/templates";
 
 export const metadata: Metadata = { alternates: { canonical: "/" }, openGraph: openGraph("/") };
 
@@ -186,17 +186,17 @@ export default function Home() {
           <div className="w-[80vw] shrink-0 md:w-[30vw]">
             <p className="kicker">Exemples</p>
             <h2 className="display mt-6 text-5xl md:text-7xl">
-              Quatre exemples. <em>Le vôtre</em> sera unique.
+              Des styles opposés. <em>Le vôtre</em> sera unique.
             </h2>
             <p className="mt-6 max-w-sm text-bone/75">
-              Ouvrez-les et faites défiler pour voir ce qu&apos;on sait faire. Votre site, lui, est créé de zéro, à vos
-              couleurs et pour votre métier.
+              Sobre et institutionnel ou animé et audacieux : ouvrez-les et faites défiler. Votre site, lui, est créé de
+              zéro, à vos couleurs et pour votre métier.
             </p>
             <Link href="/exemples" className="btn btn-primary mt-8">
               Tous les exemples →
             </Link>
           </div>
-          {templates.map((t) => (
+          {homeShowcase.map((t) => (
             <div key={t.id} data-depth className="shrink-0"><TemplateCard t={t} className="h-[68vh] w-[84vw] md:w-[46vw]" /></div>
           ))}
         </div>
