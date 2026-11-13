@@ -197,7 +197,7 @@ export default function Home() {
             </Link>
           </div>
           {homeShowcase.map((t) => (
-            <div key={t.id} data-depth className="shrink-0"><TemplateCard t={t} className="h-[68vh] w-[84vw] md:w-[46vw]" /></div>
+            <div key={t.id} data-depth className="shrink-0"><TemplateCard t={t} className="h-[68vh] w-[84vw] md:h-auto md:w-[46vw]" /></div>
           ))}
         </div>
         </div>

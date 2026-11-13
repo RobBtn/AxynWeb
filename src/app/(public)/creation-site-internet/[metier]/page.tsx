@@ -93,7 +93,7 @@ export default async function MetierPage({ params }: Props) {
               <h3 className="display text-3xl md:text-5xl">Un exemple pour vous inspirer : {template.name}</h3>
               <p className="mt-4 max-w-md text-mute">{template.pitch} Votre site sera créé de zéro, à votre image : cet exemple montre seulement l&apos;ambiance possible.</p>
             </div>
-            <TemplateCard t={template} className="h-[28rem]" />
+            <TemplateCard t={template} className="h-[28rem] md:h-auto" />
           </div>
         )}
       </section>

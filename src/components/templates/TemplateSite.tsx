@@ -534,7 +534,7 @@ function Atelier({ template, content: c, bare }: Props) {
             </nav>
           </details>
           <span className="serif text-2xl md:text-3xl">{c.brand}</span>
-          <a href="#contact" className="rounded-full bg-[#2a2420] px-5 py-2.5 text-sm text-[#f6f1ec]">
+          <a href="#contact" className="hidden rounded-full bg-[#2a2420] px-5 py-2.5 text-sm text-[#f6f1ec] sm:inline-block">
             {c.cta}
           </a>
         </div>

@@ -28,7 +28,7 @@ export default function ExemplesPage() {
       <section className="px-6 pb-32 md:px-10">
         <div data-stagger className="grid gap-x-6 gap-y-14 md:grid-cols-2">
           {showcase.map((t) => (
-            <TemplateCard key={t.id} t={t} className="h-[36rem]" />
+            <TemplateCard key={t.id} t={t} className="h-[36rem] md:h-auto" />
           ))}
         </div>
         <div data-reveal className="glass mt-16 flex flex-col items-start justify-between gap-6 rounded-2xl p-10 md:flex-row md:items-center">
