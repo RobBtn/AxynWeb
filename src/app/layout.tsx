@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   description: seoDescription,
 };
 
-export const viewport: Viewport = { themeColor: "#0c0d0a" };
+export const viewport: Viewport = { themeColor: "#0c0d0a", viewportFit: "cover" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Lecture des en-têtes : force un rendu par requête, indispensable pour que

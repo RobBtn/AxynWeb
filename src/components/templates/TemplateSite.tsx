@@ -23,33 +23,63 @@ export default function TemplateSite({ template, content, bare = false, demo = f
       <div className={demo ? "demo-visuals" : undefined} data-demo={demo ? template.id : undefined}>
         <Layout template={template} content={content} bare={bare} />
       </div>
-      <MobileActions c={content} />
+      <MobileActions c={content} demo={demo} />
     </>
   );
 }
 
-/** Sur téléphone : appeler, venir ou écrire en un geste, toujours sous le pouce. */
-function MobileActions({ c }: { c: SiteContent }) {
+const icons = {
+  Appeler: "M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z",
+  Itinéraire: "M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z",
+  Écrire: "M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5z",
+} as const;
+
+/**
+ * Sur téléphone : appeler, venir ou écrire en un geste, dans un panneau flottant sous le pouce. Il tient
+ * compte de la zone de sécurité de l'iPhone (barre d'accueil). Sur une page d'exemple, il porte aussi
+ * le retour aux exemples et la demande de devis, pour n'avoir qu'une seule barre.
+ */
+function MobileActions({ c, demo }: { c: SiteContent; demo: boolean }) {
   const actions = [
-    c.phone && { href: tel(c.phone), label: "Appeler" },
-    c.address && { href: mapUrl(c.address), label: "Itinéraire", external: true },
-    c.email && { href: `mailto:${c.email}`, label: "Écrire" },
-  ].filter(Boolean) as { href: string; label: string; external?: boolean }[];
-  if (actions.length === 0) return null;
+    c.phone && { href: tel(c.phone), label: "Appeler" as const },
+    c.address && { href: mapUrl(c.address), label: "Itinéraire" as const, external: true },
+    c.email && { href: `mailto:${c.email}`, label: "Écrire" as const },
+  ].filter(Boolean) as { href: string; label: keyof typeof icons; external?: boolean }[];
+  if (actions.length === 0 && !demo) return null;
   return (
     <>
-      <div className="h-16 md:hidden" aria-hidden="true" />
-      <nav aria-label="Contact rapide" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-white/15 bg-[#10130b] text-[#f3f0e6] md:hidden">
-        {actions.map((a) => (
-          <a
-            key={a.label}
-            href={a.href}
-            {...(a.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            className="flex-1 border-r border-white/15 py-4 text-center text-sm font-semibold last:border-r-0 active:bg-white/10"
-          >
-            {a.label}
-          </a>
-        ))}
+      <div className={`md:hidden ${demo ? "h-36" : "h-24"}`} aria-hidden="true" />
+      <nav
+        aria-label="Contact rapide"
+        className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 overflow-hidden rounded-2xl border border-white/10 bg-[#111214]/90 text-[#f3f0e6] shadow-2xl shadow-black/30 backdrop-blur-xl md:hidden"
+      >
+        {demo && (
+          <div className="flex items-center gap-2 border-b border-white/10 p-2 text-sm">
+            <Link href="/exemples" className="rounded-xl px-3 py-2 text-white/70">
+              ← Exemples
+            </Link>
+            <Link href="/#contact" className="ml-auto rounded-xl bg-[#d3e5c9] px-4 py-2 font-semibold text-[#164a36]">
+              Un site comme ça
+            </Link>
+          </div>
+        )}
+        {actions.length > 0 && (
+          <div className="flex">
+            {actions.map((a) => (
+              <a
+                key={a.label}
+                href={a.href}
+                {...(a.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                className="flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium active:bg-white/10"
+              >
+                <svg viewBox="0 0 24 24" className="size-5 fill-current" aria-hidden="true">
+                  <path d={icons[a.label]} />
+                </svg>
+                {a.label}
+              </a>
+            ))}
+          </div>
+        )}
       </nav>
     </>
   );
