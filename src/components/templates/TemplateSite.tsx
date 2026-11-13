@@ -35,8 +35,10 @@ const icons = {
 } as const;
 
 /**
- * Sur téléphone : appeler, venir ou écrire en un geste, dans un panneau flottant sous le pouce. Il tient
- * compte de la zone de sécurité de l'iPhone (barre d'accueil). Sur une page d'exemple, il porte aussi
+ * Sur téléphone : appeler, venir ou écrire en un geste, dans un panneau ancré en bas de l'écran. Sur iPhone,
+ * Safari ne déplace les éléments fixes qu'à la fin du défilement quand sa barre se replie : le fond du
+ * panneau se prolonge donc sous le bord (::after) pour qu'aucun trou n'apparaisse, et la zone de sécurité
+ * (barre d'accueil) est respectée. Sur une page d'exemple, il porte aussi
  * le retour aux exemples et la demande de devis, pour n'avoir qu'une seule barre.
  */
 function MobileActions({ c, demo }: { c: SiteContent; demo: boolean }) {
@@ -48,10 +50,10 @@ function MobileActions({ c, demo }: { c: SiteContent; demo: boolean }) {
   if (actions.length === 0 && !demo) return null;
   return (
     <>
-      <div className={`md:hidden ${demo ? "h-36" : "h-24"}`} aria-hidden="true" />
+      <div className={`md:hidden ${demo ? "h-32" : "h-20"}`} aria-hidden="true" />
       <nav
         aria-label="Contact rapide"
-        className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 overflow-hidden rounded-2xl border border-white/10 bg-[#111214]/90 text-[#f3f0e6] shadow-2xl shadow-black/30 backdrop-blur-xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 rounded-t-3xl border-t border-white/10 bg-[#111214] pb-[env(safe-area-inset-bottom)] text-[#f3f0e6] shadow-[0_-12px_40px_rgba(0,0,0,0.25)] after:absolute after:inset-x-0 after:top-full after:h-40 after:bg-[#111214] md:hidden"
       >
         {demo && (
           <div className="flex items-center gap-2 border-b border-white/10 p-2 text-sm">
