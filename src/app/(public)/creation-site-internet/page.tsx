@@ -35,7 +35,7 @@ const faq = [
 ];
 
 const steps = [
-  ["Le brief", "Quelques lignes sur votre activité, ou le choix d'un modèle."],
+  ["Le brief", "Quelques lignes sur votre activité, et un exemple qui vous plaît."],
   ["La création", "Structure, textes, fond 3D et animations : une première version complète."],
   ["Les retouches", "Relecture, vérification de sécurité, ajout de vos photos depuis l'espace client."],
   ["La mise en ligne", "Nom de domaine, hébergement en Europe et HTTPS : votre site est en ligne."],
@@ -68,8 +68,8 @@ export default function CreationSiteInternet() {
           <Link href="/#contact" className="btn btn-primary" data-magnetic>
             Estimer mon site <span aria-hidden="true">→</span>
           </Link>
-          <Link href="/modeles" className="btn btn-ghost">
-            Voir les modèles
+          <Link href="/exemples" className="btn btn-ghost">
+            Voir des exemples
           </Link>
         </div>
       </section>

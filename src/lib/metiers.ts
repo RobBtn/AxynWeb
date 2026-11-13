@@ -34,7 +34,7 @@ export const metiers: Metier[] = [
     sections: [
       { title: "La carte toujours à jour", text: "Horaires, textes et photos se modifient depuis l'espace client, en ligne en une minute. La carte complète, en texte et sans PDF, a sa page dans la formule Signature." },
       { title: "Réservation simple", text: "Appel direct ou lien vers votre outil de réservation : le chemin le plus court vers une table." },
-      { title: "Un fond 3D chaleureux", text: "Le modèle Aurore fait onduler une lumière chaude derrière vos photos, pour une ambiance qui ressemble à votre salle." },
+      { title: "Un fond 3D chaleureux", text: "Comme dans notre exemple Aurore, une lumière chaude peut onduler derrière vos photos, pour une ambiance qui ressemble à votre salle." },
     ],
     seoTips: ["Nom, adresse et téléphone identiques sur le site et sur votre fiche Google", "Une page qui cite votre quartier et votre type de cuisine", "La carte en texte, pas en image : Google et les assistants IA peuvent la lire"],
     faq: [
@@ -73,11 +73,11 @@ export const metiers: Metier[] = [
     sections: [
       { title: "Vos chantiers en images", text: "Des cadres photo pour vos réalisations, que vous changez depuis votre téléphone ; une galerie complète de chantiers dans la formule Signature." },
       { title: "Demande de devis qualifiée", text: "Appel direct depuis un téléphone, ou formulaire détaillé (type de travaux, commune, délai) en formule Signature : vous rappelez les bons clients." },
-      { title: "Un style net et solide", text: "Le modèle Monolithe affiche un relief filaire, comme un plan qui prend vie, et une typographie massive." },
+      { title: "Un style net et solide", text: "Comme dans notre exemple Monolithe : un relief filaire, comme un plan qui prend vie, et une typographie massive." },
     ],
     seoTips: ["Une section par prestation (« rénovation de salle de bain », « dépannage »…)", "La liste des communes où vous intervenez", "Vos labels écrits en toutes lettres"],
     faq: [
-      { q: "Je n'ai pas de photos professionnelles, est-ce un problème ?", a: "Non. Des photos de chantier prises au téléphone suffisent ; le modèle les met en valeur dans des cadres soignés." },
+      { q: "Je n'ai pas de photos professionnelles, est-ce un problème ?", a: "Non. Des photos de chantier prises au téléphone suffisent ; le site les met en valeur dans des cadres soignés." },
       { q: "Puis-je indiquer plusieurs communes d'intervention ?", a: "Oui, et c'est conseillé : c'est ce que les clients tapent dans Google (« plombier + commune »)." },
     ],
   },
@@ -90,7 +90,7 @@ export const metiers: Metier[] = [
       "Coach, salle de sport, studio de yoga : vos futurs adhérents veulent sentir l'énergie avant de franchir la porte. Le site doit motiver, présenter vos formules et faciliter la première séance.",
     needs: ["Les formules et les tarifs", "Le planning des cours", "Votre parcours et vos diplômes", "Une séance d'essai facile à réserver"],
     sections: [
-      { title: "De l'énergie dès l'arrivée", text: "Le modèle Pulse fait rouler une nappe de points néon vers l'horizon, avec des titres géants." },
+      { title: "De l'énergie dès l'arrivée", text: "Comme dans notre exemple Pulse : une nappe de points néon qui roule vers l'horizon, des titres géants." },
       { title: "Formules et planning", text: "Vos offres et vos tarifs, modifiables à chaque saison depuis l'espace client ; le planning détaillé a sa page dans la formule Signature." },
       { title: "Prise de contact directe", text: "Séance d'essai, bilan, question : un lien vers votre outil de réservation, ou l'appel direct depuis un téléphone." },
     ],
@@ -109,7 +109,7 @@ export const metiers: Metier[] = [
       "Un salon de coiffure ou un institut se choisit sur l'ambiance, les réalisations et la facilité de prise de rendez-vous. Votre site doit refléter votre style et mener au rendez-vous en un clic.",
     needs: ["Les prestations et les tarifs", "Des photos de réalisations", "La prise de rendez-vous", "Les horaires et l'accès au salon"],
     sections: [
-      { title: "Un univers doux et soigné", text: "Le modèle Atelier fait respirer une étoffe nacrée sur fond clair : élégant, lumineux, à votre image." },
+      { title: "Un univers doux et soigné", text: "Comme dans notre exemple Atelier : une étoffe nacrée qui respire sur fond clair : élégant, lumineux, à votre image." },
       { title: "Tarifs lisibles", text: "Coupes, couleurs, soins : une grille claire que vous ajustez vous-même." },
       { title: "Rendez-vous en un clic", text: "Un bouton vers votre agenda en ligne, ou l'appel direct depuis un téléphone." },
     ],
@@ -128,7 +128,7 @@ export const metiers: Metier[] = [
       "Ostéopathe, kinésithérapeute, sophrologue, psychologue : vos patients cherchent à être rassurés avant de prendre rendez-vous. Un site sobre et clair explique votre approche, vos tarifs et l'accès au cabinet.",
     needs: ["Votre approche et les motifs de consultation", "Le déroulé d'une séance et les tarifs", "La prise de rendez-vous", "L'accès au cabinet et l'accessibilité"],
     sections: [
-      { title: "Un ton apaisant", text: "Le modèle Atelier, sur fond clair et nacré, installe une atmosphère calme et professionnelle." },
+      { title: "Un ton apaisant", text: "Un fond clair et nacré, comme dans notre exemple Atelier, installe une atmosphère calme et professionnelle." },
       { title: "Des réponses avant la séance", text: "Déroulé, durée, tarifs, remboursement : les questions que les patients se posent, traitées sur la page." },
       { title: "Confidentialité respectée", text: "Aucun traceur, formulaires sécurisés, hébergement en Europe : un site conforme au RGPD." },
     ],

@@ -27,6 +27,13 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // Les « modèles » sont devenus des « exemples » : anciennes adresses redirigées (301) pour le référencement.
+  async redirects() {
+    return [
+      { source: "/modeles", destination: "/exemples", permanent: true },
+      { source: "/modeles/:id", destination: "/exemples/:id", permanent: true },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

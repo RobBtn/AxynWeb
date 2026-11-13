@@ -86,7 +86,7 @@ const coreTools: Tool[] = [
     inputSchema: { type: "object", properties: {} },
     handler: () => ({
       fields: contentFields.map((f) => ({ key: f.key, label: f.label, group: f.group, max: f.max })),
-      templates: templates.map((t) => ({ id: t.id, name: t.name, sector: t.sector, pitch: t.pitch, demo: `/modeles/${t.id}`, defaultContent: t.content })),
+      templates: templates.map((t) => ({ id: t.id, name: t.name, sector: t.sector, pitch: t.pitch, demo: `/exemples/${t.id}`, defaultContent: t.content })),
     }),
   },
   {

@@ -25,7 +25,7 @@ export function Logo({ className = "", tone = "dark", height = 28 }: { className
 
 export function Nav() {
   const links = [
-    { href: "/modeles", label: "Modèles" },
+    { href: "/exemples", label: "Exemples" },
     { href: "/#methode", label: "Méthode" },
     { href: "/#tarifs", label: "Tarifs" },
     { href: "/#contact", label: "Devis" },

@@ -53,8 +53,8 @@ export default async function MetierPage({ params }: Props) {
             Estimer mon site <span aria-hidden="true">→</span>
           </Link>
           {template && (
-            <Link href={`/modeles/${template.id}`} className="btn btn-ghost">
-              Voir le modèle {template.name}
+            <Link href={`/exemples/${template.id}`} className="btn btn-ghost">
+              Voir l&apos;exemple {template.name}
             </Link>
           )}
         </div>
@@ -90,8 +90,8 @@ export default async function MetierPage({ params }: Props) {
         {template && (
           <div data-reveal className="mt-16 grid items-center gap-10 md:grid-cols-[1fr_1.2fr]">
             <div>
-              <h3 className="display text-3xl md:text-5xl">Le modèle conseillé : {template.name}</h3>
-              <p className="mt-4 max-w-md text-mute">{template.pitch} Ouvrez-le et faites défiler pour le tester en direct.</p>
+              <h3 className="display text-3xl md:text-5xl">Un exemple pour vous inspirer : {template.name}</h3>
+              <p className="mt-4 max-w-md text-mute">{template.pitch} Votre site sera créé de zéro, à votre image : cet exemple montre seulement l&apos;ambiance possible.</p>
             </div>
             <TemplateCard t={template} className="h-[28rem]" />
           </div>

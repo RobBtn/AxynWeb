@@ -14,8 +14,8 @@ export default function NotFound() {
           <Link href="/" className="btn btn-primary">
             Retour à l&apos;accueil
           </Link>
-          <Link href="/modeles" className="btn btn-ghost">
-            Voir les modèles
+          <Link href="/exemples" className="btn btn-ghost">
+            Voir des exemples
           </Link>
         </div>
       </div>

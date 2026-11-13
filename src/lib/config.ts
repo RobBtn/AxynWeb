@@ -33,11 +33,12 @@ export const pricing = {
     {
       id: "essentiel",
       name: "Essentiel",
-      price: 149,
-      description: "Un site une page, basé sur un de nos modèles 3D.",
+      price: 179,
+      description: "Un site une page, unique et conçu pour votre activité.",
       features: [
-        "Modèle 3D animé au choix",
-        "Textes et couleurs adaptés à votre marque",
+        "Design personnalisé à votre image",
+        "Fond 3D animé à vos couleurs",
+        "Textes adaptés à votre métier",
         "Espace client inclus",
         "En ligne en 72 h",
       ],
@@ -47,7 +48,7 @@ export const pricing = {
       name: "Signature",
       price: 349,
       featured: true,
-      description: "Jusqu'à 5 pages, modèle retravaillé à votre image.",
+      description: "Jusqu'à 5 pages, un design plus poussé et une scène 3D créée pour vous.",
       features: [
         "Tout Essentiel",
         "Scène 3D personnalisée",
@@ -61,9 +62,9 @@ export const pricing = {
       name: "Sur-mesure",
       price: 690,
       from: true,
-      description: "Un site unique, généré et affiné à partir de votre brief.",
+      description: "Un projet ambitieux : pages et fonctions sans limite, à partir de votre brief.",
       features: [
-        "Design original, sans modèle",
+        "Fonctions sur mesure (réservation, boutique…)",
         "Pages illimitées",
         "Animations sur-mesure",
         "Accompagnement dédié",
@@ -73,7 +74,7 @@ export const pricing = {
   maintenanceMonthly: 19,
   simulator: {
     // Tarif dégressif : la 1re page est dans la base, la 2e coûte moins cher que les suivantes.
-    base: 149,
+    base: 179,
     secondPage: 15,
     perPage: 30,
     options: [

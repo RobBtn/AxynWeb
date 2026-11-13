@@ -14,8 +14,8 @@ export const metadata: Metadata = { alternates: { canonical: "/" }, openGraph: o
 const sectors = ["Restaurants", "Artisans", "Coachs", "Créateurs", "Architectes", "Boutiques", "Thérapeutes", "Associations"];
 
 const steps = [
-  { n: "01", title: "Le brief", text: "Vous décrivez votre activité en quelques lignes, ou vous choisissez un modèle. C'est tout ce qu'il nous faut." },
-  { n: "02", title: "La création", text: "Nous montons une première version complète : structure, textes, fond 3D, animations." },
+  { n: "01", title: "Le brief", text: "Vous décrivez votre activité en quelques lignes, et montrez-nous un exemple qui vous plaît. C'est tout ce qu'il nous faut." },
+  { n: "02", title: "La création", text: "Nous créons votre site de zéro, à votre image : structure, textes, fond 3D, animations." },
   { n: "03", title: "Les retouches", text: "Chaque page est relue, corrigée et vérifiée côté sécurité. Vous ajoutez vos photos et validez depuis votre espace client." },
   { n: "04", title: "La mise en ligne", text: "Nom de domaine, hébergement en Europe, certificat HTTPS. Votre site est en ligne." },
 ];
@@ -43,7 +43,7 @@ const faq = [
   },
   {
     q: `Combien coûte la création d'un site internet ?`,
-    a: `Un site une page basé sur un modèle 3D coûte ${pricing.offers[0].price} €, un site jusqu'à 5 pages ${pricing.offers[1].price} €, un site sur-mesure à partir de ${pricing.offers[2].price} €. S'y ajoutent ${pricing.maintenanceMonthly} € par mois pour l'hébergement, la sécurité et l'espace client, sans engagement. Le simulateur ci-dessous donne un prix précis.`,
+    a: `Un site une page unique, conçu pour votre activité, coûte ${pricing.offers[0].price} €, un site jusqu'à 5 pages ${pricing.offers[1].price} €, un site sur-mesure à partir de ${pricing.offers[2].price} €. S'y ajoutent ${pricing.maintenanceMonthly} € par mois pour l'hébergement, la sécurité et l'espace client, sans engagement. Le simulateur ci-dessous donne un prix précis.`,
   },
   {
     q: `Travaillez-vous seulement à ${area.mainCity} ?`,
@@ -134,8 +134,8 @@ export default function Home() {
             sur Google et sécurisé. Vous modifiez tout vous-même depuis votre espace client.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/modeles" className="btn btn-primary" data-magnetic>
-              Voir les modèles <span aria-hidden="true">→</span>
+            <Link href="/exemples" className="btn btn-primary" data-magnetic>
+              Voir des exemples <span aria-hidden="true">→</span>
             </Link>
             <Link href="/#contact" className="btn btn-ghost" data-magnetic>
               Estimer mon site
@@ -175,8 +175,8 @@ export default function Home() {
         </dl>
       </section>
 
-      {/* MODÈLES — défilement horizontal épinglé, sur fond sombre */}
-      <section id="modeles" data-hscroll data-stage="2" data-stage-alpha="0.55" data-stage-bg="#10130b" data-stage-ink="#cfe3c4" className="zone-dark relative z-10 overflow-hidden">
+      {/* EXEMPLES — défilement horizontal épinglé, sur fond sombre */}
+      <section id="exemples" data-hscroll data-stage="2" data-stage-alpha="0.55" data-stage-bg="#10130b" data-stage-ink="#cfe3c4" className="zone-dark relative z-10 overflow-hidden">
         {/* GSAP épingle ce bloc interne, jamais la section : React doit retrouver ses nœuds au changement de page. */}
         <div data-hscroll-pin>
         <div
@@ -184,16 +184,16 @@ export default function Home() {
           className="flex gap-6 overflow-x-auto px-6 py-12 md:h-dvh md:items-center md:gap-10 md:overflow-visible md:px-10"
         >
           <div className="w-[80vw] shrink-0 md:w-[30vw]">
-            <p className="kicker">Modèles</p>
+            <p className="kicker">Exemples</p>
             <h2 className="display mt-6 text-5xl md:text-7xl">
-              Quatre univers. <em>Le vôtre</em> en fait partie.
+              Quatre exemples. <em>Le vôtre</em> sera unique.
             </h2>
             <p className="mt-6 max-w-sm text-bone/75">
-              Chaque modèle est un vrai site : fond 3D, cadres pour vos photos, infos pratiques. Ouvrez-les et faites
-              défiler.
+              Ouvrez-les et faites défiler pour voir ce qu&apos;on sait faire. Votre site, lui, est créé de zéro, à vos
+              couleurs et pour votre métier.
             </p>
-            <Link href="/modeles" className="btn btn-primary mt-8">
-              Toute la galerie →
+            <Link href="/exemples" className="btn btn-primary mt-8">
+              Tous les exemples →
             </Link>
           </div>
           {templates.map((t) => (

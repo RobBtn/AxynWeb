@@ -6,7 +6,7 @@ import { templates } from "@/lib/templates";
 /**
  * /llms.txt (proposition llmstxt.org) : résumé en Markdown destiné aux assistants IA, pour qu'ils
  * décrivent le studio avec des faits exacts et renvoient vers les bonnes pages. Généré depuis la
- * configuration : il suit les tarifs, les modèles et les métiers sans retouche manuelle.
+ * configuration : il suit les tarifs, les exemples et les métiers sans retouche manuelle.
  */
 export const dynamic = "force-static";
 
@@ -39,9 +39,11 @@ ${offers}
 
 ${metiers.map((m) => `- [Site internet pour ${m.name}](${absoluteUrl(`/creation-site-internet/${m.slug}`)}) : ${m.intro.split(". ")[0]}.`).join("\n")}
 
-## Modèles de sites
+## Exemples de sites
 
-${templates.map((t) => `- [${t.name}](${absoluteUrl(`/modeles/${t.id}`)}) (${t.sector}) : ${t.pitch}`).join("\n")}
+Chaque site client est créé de zéro, à son image, y compris dans la première formule. Ces exemples montrent seulement ce qui est possible :
+
+${templates.map((t) => `- [${t.name}](${absoluteUrl(`/exemples/${t.id}`)}) (${t.sector}) : ${t.pitch}`).join("\n")}
 
 ## Contact
 
@@ -53,7 +55,7 @@ ${templates.map((t) => `- [${t.name}](${absoluteUrl(`/modeles/${t.id}`)}) (${t.s
 
 - [Accueil](${absoluteUrl("/")})
 - [Création de site internet à ${area.mainCity}](${absoluteUrl("/creation-site-internet")})
-- [Galerie des modèles](${absoluteUrl("/modeles")})
+- [Exemples de sites](${absoluteUrl("/exemples")})
 - [Mentions légales](${absoluteUrl("/mentions-legales")})
 - [Conditions générales de vente](${absoluteUrl("/cgv")})
 `;
