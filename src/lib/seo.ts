@@ -23,6 +23,9 @@ export const seoDescription =
   `Création de sites internet à ${area.mainCity} et partout en France : sites vitrines modernes avec fond 3D, ` +
   `sécurisés par un étudiant ingénieur en cybersécurité, en ligne en 72 h dès ${pricing.offers[0].price} €. Espace client inclus.`;
 
+/** Graphies sous lesquelles on cherche la marque : Google s'en sert pour le nom affiché dans les résultats. */
+const alternateNames = ["Axyn Web", "axynweb.fr"];
+
 const orgId = absoluteUrl("/#organisation");
 
 /** Le studio : entreprise locale de services, identifiée par un @id réutilisé par les autres blocs. */
@@ -31,6 +34,7 @@ export function organizationLd() {
     "@type": "ProfessionalService",
     "@id": orgId,
     name: brand.name,
+    alternateName: alternateNames,
     url: siteUrl,
     logo: absoluteUrl("/logo/axynweb-logo.svg"),
     image: absoluteUrl("/opengraph-image"),
@@ -68,7 +72,7 @@ export function organizationLd() {
 }
 
 export function websiteLd() {
-  return { "@type": "WebSite", "@id": absoluteUrl("/#site"), url: siteUrl, name: brand.name, inLanguage: "fr-FR", publisher: { "@id": orgId } };
+  return { "@type": "WebSite", "@id": absoluteUrl("/#site"), url: siteUrl, name: brand.name, alternateName: alternateNames, inLanguage: "fr-FR", publisher: { "@id": orgId } };
 }
 
 export function faqLd(items: { q: string; a: string }[]) {
