@@ -64,7 +64,7 @@ export function Footer() {
       <Logo tone="light" height={36} className="mb-10" />
       <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
         <p className="display max-w-3xl text-5xl md:text-7xl">
-          Votre site peut être en ligne <em>dans trois jours.</em>
+          Prêt à passer <em>devant vos concurrents ?</em>
         </p>
         <Link href="/#contact" className="btn btn-primary shrink-0" data-magnetic>
           Estimer mon site →

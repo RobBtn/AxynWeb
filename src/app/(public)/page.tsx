@@ -119,19 +119,20 @@ export default function Home() {
         <h1 className="kicker rise self-start">Création de site internet à {area.mainCity}</h1>
         <p className="display mt-8 text-[clamp(3.2rem,11.5vw,13rem)]">
           <span className="line-mask">
-            <span>Des sites qui</span>
+            <span>Être trouvé.</span>
           </span>
           <span className="line-mask">
             <span>
-              coupent <em>le souffle.</em>
+              Être <em>choisi.</em>
             </span>
           </span>
         </p>
 
         <div className="rise rise-3 mt-10 flex flex-col gap-8 border-t border-bone pt-8 md:flex-row md:items-end md:justify-between">
           <p className="max-w-md text-lg">
-            Sites vitrines pour indépendants, commerces et TPE : un fond 3D qui vit, une sécurité vérifiée, et un espace
-            client pour tout gérer vous-même. En ligne en 72 h, dès {pricing.offers[0].price} €.
+            Vos clients comparent trois sites et choisissent en quelques secondes. On fait en sorte que ce soit le vôtre :
+            un design qui marque, des textes qui donnent envie, bien placé sur Google. En ligne en 72 h, dès{" "}
+            {pricing.offers[0].price} €.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/modeles" className="btn btn-primary" data-magnetic>
@@ -161,9 +162,9 @@ export default function Home() {
           Notre parti pris
         </p>
         <p data-scrub-text className="display mt-10 max-w-6xl text-[clamp(2rem,5.4vw,5.4rem)] leading-[1]">
-          Un beau site livré vite, c&apos;est bien. Un site sûr, c&apos;est indispensable. Le studio est porté par un
-          étudiant ingénieur en cybersécurité : chaque site est relu, sécurisé et tenu à jour, et vous êtes accompagné du
-          premier échange à la mise en ligne.
+          Un site qu&apos;on oublie, c&apos;est un client qui part chez le voisin. Le vôtre doit arrêter le pouce qui
+          défile, donner envie d&apos;appeler, et tenir bon face aux attaques : chaque site est relu et sécurisé par un
+          étudiant ingénieur en cybersécurité.
         </p>
         <dl data-stagger className="mt-24 grid gap-4 md:grid-cols-3">
           {facts.map((f) => (
@@ -211,7 +212,7 @@ export default function Home() {
               Méthode
             </p>
             <h2 data-split className="display mt-6 text-5xl md:text-7xl">
-              Du brief au site en ligne, en quatre temps.
+              Trois jours entre votre idée et votre site.
             </h2>
           </div>
           <ol>
@@ -333,7 +334,7 @@ export default function Home() {
           Par métier
         </p>
         <h2 data-split className="display mt-6 max-w-4xl text-5xl md:text-7xl">
-          Un site pensé pour votre activité.
+          Votre métier a ses codes. Votre site aussi.
         </h2>
         <ul data-stagger className="mt-14 flex flex-wrap gap-3">
           {metiers.map((m) => (
@@ -355,7 +356,7 @@ export default function Home() {
           Tarifs
         </p>
         <h2 data-split className="display mt-6 max-w-4xl text-5xl md:text-8xl">
-          Des prix clairs. Sans surprise.
+          Le prix d&apos;un artisan. Le rendu d&apos;une agence.
         </h2>
         <div data-stagger className="mt-20 grid gap-5 lg:grid-cols-3">
           {pricing.offers.map((o) => (
@@ -421,7 +422,7 @@ export default function Home() {
           Devis instantané
         </p>
         <h2 data-reveal className="display mt-6 max-w-5xl text-5xl md:text-8xl">
-          Combien coûterait <em>votre site ?</em>
+          Votre prix, <em>en 30 secondes.</em>
         </h2>
         <div data-reveal className="mt-16">
           <Estimator />

@@ -5,7 +5,7 @@
  */
 export const brand = {
   name: "AxynWeb",
-  tagline: "Des sites à couper le souffle. Sécurisés, accompagnés, à prix juste.",
+  tagline: "Être trouvé. Être choisi. Des sites qui font venir les clients, sécurisés et à prix juste.",
   email: "contact@axynweb.fr",
   phone: "",
   legal: {
