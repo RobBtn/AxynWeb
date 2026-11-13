@@ -37,7 +37,7 @@ const icons = {
 
 /**
  * Sur téléphone : appeler, venir ou écrire en un geste, dans un panneau collé au bas de la zone visible
- * (voir BottomDock, qui contourne le calcul de Safari sur iPhone) ; la zone de sécurité est respectée. Sur une page d'exemple, il porte aussi
+ * (voir BottomDock : elle s'efface au défilement vers le bas pour éviter le trou de Safari sur iPhone). Sur une page d'exemple, il porte aussi
  * le retour aux exemples et la demande de devis, pour n'avoir qu'une seule barre.
  */
 function MobileActions({ c, demo }: { c: SiteContent; demo: boolean }) {
