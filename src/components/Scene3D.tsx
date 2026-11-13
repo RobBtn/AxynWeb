@@ -213,12 +213,19 @@ export default function Scene3D({
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const state = { scroll: 0, target: 0, mx: 0, my: 0, tmx: 0, tmy: 0 };
 
+      // Sur mobile, la hauteur visible change sans arrêt au défilement (barres du navigateur) : redimensionner
+      // le canvas l'efface à chaque fois, d'où un clignotement. Le conteneur prend donc la plus grande hauteur
+      // possible (100lvh), on ignore les petites variations de hauteur, et on redessine aussitôt après.
+      let size = { w: 0, h: 0 };
       const resize = () => {
         const w = el.clientWidth;
         const h = el.clientHeight;
+        if (w === size.w && Math.abs(h - size.h) < 160) return;
+        size = { w, h };
         renderer.setSize(w, h, false);
         camera.aspect = w / Math.max(h, 1);
         camera.updateProjectionMatrix();
+        renderer.render(scene, camera);
       };
       const onScroll = () => {
         const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -299,7 +306,7 @@ export default function Scene3D({
     <div
       ref={mount}
       aria-hidden="true"
-      className="scene3d pointer-events-none fixed inset-0 z-0"
+      className="scene3d pointer-events-none fixed left-0 top-0 z-0 h-lvh w-full"
       style={{ opacity }}
     />
   );
