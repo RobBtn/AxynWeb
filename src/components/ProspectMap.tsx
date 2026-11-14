@@ -10,7 +10,7 @@ const COLORS: Record<string, string> = { Haute: "#e0603f", Normale: "#2f6fd6", "
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 /** Carte des prospects (Leaflet + tuiles OpenStreetMap). Un point par commerce géolocalisé, couleur selon la priorité. */
-export default function ProspectMap({ points }: { points: MapPoint[] }) {
+export default function ProspectMap({ points, legend = true, label = "Carte des prospects" }: { points: MapPoint[]; legend?: boolean; label?: string }) {
   const el = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,7 +46,8 @@ export default function ProspectMap({ points }: { points: MapPoint[] }) {
 
   return (
     <div>
-      <div ref={el} className="h-[min(70dvh,40rem)] w-full overflow-hidden rounded-2xl border border-line" role="region" aria-label="Carte des prospects" />
+      <div ref={el} className="h-[min(70dvh,40rem)] w-full overflow-hidden rounded-2xl border border-line" role="region" aria-label={label} />
+      {legend && (
       <p className="mt-3 flex flex-wrap gap-4 text-xs text-mute">
         {Object.entries(COLORS).map(([label, color]) => (
           <span key={label} className="flex items-center gap-1.5">
@@ -55,6 +56,7 @@ export default function ProspectMap({ points }: { points: MapPoint[] }) {
           </span>
         ))}
       </p>
+      )}
     </div>
   );
 }

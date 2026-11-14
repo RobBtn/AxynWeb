@@ -21,6 +21,7 @@ import {
   setSiteHtml,
   setSiteStatus,
   updateSiteContent,
+  updateClientAddress,
 } from "@/lib/data";
 import { contentFields, getTemplate, resolveContent } from "@/lib/templates";
 import { removeSiteMedia } from "@/lib/media";
@@ -51,6 +52,15 @@ export async function createClientAction(_p: FormState, fd: FormData): Promise<F
     const c = createClient({ name: str(fd, "name"), email: str(fd, "email"), company: str(fd, "company") });
     audit(actor, "client.create", c.email);
     return { ok: true, message: `Compte créé pour ${c.email}. Mot de passe provisoire (affiché une seule fois) :`, secret: c.password };
+  });
+}
+
+export async function updateClientAddressAction(_p: FormState, fd: FormData): Promise<FormState> {
+  return adminAction((actor) => {
+    updateClientAddress(str(fd, "id"), { address: str(fd, "address"), city: str(fd, "city") });
+    void geocodeProspects();
+    audit(actor, "client.address", str(fd, "id"));
+    return { ok: true, message: "Adresse enregistrée." };
   });
 }
 

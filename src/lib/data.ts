@@ -53,11 +53,19 @@ function uniqueSlug(name: string): string {
 
 /* ---------- Clients ---------- */
 export function listClients() {
-  return all<Pick<UserRow, "id" | "email" | "name" | "company" | "created_at" | "deletion_requested_at"> & { sites: number }>(
-    `SELECT u.id, u.email, u.name, u.company, u.created_at, u.deletion_requested_at,
+  return all<Pick<UserRow, "id" | "email" | "name" | "company" | "created_at" | "deletion_requested_at" | "address" | "city" | "lat" | "lng"> & { sites: number }>(
+    `SELECT u.id, u.email, u.name, u.company, u.created_at, u.deletion_requested_at, u.address, u.city, u.lat, u.lng,
             (SELECT COUNT(*) FROM sites s WHERE s.client_id = u.id) AS sites
        FROM users u WHERE u.role = 'client' ORDER BY u.created_at DESC`
   );
+}
+
+/** Adresse professionnelle et ville d'un client (vides autorisées). La position est recalculée par geocode.ts. */
+export function updateClientAddress(id: string, input: { address?: string; city?: string }) {
+  const row = get<{ id: string }>("SELECT id FROM users WHERE id = ? AND role = 'client'", id);
+  if (!row) throw new DataError("Client introuvable.");
+  const clean = (v: string | undefined, max: number) => (v ?? "").trim().replace(/\s+/g, " ").slice(0, max);
+  run("UPDATE users SET address = ?, city = ? WHERE id = ?", clean(input.address, 200), clean(input.city, 80), id);
 }
 
 /** Crée un compte client et renvoie un mot de passe provisoire (affiché une seule fois). */

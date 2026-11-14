@@ -2,7 +2,7 @@ import "server-only";
 import { all, run } from "./db";
 
 /**
- * Géocodage des adresses de prospects avec le service public de la Géoplateforme (IGN, Base Adresse Nationale) :
+ * Géocodage des adresses de prospects et de clients avec le service public de la Géoplateforme (IGN, Base Adresse Nationale) :
  * gratuit, sans clé, hébergé en France. On n'envoie que l'adresse postale d'un commerce, jamais de donnée personnelle.
  *
  * Une adresse n'est géocodée qu'une fois : `geocoded_address` garde celle qui a été traitée. Si l'adresse change,
@@ -30,18 +30,31 @@ async function geocodeOne(address: string): Promise<{ lat: number; lng: number; 
   return { lat, lng, city: f?.properties?.city ?? "" };
 }
 
-/** Traite les adresses nouvelles ou modifiées. Sans attente côté appelant : `void geocodeProspects()`. */
+/**
+ * Traite les adresses nouvelles ou modifiées des prospects et des clients.
+ * Sans attente côté appelant : `void geocodeProspects()`.
+ */
 export async function geocodeProspects(max = 200) {
   if (running) return;
   running = true;
   try {
+    for (const table of ["prospects", "users"] as const) {
+      if ((await geocodeTable(table, max)) === "stop") break;
+    }
+  } finally {
+    running = false;
+  }
+}
+
+async function geocodeTable(table: "prospects" | "users", max: number): Promise<"ok" | "stop"> {
+  {
     const todo = all<{ id: string; address: string; city: string }>(
-      "SELECT id, address, city FROM prospects WHERE address <> geocoded_address LIMIT ?",
+      `SELECT id, address, city FROM ${table} WHERE address <> geocoded_address LIMIT ?`,
       max
     );
     for (const p of todo) {
       if (!p.address) {
-        run("UPDATE prospects SET lat = NULL, lng = NULL, geocoded_address = '' WHERE id = ?", p.id);
+        run(`UPDATE ${table} SET lat = NULL, lng = NULL, geocoded_address = '' WHERE id = ?`, p.id);
         continue;
       }
       let hit: Awaited<ReturnType<typeof geocodeOne>> = null;
@@ -49,11 +62,11 @@ export async function geocodeProspects(max = 200) {
         hit = await geocodeOne(p.address);
       } catch (e) {
         console.error("[axynweb] géocodage interrompu :", (e as Error).message);
-        break; // service indisponible : on réessaiera au prochain passage
+        return "stop"; // service indisponible : on réessaiera au prochain passage
       }
       const city = p.city || hit?.city || cityFromAddress(p.address);
       run(
-        "UPDATE prospects SET lat = ?, lng = ?, city = ?, geocoded_address = ? WHERE id = ?",
+        `UPDATE ${table} SET lat = ?, lng = ?, city = ?, geocoded_address = ? WHERE id = ?`,
         hit?.lat ?? null,
         hit?.lng ?? null,
         city,
@@ -62,7 +75,6 @@ export async function geocodeProspects(max = 200) {
       );
       await new Promise((r) => setTimeout(r, 120)); // limite du service : 50 requêtes/s, on reste très en dessous
     }
-  } finally {
-    running = false;
   }
+  return "ok";
 }

@@ -252,6 +252,9 @@ export function getDb(): DatabaseSync {
   if (!msgCols.includes("html")) db.exec("ALTER TABLE mail_messages ADD COLUMN html TEXT NOT NULL DEFAULT ''");
   const userCols = (db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map((c) => c.name);
   if (!userCols.includes("google_sub")) db.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
+  // Adresse professionnelle des clients, pour la carte et le tri par ville (voir geocode.ts).
+  for (const col of ["address", "city", "geocoded_address"]) if (!userCols.includes(col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
+  for (const col of ["lat", "lng"]) if (!userCols.includes(col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} REAL`);
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_google_sub ON users(google_sub) WHERE google_sub IS NOT NULL");
   purgeExpired(db);
   setInterval(() => purgeExpired(db), 24 * 3600 * 1000).unref();
@@ -287,6 +290,11 @@ export type UserRow = {
   password_hash: string;
   created_at: string;
   deletion_requested_at: string | null;
+  /** Adresse professionnelle (facultative) et ville, saisie ou déduite par le géocodage. */
+  address: string;
+  city: string;
+  lat: number | null;
+  lng: number | null;
 };
 export type SiteRow = {
   id: string;

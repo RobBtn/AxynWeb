@@ -28,7 +28,7 @@ export default function Confidentialite() {
           légale : votre consentement et les mesures précontractuelles. Conservation : 3 ans après le dernier contact.
         </li>
         <li>
-          <strong>Compte client</strong> — nom, e-mail, entreprise, mot de passe (stocké sous forme d&apos;empreinte
+          <strong>Compte client</strong> — nom, e-mail, entreprise, adresse professionnelle (facultative), mot de passe (stocké sous forme d&apos;empreinte
           irréversible), contenu de vos sites, demandes de modification. Finalité : exécution du contrat. Conservation :
           durée du contrat, puis 5 ans pour les pièces contractuelles et 10 ans pour les pièces comptables.
         </li>

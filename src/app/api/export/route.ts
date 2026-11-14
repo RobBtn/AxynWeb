@@ -1,5 +1,5 @@
 import { getUser } from "@/lib/auth";
-import { all, audit } from "@/lib/db";
+import { all, audit, get } from "@/lib/db";
 
 /** Droit d'accès et à la portabilité (RGPD art. 15 et 20) : export JSON des données du compte. */
 export async function GET() {
@@ -17,10 +17,11 @@ export async function GET() {
     "SELECT d.name, d.registrar, d.expires_at, d.auto_renew FROM domains d JOIN sites s ON s.id = d.site_id WHERE s.client_id = ?",
     user.id
   );
+  const place = get<{ address: string; city: string }>("SELECT address, city FROM users WHERE id = ?", user.id);
   audit(user.email, "account.export");
 
   const body = JSON.stringify(
-    { exportedAt: new Date().toISOString(), account: { email: user.email, name: user.name, company: user.company }, sites, domains, requests, messages },
+    { exportedAt: new Date().toISOString(), account: { email: user.email, name: user.name, company: user.company, address: place?.address ?? "", city: place?.city ?? "" }, sites, domains, requests, messages },
     null,
     2
   );
