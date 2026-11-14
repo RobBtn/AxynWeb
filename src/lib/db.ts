@@ -239,9 +239,11 @@ export function getDb(): DatabaseSync {
   db.exec(SCHEMA);
   // Migration : ces colonnes ont été ajoutées après la création de la table sur les bases existantes.
   const prospectCols = (db.prepare("PRAGMA table_info(prospects)").all() as { name: string }[]).map((c) => c.name);
-  for (const col of ["tags", "email", "website", "address", "notes", "updated_at"]) {
+  for (const col of ["tags", "email", "website", "address", "notes", "updated_at", "city", "geocoded_address"]) {
     if (!prospectCols.includes(col)) db.exec(`ALTER TABLE prospects ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
   }
+  // Coordonnées calculées depuis l'adresse (voir geocode.ts), pour la carte des prospects.
+  for (const col of ["lat", "lng"]) if (!prospectCols.includes(col)) db.exec(`ALTER TABLE prospects ADD COLUMN ${col} REAL`);
   const threadCols = (db.prepare("PRAGMA table_info(mail_threads)").all() as { name: string }[]).map((c) => c.name);
   if (!threadCols.includes("status")) db.exec("ALTER TABLE mail_threads ADD COLUMN status TEXT NOT NULL DEFAULT 'open'");
   const folderCols = (db.prepare("PRAGMA table_info(mail_folders)").all() as { name: string }[]).map((c) => c.name);
@@ -355,6 +357,12 @@ export type ProspectRow = {
   /** Adresse du site actuel du commerce (http ou https). */
   website: string;
   address: string;
+  /** Ville : saisie, ou déduite de l'adresse par le géocodage. */
+  city: string;
+  /** Adresse telle qu'elle a été géocodée la dernière fois (vide : à faire). */
+  geocoded_address: string;
+  lat: number | null;
+  lng: number | null;
   notes: string;
   created_at: string;
 };

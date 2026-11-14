@@ -11,14 +11,15 @@ const HSTS_CUSTOM = "max-age=31536000";
 /** Sur le domaine d'un client, rien d'autre que ces chemins n'est accessible. */
 const CUSTOM_ALLOWED_PREFIXES = ["/api/media/", "/api/raw/"];
 
-function buildCsp(nonce: string) {
+function buildCsp(nonce: string, pathname = "") {
   const isDev = process.env.NODE_ENV === "development";
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     // Les animations (GSAP, styles en ligne React) imposent 'unsafe-inline' pour les styles.
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' blob: data:",
+    // Tuiles OpenStreetMap : seulement dans l'admin (carte des prospects), jamais pour les visiteurs.
+    `img-src 'self' blob: data:${pathname.startsWith("/admin") ? " https://tile.openstreetmap.org" : ""}`,
     "font-src 'self'",
     `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
     "frame-src 'self'",
@@ -44,7 +45,7 @@ const ORIGIN_HOST_HEADER = "x-axynweb-host"; // lu par src/app/d/[host]/page.tsx
 /** Transmet la requête (éventuellement réécrite) avec une CSP à nonce, et la pose aussi sur la réponse. */
 function withCsp(request: NextRequest, hsts: string, rewrite?: { to: URL; host: string }) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const csp = buildCsp(nonce);
+  const csp = buildCsp(nonce, request.nextUrl.pathname);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);

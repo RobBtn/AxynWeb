@@ -326,8 +326,9 @@ export const PROSPECT_PRIORITIES = ["Haute", "Normale", "À vérifier"] as const
 const MAX_PROSPECTS_PER_CALL = 200;
 
 /** Un prospect tel que le voit le MCP : toutes les colonnes (dont e-mail, site, adresse, notes), les cases cochées en liste. */
-export type ProspectView = Omit<ProspectRow, "tags"> & { tags: string[] };
-const prospectView = (p: ProspectRow): ProspectView => ({ ...p, tags: parseTags(p.tags) });
+export type ProspectView = Omit<ProspectRow, "tags" | "geocoded_address"> & { tags: string[] };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const prospectView = ({ geocoded_address, ...p }: ProspectRow): ProspectView => ({ ...p, tags: parseTags(p.tags) });
 
 const likePattern = (q: string) => "%" + q.replace(/[\\%_]/g, "\\$&") + "%";
 const squash = (v: unknown, max: number) => (typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, max) : "");
@@ -377,7 +378,7 @@ function checkTags(v: unknown): string[] {
   return [...out];
 }
 
-export function listProspects(f: { status?: string; tag?: string; category?: string; priority?: string; query?: string; limit?: number; offset?: number } = {}) {
+export function listProspects(f: { status?: string; tag?: string; category?: string; priority?: string; city?: string; query?: string; limit?: number; offset?: number } = {}) {
   const where: string[] = [];
   const params: (string | number)[] = [];
   if (f.status) {
@@ -394,16 +395,20 @@ export function listProspects(f: { status?: string; tag?: string; category?: str
     where.push("category LIKE ? ESCAPE '\\'");
     params.push(likePattern(f.category));
   }
+  if (f.city) {
+    where.push("lower(city) = lower(?)");
+    params.push(f.city.trim());
+  }
   if (f.priority) {
     where.push("priority = ?");
     params.push(normalizePriority(f.priority));
   }
   if (f.query) {
     where.push(
-      "(name LIKE ? ESCAPE '\\' OR activity LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\' OR finding LIKE ? ESCAPE '\\' OR email LIKE ? ESCAPE '\\' OR website LIKE ? ESCAPE '\\' OR address LIKE ? ESCAPE '\\' OR notes LIKE ? ESCAPE '\\')"
+      "(name LIKE ? ESCAPE '\\' OR activity LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\' OR finding LIKE ? ESCAPE '\\' OR email LIKE ? ESCAPE '\\' OR website LIKE ? ESCAPE '\\' OR address LIKE ? ESCAPE '\\' OR city LIKE ? ESCAPE '\\' OR notes LIKE ? ESCAPE '\\')"
     );
     const q = likePattern(f.query);
-    params.push(q, q, q, q, q, q, q, q);
+    params.push(q, q, q, q, q, q, q, q, q);
   }
   const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
   const total = get<{ n: number }>(`SELECT COUNT(*) AS n FROM prospects ${clause}`, ...params)?.n ?? 0;
@@ -476,7 +481,7 @@ export function addProspects(items: unknown[]) {
 
       const id = newId();
       run(
-        "INSERT INTO prospects (id, category, priority, name, activity, phone, rating, finding, status, tags, email, website, address, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO prospects (id, category, priority, name, activity, phone, rating, finding, status, tags, email, website, address, city, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         id,
         squash(o.category, 80),
         normalizePriority(o.priority),
@@ -490,6 +495,7 @@ export function addProspects(items: unknown[]) {
         email,
         website,
         squash(o.address, 200),
+        squash(o.city, 80),
         checkNotes(o.notes)
       );
       created.push({ id, name });
@@ -537,6 +543,7 @@ export function updateProspect(idOrName: string, patch: Record<string, unknown>)
   if (patch.email !== undefined) set("email", checkEmail(patch.email));
   if (patch.website !== undefined) set("website", checkWebsite(patch.website));
   if (patch.address !== undefined) set("address", squash(patch.address, 200));
+  if (patch.city !== undefined) set("city", squash(patch.city, 80));
   if (patch.notes !== undefined) set("notes", checkNotes(patch.notes));
 
   if (sets.length === 0) throw new DataError("Rien à modifier : fournissez au moins un champ.");

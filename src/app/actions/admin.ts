@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { geocodeProspects } from "@/lib/geocode";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { audit, get, newId, run, type LeadRow, type RequestRow } from "@/lib/db";
@@ -340,8 +341,10 @@ export async function updateProspectInfoAction(_p: FormState, fd: FormData): Pro
       email: str(fd, "email"),
       website: str(fd, "website"),
       address: str(fd, "address"),
+      city: str(fd, "city"),
       notes: String(fd.get("notes") ?? ""),
     });
+    void geocodeProspects();
     audit(actor, "prospect.update", p.name);
     return { ok: true, message: "Informations enregistrées." };
   });

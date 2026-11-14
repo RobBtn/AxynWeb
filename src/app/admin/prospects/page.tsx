@@ -12,6 +12,8 @@ import {
   updateProspectInfoAction,
 } from "@/app/actions/admin";
 import BulkDeleteBar from "@/components/BulkDeleteBar";
+import ProspectMap, { type MapPoint } from "@/components/ProspectMap";
+import { geocodeProspects } from "@/lib/geocode";
 import { requireUser } from "@/lib/auth";
 import { all, type LeadRow, type ProspectRow } from "@/lib/db";
 import { statusLabel } from "@/lib/data";
@@ -44,7 +46,7 @@ function ProspectCard({ p }: { p: ProspectRow }) {
         <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5">
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold">{p.name}</p>
-            <p className="truncate text-sm text-mute">{[p.activity, p.rating && `${p.rating} ★`, p.phone].filter(Boolean).join(" · ") || "—"}</p>
+            <p className="truncate text-sm text-mute">{[p.activity, p.city, p.rating && `${p.rating} ★`, p.phone].filter(Boolean).join(" · ") || "—"}</p>
           </div>
           <div className="hidden flex-wrap items-center justify-end gap-1.5 sm:flex">
             {tags.map((t) => (
@@ -138,10 +140,16 @@ function ProspectCard({ p }: { p: ProspectRow }) {
                   <input className="input" name="website" defaultValue={p.website} maxLength={200} autoComplete="off" placeholder="commerce.fr" />
                 </label>
               </div>
-              <label className="field">
-                Adresse
-                <input className="input" name="address" defaultValue={p.address} maxLength={200} autoComplete="off" />
-              </label>
+              <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+                <label className="field">
+                  Adresse
+                  <input className="input" name="address" defaultValue={p.address} maxLength={200} autoComplete="off" placeholder="12 rue de la Paix, 35000 Rennes" />
+                </label>
+                <label className="field">
+                  Ville
+                  <input className="input" name="city" defaultValue={p.city} maxLength={80} autoComplete="off" placeholder="Déduite de l'adresse" />
+                </label>
+              </div>
               <label className="field">
                 Notes
                 <textarea className="input min-h-24" name="notes" defaultValue={p.notes} maxLength={2000} />
@@ -165,15 +173,20 @@ const entry = (active: boolean) =>
     active ? "border-accent bg-accent font-medium text-on-accent" : "border-line bg-ink-2 hover:border-bone/40 hover:bg-ink-3"
   }`;
 
-export default async function AdminLeads({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string }> }) {
+export default async function AdminLeads({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string; ville?: string; groupe?: string }> }) {
   await requireUser("admin");
-  const { vue, q: rawQ } = await searchParams;
+  // Adresses nouvelles ou modifiées : positionnées en arrière-plan, visibles au prochain affichage.
+  void geocodeProspects();
+  const { vue, q: rawQ, ville: rawCity, groupe } = await searchParams;
+  const city = (rawCity ?? "").trim().slice(0, 80);
+  const byCity = groupe === "ville";
   const q = (rawQ ?? "").trim().slice(0, 80);
 
   const leads = all<LeadRow>("SELECT * FROM leads ORDER BY created_at DESC");
   const newLeads = leads.filter((l) => l.status === "new").length;
   // Sans choix : les demandes de devis à traiter d'abord, sinon toute la prospection.
-  const view: "devis" | "tous" | ProspectTagId = vue === "devis" ? "devis" : vue && isProspectTag(vue) ? vue : vue === "tous" ? "tous" : newLeads > 0 ? "devis" : "tous";
+  const view: "devis" | "tous" | "carte" | ProspectTagId =
+    vue === "devis" ? "devis" : vue === "carte" ? "carte" : vue && isProspectTag(vue) ? vue : vue === "tous" ? "tous" : newLeads > 0 ? "devis" : "tous";
 
   const prospects = all<ProspectRow>(
     "SELECT * FROM prospects ORDER BY CASE priority WHEN 'Haute' THEN 0 WHEN 'Normale' THEN 1 ELSE 2 END, rowid"
@@ -181,18 +194,35 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
   const counts = Object.fromEntries(prospectTags.map((t) => [t.id, prospects.filter((p) => parseTags(p.tags).includes(t.id)).length]));
   const needle = q.toLowerCase();
   const matches = (p: ProspectRow) =>
-    !needle || [p.name, p.activity, p.phone, p.email, p.website, p.address].some((v) => v.toLowerCase().includes(needle));
-  const inView = view === "devis" || view === "tous" ? prospects : prospects.filter((p) => parseTags(p.tags).includes(view));
-  const shown = inView.filter(matches);
-  const categories = [...new Set(shown.map((p) => p.category))].sort();
+    !needle || [p.name, p.activity, p.phone, p.email, p.website, p.address, p.city].some((v) => v.toLowerCase().includes(needle));
+  const inView = view === "devis" || view === "tous" || view === "carte" ? prospects : prospects.filter((p) => parseTags(p.tags).includes(view));
+  // Ville choisie : « - » désigne les fiches sans ville.
+  const inCity = (p: ProspectRow) => !city || (city === "-" ? !p.city : p.city.toLowerCase() === city.toLowerCase());
+  const shown = inView.filter((p) => matches(p) && inCity(p));
+  const groupOf = (p: ProspectRow) => (byCity ? p.city : p.category);
+  const groups = [...new Set(shown.map(groupOf))].sort((a, b) => (!a ? 1 : !b ? -1 : a.localeCompare(b, "fr")));
+  const grouped = view === "tous" || byCity;
 
-  const href = (v: string, withQ = true) => {
+  // Villes avec leur nombre de fiches, les plus fournies d'abord.
+  const cityCounts = new Map<string, number>();
+  for (const p of prospects) if (p.city) cityCounts.set(p.city, (cityCounts.get(p.city) ?? 0) + 1);
+  const cities = [...cityCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"));
+  const withoutCity = prospects.filter((p) => !p.city).length;
+  const points: MapPoint[] = shown
+    .filter((p) => p.lat !== null && p.lng !== null)
+    .map((p) => ({ id: p.id, name: p.name, activity: p.activity, phone: p.phone, city: p.city, address: p.address, lat: p.lat!, lng: p.lng!, priority: p.priority }));
+
+  const href = (v: string, withQ = true, over: { ville?: string; groupe?: string } = {}) => {
     const params = new URLSearchParams();
     params.set("vue", v);
     if (withQ && q) params.set("q", q);
+    const c = over.ville ?? city;
+    if (c && v !== "devis") params.set("ville", c);
+    const g = over.groupe ?? (byCity ? "ville" : "");
+    if (g && v !== "devis") params.set("groupe", g);
     return `/admin/prospects?${params.toString()}`;
   };
-  const title = view === "devis" ? "Demandes de devis" : view === "tous" ? "Tous les prospects" : (prospectTags.find((t) => t.id === view)?.label ?? "");
+  const title = view === "devis" ? "Demandes de devis" : view === "carte" ? "Carte des prospects" : view === "tous" ? "Tous les prospects" : (prospectTags.find((t) => t.id === view)?.label ?? "");
 
   return (
     <>
@@ -225,6 +255,13 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
               <span className="flex-1">Tous</span>
               <span className="font-mono text-xs">{prospects.length}</span>
             </Link>
+            <Link href={href("carte")} className={entry(view === "carte")} aria-current={view === "carte" ? "page" : undefined}>
+              <span className={view === "carte" ? "" : "hue hue-green"}>
+                <PinIcon />
+              </span>
+              <span className="flex-1">Carte</span>
+              <span className="font-mono text-xs">{prospects.filter((p) => p.lat !== null).length}</span>
+            </Link>
             {prospectTags.map((t) => (
               <Link key={t.id} href={href(t.id)} className={entry(view === t.id)} aria-current={view === t.id ? "page" : undefined}>
                 {tagIcon(t.id, view === t.id)}
@@ -233,6 +270,27 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
               </Link>
             ))}
           </nav>
+
+          {(cities.length > 0 || city) && view !== "devis" && (
+            <>
+              <p className="border-t border-line pt-4 font-mono text-[0.68rem] uppercase tracking-wider text-mute">Villes</p>
+              <nav className="flex flex-wrap gap-1.5" aria-label="Filtrer par ville">
+                <Link href={href(view, true, { ville: "" })} className={`chip-h ${!city ? "hue-green" : "hue-slate"}`} aria-current={!city ? "true" : undefined}>
+                  Toutes
+                </Link>
+                {cities.map(([c, n]) => (
+                  <Link key={c} href={href(view, true, { ville: c })} className={`chip-h ${city.toLowerCase() === c.toLowerCase() ? "hue-green" : "hue-slate"}`} aria-current={city.toLowerCase() === c.toLowerCase() ? "true" : undefined}>
+                    {c} · {n}
+                  </Link>
+                ))}
+                {withoutCity > 0 && (
+                  <Link href={href(view, true, { ville: "-" })} className={`chip-h ${city === "-" ? "hue-green" : "hue-slate"}`} aria-current={city === "-" ? "true" : undefined}>
+                    Sans ville · {withoutCity}
+                  </Link>
+                )}
+              </nav>
+            </>
+          )}
 
           <p className="mt-auto text-xs leading-relaxed text-mute">
             RGPD : les fiches non modifiées depuis 3 ans (hors clients gagnés) sont supprimées automatiquement. En cas d&apos;opposition d&apos;un commerce, supprime sa fiche tout de suite.
@@ -292,12 +350,34 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
           ) : (
             <>
               <p className="mb-4 text-sm text-mute">
-                {view === "tous"
-                  ? "Commerces repérés, sans demande de leur part. Coche une case sur une fiche : elle apparaît dans la vue correspondante."
-                  : "Les fiches cochées « " + title + " »."}
+                {view === "carte"
+                  ? `${points.length} commerce${points.length > 1 ? "s" : ""} placé${points.length > 1 ? "s" : ""} sur la carte${shown.length > points.length ? ` · ${shown.length - points.length} sans adresse reconnue` : ""}. Clique sur un point pour voir la fiche.`
+                  : view === "tous"
+                    ? "Commerces repérés, sans demande de leur part. Coche une case sur une fiche : elle apparaît dans la vue correspondante."
+                    : "Les fiches cochées « " + title + " »."}
               </p>
+              {view !== "carte" && (
+                <p className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-mute">Regrouper par</span>
+                  {view === "tous" && (
+                    <Link href={href(view, true, { groupe: "" })} className={`chip-h ${!byCity ? "hue-green" : "hue-slate"}`}>
+                      Catégorie
+                    </Link>
+                  )}
+                  {view !== "tous" && (
+                    <Link href={href(view, true, { groupe: "" })} className={`chip-h ${!byCity ? "hue-green" : "hue-slate"}`}>
+                      Aucun
+                    </Link>
+                  )}
+                  <Link href={href(view, true, { groupe: "ville" })} className={`chip-h ${byCity ? "hue-green" : "hue-slate"}`}>
+                    Ville
+                  </Link>
+                </p>
+              )}
               <form action="/admin/prospects" method="get" role="search" className="mb-4 flex flex-wrap items-center gap-2">
                 <input type="hidden" name="vue" value={view} />
+                {city && <input type="hidden" name="ville" value={city} />}
+                {byCity && <input type="hidden" name="groupe" value="ville" />}
                 <input className="input !w-auto min-w-56 flex-1" type="search" name="q" defaultValue={q} placeholder="Rechercher un nom, une activité, un téléphone…" aria-label="Rechercher un prospect" maxLength={80} />
                 <button className="btn btn-primary btn-sm">Rechercher</button>
                 {q && (
@@ -312,6 +392,10 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
                 </p>
               )}
 
+              {view === "carte" ? (
+                <ProspectMap points={points} />
+              ) : (
+              <>
               {shown.length > 0 && <BulkDeleteBar />}
 
               {shown.length === 0 ? (
@@ -322,17 +406,17 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
                       ? "Aucun commerce repéré pour l'instant."
                       : "Personne ici. Coche la case correspondante sur une fiche de la vue « Tous »."}
                 </Empty>
-              ) : view === "tous" ? (
+              ) : grouped ? (
                 <div className="space-y-8">
-                  {categories.map((cat) => (
+                  {groups.map((cat) => (
                     <section key={cat}>
-                      <h3 className={`mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-mute hue-${categoryHue(cat)}`}>
+                      <h3 className={`mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-mute hue-${byCity ? "green" : categoryHue(cat)}`}>
                         <span className="dot-h" aria-hidden="true" />
-                        {cat || "Sans catégorie"} · {shown.filter((p) => p.category === cat).length}
+                        {cat || (byCity ? "Sans ville" : "Sans catégorie")} · {shown.filter((p) => groupOf(p) === cat).length}
                       </h3>
                       <div className="grid gap-2.5">
                         {shown
-                          .filter((p) => p.category === cat)
+                          .filter((p) => groupOf(p) === cat)
                           .map((p) => (
                             <ProspectCard key={p.id} p={p} />
                           ))}
@@ -346,6 +430,8 @@ export default async function AdminLeads({ searchParams }: { searchParams: Promi
                     <ProspectCard key={p.id} p={p} />
                   ))}
                 </div>
+              )}
+              </>
               )}
             </>
           )}

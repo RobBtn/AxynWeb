@@ -1,4 +1,5 @@
 import "server-only";
+import { geocodeProspects } from "./geocode";
 import { all, audit, type LeadRow } from "./db";
 import {
   DataError,
@@ -283,7 +284,7 @@ const coreTools: Tool[] = [
     name: "list_prospects",
     description:
       "Liste la prospection à froid : les commerces repérés par le studio, SANS demande de leur part (à ne pas confondre avec list_leads, les demandes de devis reçues). " +
-      "Chaque prospect a : id, name, activity, phone, email, website (son site actuel), address, rating (note Google), category (« A. Aucun site », « B. Site cassé ou mort », « C. Site pourri ou daté », « D. Non évalué »), " +
+      "Chaque prospect a : id, name, activity, phone, email, website (son site actuel), address, city (ville, déduite de l'adresse si non fournie), lat/lng (position calculée depuis l'adresse), rating (note Google), category (« A. Aucun site », « B. Site cassé ou mort », « C. Site pourri ou daté », « D. Non évalué »), " +
       "priority (« Haute », « Normale », « À vérifier »), finding (le constat sur son site), notes (texte libre), status (new = nouveau, contacted = contacté, won = gagné, lost = perdu), " +
       `tags (cases de suivi cochées : ${prospectTags.map((t) => `${t.id} = ${t.label}`).join(", ")}) et created_at. ` +
       "Tous les filtres sont facultatifs et se cumulent ; la recherche `query` porte sur le nom, l'activité, le téléphone, l'e-mail, le site, l'adresse, le constat et les notes. " +
@@ -295,6 +296,7 @@ const coreTools: Tool[] = [
         tag: s("Case de suivi cochée", { enum: prospectTags.map((t) => t.id) }),
         category: s("Texte contenu dans la catégorie, ex. « Aucun site »"),
         priority: s("Priorité", { enum: [...PROSPECT_PRIORITIES] }),
+        city: s("Ville exacte, ex. « Rennes »"),
         query: s("Recherche dans le nom, l'activité, le téléphone et le constat"),
         limit: { type: "integer", description: "Nombre de résultats (50 par défaut, 200 au plus)" },
         offset: { type: "integer", description: "Nombre de résultats à sauter" },
@@ -306,6 +308,7 @@ const coreTools: Tool[] = [
         tag: text(a, "tag", false) || undefined,
         category: text(a, "category", false) || undefined,
         priority: text(a, "priority", false) || undefined,
+        city: text(a, "city", false) || undefined,
         query: text(a, "query", false) || undefined,
         limit: typeof a.limit === "number" ? a.limit : undefined,
         offset: typeof a.offset === "number" ? a.offset : undefined,
@@ -337,7 +340,8 @@ const coreTools: Tool[] = [
               phone: s("Téléphone, ex. « 02 99 06 40 36 »"),
               email: s("Adresse e-mail du commerce (un prospect ayant le même e-mail n'est pas dupliqué)"),
               website: s("Adresse de son site actuel, ex. « exemple.fr » (http ou https)"),
-              address: s("Adresse postale (200 car. max)"),
+              address: s("Adresse postale complète avec code postal et ville (200 car. max) : elle place le commerce sur la carte"),
+              city: s("Ville (sinon déduite de l'adresse)"),
               notes: s("Notes libres (2 000 car. max)"),
               rating: s("Note Google, ex. « 4,8 »"),
               category: s("Catégorie, ex. « A. Aucun site »"),
@@ -352,7 +356,11 @@ const coreTools: Tool[] = [
         name: s("Pour ajouter un seul prospect : son nom (avec les mêmes champs facultatifs que ci-dessus)"),
       },
     },
-    handler: (a) => addProspects(Array.isArray(a.prospects) ? a.prospects : a.name ? [a] : []),
+    handler: (a) => {
+      const result = addProspects(Array.isArray(a.prospects) ? a.prospects : a.name ? [a] : []);
+      void geocodeProspects();
+      return result;
+    },
   },
   {
     name: "update_prospect",
@@ -372,7 +380,8 @@ const coreTools: Tool[] = [
         phone: s("Téléphone"),
         email: s("Adresse e-mail (chaîne vide pour l'effacer)"),
         website: s("Adresse de son site actuel (chaîne vide pour l'effacer)"),
-        address: s("Adresse postale"),
+        address: s("Adresse postale complète avec code postal et ville : elle place le commerce sur la carte"),
+        city: s("Ville (sinon déduite de l'adresse)"),
         notes: s("Notes libres (remplacent les anciennes)"),
         rating: s("Note Google"),
         category: s("Catégorie"),
@@ -383,7 +392,9 @@ const coreTools: Tool[] = [
     },
     handler: (a) => {
       const { prospect, ...patch } = a;
-      return updateProspect(text({ prospect }, "prospect"), patch);
+      const result = updateProspect(text({ prospect }, "prospect"), patch);
+      void geocodeProspects();
+      return result;
     },
   },
   {
